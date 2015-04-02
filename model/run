@@ -1,0 +1,4 @@
+#!/bin/bash -x
+
+~/src/cdec_net/training/dtrain/dtrain_net_interface -c dtrain.ini -a ipc:///tmp/dtrain.ipc
+

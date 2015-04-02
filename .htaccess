@@ -1,0 +1,4 @@
+AuthName "Postedit Login"
+AuthType Basic
+AuthUserFile /workspace/post_editing/conf/.htpasswd
+require valid-user

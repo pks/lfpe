@@ -1,0 +1,19 @@
+textarea {
+  font-size: 20px
+}
+
+p#translating_status {
+  display: none;
+}
+
+button {
+  margin: 1em;
+  padding: .25em;
+  background: #fff;
+  font-weight: bold
+}
+
+p#fi {
+  display: none;
+}
+
