@@ -1,0 +1,5 @@
+#!/bin/bash -x
+
+export LD_LIBRARY_PATH=/fast_scratch/simianer/lfpe/nanomsg-0.5-beta/lib
+ruby server.rb &>server.rb.out
+
