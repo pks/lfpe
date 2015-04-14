@@ -1,4 +1,11 @@
 #!/bin/bash -x
 
-~/src/cdec_net/training/dtrain/dtrain_net_interface -c dtrain.ini -a ipc:///tmp/dtrain.ipc
+export LD_LIBRARY_PATH=/fast_scratch/simianer/lfpe/nanomsg-0.5-beta/lib
+
+while true; do
+/fast_scratch/simianer/lfpe/cdec_net/training/dtrain/dtrain_net_interface -c dtrain.ini -a ipc:///tmp/dtrain.ipc &>dtrain.out &
+PID=$!
+sleep 600
+kill $PID
+done
 

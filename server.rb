@@ -5,8 +5,8 @@ require 'sinatra/cross_origin'
 require 'nanomsg'
 require 'zipf'
 
-set :bind, '0.0.0.0'
-set :port, 31337
+set :bind, '147.142.207.52'
+set :port, 60666
 
 set :allow_origin, :any
 set :allow_methods, [:get, :post, :options]

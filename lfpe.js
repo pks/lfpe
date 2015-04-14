@@ -14,9 +14,18 @@ function CreateCORSRequest(method, url) {
   return xhr;
 }
 
-function Next(url)
+function submit(e) {
+  if (e.keyCode == 13) {
+    e.preventDefault();
+    Next();
+  }
+
+  return false;
+}
+
+function Next()
 {
-  url = "http://localhost:31337/next";
+  url = "http://coltrane.cl.uni-heidelberg.de:60666/next";
   var pe = document.getElementById("trgt").value;
   if (pe != "") {
     var src = document.getElementById("src").value;
@@ -43,6 +52,9 @@ function Next(url)
       document.getElementById("trgt").value = x[1];
       document.getElementById("trgt").cols = x[1].length;
       document.getElementById("translating_status").style.display = "none";
+      document.getElementById("trgt").focus();
+      document.getElementById("trgt").selectionStart = 0;
+      document.getElementById("trgt").selectionEnd = 0;
     }
   };
 

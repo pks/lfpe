@@ -4,6 +4,8 @@ textarea {
 
 p#translating_status {
   display: none;
+  margin-left: 4.2em;
+  margin-top: -5.5em
 }
 
 button {
@@ -15,5 +17,17 @@ button {
 
 p#fi {
   display: none;
+}
+
+div#wrapper {
+  margin: 4em;
+  padding: 1em;
+  border: 1px dashed #000
+}
+
+p#desc {
+  font-size:0.8em;
+  color: #ccc;
+  position: fixed
 }
 
