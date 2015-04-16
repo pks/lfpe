@@ -3,7 +3,7 @@
 # TODO
 
 ## Interface
-* dynamic enlargement of textarea
+* dynamic enlargement of textarea (fix size)
 * alignment visualization
 * add interface to modify alignments
 * enable dynamic updating of visualization
