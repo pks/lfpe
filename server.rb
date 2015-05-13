@@ -7,7 +7,7 @@ require 'zipf'
 require 'digest'
 
 require_relative "#{ARGV[0]}"
-INPUT      = ReadFile.readlines INPUT_FILE
+INPUT = ReadFile.readlines INPUT_FILE
 `mkdir -p #{WORK_DIR}/g`
 
 def start_daemon cmd, name, addr
@@ -18,7 +18,7 @@ def start_daemon cmd, name, addr
   end
   sock = NanoMsg::PairSocket.new
   sock.connect addr
-  STDERR.write ">> got #{sock.recv} from #{name}\n"
+  STDERR.write "< got #{sock.recv} from #{name}\n"
 
   return sock, pid
 end
@@ -27,16 +27,16 @@ def stop_all_daemons env
   STDERR.write "shutting down all daemons\n"
   env.each { |name,p|
     p[:socket].send "shutdown"
-    STDERR.write ">> #{name} is #{p[:socket].recv}"
+    STDERR.write "< #{name} is #{p[:socket].recv}\n"
   }
 end
 
 daemons = {
   :extractor    => "python -m cdec.sa.extract -c #{DATA_DIR}/sa.ini --online -u -S '__ADDR__'",
-  :aligner_fwd  => "#{CDEC_NET}/word-aligner/net_fa -f #{DATA_DIR}/a/forward.params --sock_url '__ADDR__'",
-  :aligner_back => "#{CDEC_NET}/word-aligner/net_fa -f #{DATA_DIR}/a/backward.params --sock_url '__ADDR__'",
+  :aligner_fwd  => "#{CDEC_NET}/word-aligner/net_fa -f #{DATA_DIR}/a/forward.params -m #{FWD_MEAN_SRCLEN_MULT} -T #{FWD_TENSION} --sock_url '__ADDR__'",
+  :aligner_back => "#{CDEC_NET}/word-aligner/net_fa -f #{DATA_DIR}/a/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
   :atools       => "#{CDEC_NET}/utils/atools_net -c grow-diag-final-and -S '__ADDR__'",
-  :dtrain       => "#{CDEC_NET}/training/dtrain/dtrain_net_interface -c #{DATA_DIR}/dtrain.ini -o #{WORK_DIR}/weights.final -a '__ADDR__'"
+  :dtrain       => "#{CDEC_NET}/training/dtrain/dtrain_net_interface -c #{DATA_DIR}/dtrain.ini -o #{WORK_DIR}/weights.final -a '__ADDR__'" ##{DTRAIN_EXTRA}"
 }
 
 env = {}
@@ -94,7 +94,7 @@ get '/next' do
       STDERR.write "[atools] waiting for alignment ...\n"
     a = env[:atools][:socket].recv.strip
       STDERR.write "[atools] < got alignment '#{a}'\n"
-    # actual extractor 
+    # actual extractor
     msg = "TEST ||| #{source} ||| #{reference} ||| #{a}"
       STDERR.write "[extractor] > sending '#{msg}' for learning\n"
     env[:extractor][:socket].send "TEST ||| #{source} ||| #{reference} ||| #{a}"

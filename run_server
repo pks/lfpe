@@ -2,5 +2,5 @@
 
 export LD_LIBRARY_PATH=/fast_scratch/simianer/lfpe/nanomsg-0.5-beta/lib
 export PYTHONPATH=~/.local/lib/python2.7/site-packages
-ruby server2.rb ../example/conf.rb #&>server2.rb.out
+ruby server.rb ../example/conf.rb &>server.rb.out
 
