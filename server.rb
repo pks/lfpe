@@ -119,7 +119,7 @@ get '/next' do
       STDERR.write "[dtrain] > asking to translate: '#{msg}'\n"
     env[:dtrain][:socket].send msg
       STDERR.write "[dtrain] waiting for translation ...\n"
-    transl = env[:dtrain][:socket].recv.encode "UTF-8"
+    transl = env[:dtrain][:socket].recv.force_encoding "UTF-8"
       STDERR.write "[dtrain] < received translation: '#{transl}'\n"
     "#{source}\t#{transl}"
   end
