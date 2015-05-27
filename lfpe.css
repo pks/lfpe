@@ -5,7 +5,7 @@ textarea {
 p#translating_status {
   display: none;
   margin-left: 4.2em;
-  margin-top: -5.5em
+  /*margin-top: -5.5em*/
 }
 
 button {
@@ -20,14 +20,38 @@ p#fi {
 }
 
 div#wrapper {
-  margin: 4em;
+  margin: 2em;
   padding: 1em;
   border: 1px dashed #000
 }
 
+div#header {
+  margin-bottom: 2em;
+}
+
+p#footer {
+  text-align:right;
+  font-size: 0.5em;
+  font-weight:bold;
+  margin:0;
+  padding:0;
+  color:#ccc
+}
+
 p#desc {
   font-size:0.8em;
+  width:40%;
   color: #ccc;
-  position: fixed
+  text-align:justify
+}
+
+p#desc:hover {
+  color: #000
+}
+
+img#cl {
+  margin-bottom:20px;
+  margin-left:10px;
+  vertical-align:bottom;
 }
 

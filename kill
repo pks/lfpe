@@ -1,0 +1,4 @@
+#!/bin/bash
+
+for i in {1..6}; do ps ax | grep -P "(server.rb|atools|net_fa|sa.extract|dtrain)" | grep -v vim | grep -v -P "^\s\+$" | cut -d " " -f $i | xargs kill -9; done
+

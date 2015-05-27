@@ -28,7 +28,7 @@ function Next()
   url = "http://coltrane.cl.uni-heidelberg.de:60666/next";
   var pe = document.getElementById("trgt").value;
   if (pe != "") {
-    var src = document.getElementById("src").value;
+    var src = document.getElementById("src_pp").value;
     url += "?example="+src+" %7C%7C%7C "+pe;
   }
   document.getElementById("translating_status").style.display = "block";
@@ -47,10 +47,14 @@ function Next()
       document.getElementById("next").innerHTML = "Thank you!";
       document.getElementById("next").disabled = true;
     } else {
-      document.getElementById("src").value = x[0];
-      document.getElementById("src").cols = x[0].length;
-      document.getElementById("trgt").value = x[1];
-      document.getElementById("trgt").cols = x[1].length;
+      document.getElementById("src_pp").value = x[0];
+      document.getElementById("src").value = x[2];
+      document.getElementById("src").rows = Math.round(x[2].length/80)+1;
+      var firstLetter = x[1][0].toUpperCase();
+      var rest = x[1].substring(1);
+      var t = firstLetter + rest;
+      document.getElementById("trgt").value = t;
+      document.getElementById("trgt").rows = Math.round(x[1].length/80)+1;
       document.getElementById("translating_status").style.display = "none";
       document.getElementById("trgt").focus();
       document.getElementById("trgt").selectionStart = 0;

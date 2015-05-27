@@ -8,6 +8,7 @@ require 'digest'
 
 require_relative "#{ARGV[0]}"
 INPUT = ReadFile.readlines INPUT_FILE
+INPUT_RAW = ReadFile.readlines RAW_INPUT_FILE
 `mkdir -p #{WORK_DIR}/g`
 
 def start_daemon cmd, name, addr
@@ -102,6 +103,7 @@ get '/next' do
       STDERR.write "[extractor] < got '#{env[:extractor][:socket].recv}'\n"
   end
   source = INPUT.shift
+  raw_source = INPUT_RAW.shift
   if !source # input is done -> displays 'Thank you!'
     STDERR.write ">>> end of input, sending 'fi'\n"
     "fi"
@@ -121,7 +123,7 @@ get '/next' do
       STDERR.write "[dtrain] waiting for translation ...\n"
     transl = env[:dtrain][:socket].recv.force_encoding "UTF-8"
       STDERR.write "[dtrain] < received translation: '#{transl}'\n"
-    "#{source}\t#{transl}"
+    "#{source}\t#{transl.strip}\t#{raw_source}"
   end
 end
 
