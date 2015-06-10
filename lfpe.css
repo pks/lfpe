@@ -1,57 +1,65 @@
-textarea {
-  font-size: 20px
+html {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 18px
 }
 
-p#translating_status {
-  display: none;
-  margin-left: 4.2em;
-  /*margin-top: -5.5em*/
+textarea {
+  font-size: 20px;
+  width: 100%
 }
 
 button {
-  margin: 1em;
-  padding: .25em;
+  margin:     1em;
+  padding:    .25em;
   background: #fff;
   font-weight: bold
 }
 
-p#fi {
-  display: none;
-}
+.bold { font-weight:bold }
 
 div#wrapper {
-  margin: 2em;
+  margin:  2em;
   padding: 1em;
-  border: 1px dashed #000
+  border:  1px dashed #000
 }
 
-div#header {
-  margin-bottom: 2em;
+span#status {
+  display: none;
+  float:   right
 }
+
+/* Document overview */
+table#overview { font-size:80% }
+table#overview td.seg_text { width: 45% }
+table#overview td { border-bottom: 1px solid #000 }
+/* /Document overview */
 
 p#footer {
-  text-align:right;
-  font-size: 0.5em;
-  font-weight:bold;
-  margin:0;
-  padding:0;
-  color:#ccc
+  text-align:  right;
+  font-size:   .5em;
+  font-weight: bold;
+  margin:      0;
+  padding:     0;
+  color:       #303030
 }
 
-p#desc {
-  font-size:0.8em;
-  width:40%;
-  color: #ccc;
-  text-align:justify
-}
-
-p#desc:hover {
-  color: #000
-}
-
+/* Header */
+div#header { margin-bottom: 2em }
+img#uni {}
 img#cl {
   margin-bottom:20px;
   margin-left:10px;
-  vertical-align:bottom;
+  vertical-align:bottom
 }
+/* /Header */
+
+/* Help */
+p#help {
+  font-size:  .8em;
+  width:      40%;
+  color:      #ccc;
+  text-align: justify
+}
+p#help:hover { color: #000 }
+/* /Help */
 
