@@ -7,28 +7,37 @@ require 'nanomsg'
 require 'zipf'
 require 'digest'
 require 'json'
+require 'haml'
 
-# load configuration file and setup global variables
-require_relative "#{ARGV[0]}"
-$lock       = false # lock if currently learning/translating
-$last_reply = nil   # cache last reply
-$confirmed = true   # client received translation?
-if !FileTest.exist? LOCK_FILE
-  $db  = {} # FIXME: that is supposed to be a database connection
-  $env = {}
+# #############################################################################
+# Load configuration file and setup global variables
+# #############################################################################
+require_relative "#{ARGV[0]}" # load configuration for this session
+$lock       = false           # lock if currently learning/translating
+$last_reply = nil             # cache last reply
+$confirmed = true             # client received translation?
+if !FileTest.exist? LOCK_FILE # locked?
+  $db  = {}                   # FIXME: that is supposed to be a database connection
+  $env = {}                   # environment variables (socket connections to daemons)
 end
 
+# #############################################################################
+# Daemons
+# #############################################################################
 $daemons = {
-  :detokenizer  => "/fast_scratch/simianer/lfpe/lfpe/de-tok.rb -a D -S '__ADDR__' -p #{SCRIPTS_DIR} -l #{TARGET_LANG}",
-  :tokenizer    =>  "/fast_scratch/simianer/lfpe/lfpe/de-tok.rb -a T -S '__ADDR__' -p #{SCRIPTS_DIR} -l #{TARGET_LANG}",
+  :detokenizer  => "/fast_scratch/simianer/lfpe/lfpe/util/de-tok.rb -a D -S '__ADDR__' -p #{SCRIPTS} -l #{TARGET_LANG}",
+  :tokenizer    => "/fast_scratch/simianer/lfpe/lfpe/util/de-tok.rb -a T -S '__ADDR__' -p #{SCRIPTS} -l #{TARGET_LANG}",
+  :truecaser    => "/fast_scratch/simianer/lfpe/lfpe/util/truecase.rb -S '__ADDR__' -m #{MOSES} -n #{DATA_DIR}/truecaser", # FIXME: run as real daemon
+  :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{DATA_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights.final -a '__ADDR__'",
   :extractor    => "python -m cdec.sa.extract -c #{DATA_DIR}/sa.ini --online -u -S '__ADDR__'",
-  :aligner_fwd  => "#{CDEC_NET}/word-aligner/net_fa -f #{DATA_DIR}/a/forward.params -m #{FWD_MEAN_SRCLEN_MULT} -T #{FWD_TENSION} --sock_url '__ADDR__'",
-  :aligner_back => "#{CDEC_NET}/word-aligner/net_fa -f #{DATA_DIR}/a/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
-  :atools       => "#{CDEC_NET}/utils/atools_net -c grow-diag-final-and -S '__ADDR__'",
-  :dtrain       => "#{CDEC_NET}/training/dtrain/dtrain_net_interface -c #{DATA_DIR}/dtrain.ini -o #{WORK_DIR}/weights.final -a '__ADDR__'"
+  :aligner_fwd  => "#{CDEC}/word-aligner/net_fa -f #{DATA_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
+  :aligner_back => "#{CDEC}/word-aligner/net_fa -f #{DATA_DIR}/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
+  :atools       => "#{CDEC}/utils/atools_net -c grow-diag-final-and -S '__ADDR__'"
 }
 
-# setup Sinatra
+# #############################################################################
+# Set-up Sinatra
+# #############################################################################
 set :bind,              SERVER_IP
 set :port,              WEB_PORT
 set :allow_origin,      :any
@@ -36,31 +45,40 @@ set :allow_methods,     [:get, :post, :options]
 set :allow_credentials, true
 set :max_age,           "1728000"
 set :expose_headers,    ['Content-Type']
+set :public_folder,     File.dirname(__FILE__) + '/static'
+
+
+# #############################################################################
+# Helper functions
+# #############################################################################
+def logmsg name, msg
+  STDERR.write "[#{name}] #{msg}\n"
+end
 
 def start_daemon cmd, name, addr
-  STDERR.write "> starting #{name} daemon\n"
+  logmsg :server, "starting #{name} daemon"
   cmd.gsub! '__ADDR__', addr
   pid = fork do
     exec cmd
   end
   sock = NanoMsg::PairSocket.new
   sock.connect addr
-  STDERR.write "< got #{sock.recv} from #{name}\n"
+  logmsg :server, "< got #{sock.recv} from #{name}"
 
   return sock, pid
 end
 
 def stop_all_daemons
-  STDERR.write "shutting down all daemons\n"
+  logmsg :server, "shutting down all daemons"
   $env.each { |name,p|
-    p[:socket].send "shutdown"
-    STDERR.write "< #{name} is #{p[:socket].recv}\n"
+    p[:socket].send "shutdown" # every daemon shuts down after receiving this keyword
+    logmsg :server, "< #{name} is #{p[:socket].recv}"
   }
 end
 
-def update_database # FIXME: real database
+def update_database
   $db['progress'] += 1
-  j = JSON.generate $db
+  j = JSON.generate $db                                  # FIXME: real database
   f = WriteFile.new DB_FILE
   f.write j.to_s
   f.close
@@ -68,7 +86,7 @@ end
 
 def init
   # database connection
-  $db = JSON.parse ReadFile.read DB_FILE
+  $db = JSON.parse ReadFile.read DB_FILE                 # FIXME: real database
   # working directory
   `mkdir -p #{WORK_DIR}/g`
   # setup environment, start daemons
@@ -78,132 +96,144 @@ def init
     $env[name] = { :socket => sock, :pid => pid }
     port += 1
   }
+  # lock
   `touch #{LOCK_FILE}`
 end
 
-init if !FileTest.exist?(LOCK_FILE)
+def send_recv daemon, msg                            # simple pair communcation
+  socket = $env[daemon][:socket]
+  logmsg daemon, "> sending message: '#{msg}'"
+  socket.send msg
+  logmsg daemon, "waiting ..."
+  ans = socket.recv.force_encoding("UTF-8").strip
+  logmsg daemon, "< received answer: '#{ans}'"
 
-get '/' do
-  cross_origin
-  "Nothing to see here."
+  return ans
 end
 
-# receive post-edit, send translation
-get '/next' do
+# #############################################################################
+# Run init() [just once]
+# #############################################################################
+init if !FileTest.exist?(LOCK_FILE)
+
+# #############################################################################
+# Routes
+# #############################################################################
+get '/' do
   cross_origin
-  return "locked" if $lock
+
+  return ""
+end
+
+get '/next' do      # (receive post-edit, update models), send next translation
+  cross_origin
+  # already processing request?
+  return "locked" if $lock                                             # return
   $lock = true
-  key = params[:key] # FIXME: do something with it
+  key = params[:key]                              # FIXME: do something with it
+
+  # received post-edit -> update models
+  # 0. save raw post-edit
+  # 1. tokenize
+  # 2. truecase
+  # 3. save processed post-edit
+  # 4. update weights
+  # 5. update grammar extractor
+  # 5a. forward alignment
+  # 5b. backward alignment
+  # 5c. symmetrize alignment
+  # 5d. actual update
+  # 6. update database
   if params[:example]
+    # 0. save raw post-edit
     source, reference = params[:example].strip.split(" ||| ")
-    # tokenize, lowercase
     $db['post_edits_raw'] << reference.strip
-    $env[:tokenizer][:socket].send reference
-      STDERR.write "[tokenizer] waiting ...\n"
-    reference = $env[:tokenizer][:socket].recv.force_encoding("UTF-8").strip
-      STDERR.write "[tokenizer] < received tokenized reference: '#{reference}'\n"
-    reference.downcase!
-    # save post-edits
-    $db['post_edits'] << reference.strip
-    # update weights
-    grammar = "#{WORK_DIR}/g/#{Digest::SHA256.hexdigest(source)}.grammar"
-    annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
-    msg = "#{annotated_source} ||| #{reference}"
-      STDERR.write "[dtrain] > sending '#{msg}' for update\n"
-    $env[:dtrain][:socket].send msg
-      STDERR.write "[dtrain] waiting for confirmation ...\n"
-      STDERR.write "[dtrain] < says it's #{$env[:dtrain][:socket].recv}\n"
-    # update grammar extractor
-    # get forward alignment
-    msg = "#{source} ||| #{reference}"
-      STDERR.write "[aligner_fwd] > sending '#{msg}' for forced alignment\n"
-    $env[:aligner_fwd][:socket].send msg
-      STDERR.write "[aligner_fwd] waiting for alignment ...\n"
-    a_fwd = $env[:aligner_fwd][:socket].recv.strip
-      STDERR.write "[aligner_fwd] < got alignment: '#{a_fwd}'\n"
-    # get backward alignment
-    msg = "#{source} ||| #{reference}"
-      STDERR.write "[aligner_back] > sending '#{msg}' for forced alignment\n"
-    $env[:aligner_back][:socket].send msg
-      STDERR.write "[aligner_back] waiting for alignment ...\n"
-    a_back = $env[:aligner_back][:socket].recv.strip
-      STDERR.write "[aligner_back] < got alignment: '#{a_back}'\n"
-    # symmetrize alignment
-    msg = "#{a_fwd} ||| #{a_back}"
-      STDERR.write "[atools] > sending '#{msg}' to combine alignments\n"
-    $env[:atools][:socket].send msg
-      STDERR.write "[atools] waiting for alignment ...\n"
-    a = $env[:atools][:socket].recv.strip
-      STDERR.write "[atools] < got alignment '#{a}'\n"
-    # actual extractor
-    msg = "TEST ||| #{source} ||| #{reference} ||| #{a}"
-      STDERR.write "[extractor] > sending '#{msg}' for learning\n"
-    $env[:extractor][:socket].send "TEST ||| #{source} ||| #{reference} ||| #{a}"
-      STDERR.write "[extractor] waiting for confirmation ...\n"
-      STDERR.write "[extractor] < got '#{$env[:extractor][:socket].recv}'\n"
-    update_database
+    # 1. tokenize
+      reference = send_recv :tokenizer, reference
+    # 2. truecase
+      reference = send_recv :truecaser, reference
+    # 3. save processed post-edits
+      logmsg "db", "saving processed post-edit"
+      $db['post_edits'] << reference.strip
+    # 4. update weights
+      grammar = "#{WORK_DIR}/g/#{Digest::SHA256.hexdigest(source)}.grammar"
+      annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
+      send_recv :dtrain, "#{annotated_source} ||| #{reference}"
+    # 5. update grammar extractor
+    # 5a. get forward alignment
+      a_fwd = send_recv :aligner_fwd, "#{source} ||| #{reference}"
+    # 5b. get backward alignment
+      a_back = send_recv :aligner_back, "#{reference} ||| #{source}"
+    # 5c. symmetrize alignment
+      a = send_recv :atools, "#{a_fwd} ||| #{a_back}"
+    # 5d actual extractor
+      send_recv :extractor, "- ||| #{source} ||| #{reference} ||| #{a}"
+    # 6. update database
+      logmsg "db", "updating database"
+      update_database
   end
   source     = $db['source_segments'][$db['progress']]
   raw_source = $db['raw_source_segments'][$db['progress']]
   if !source # input is done -> displays 'Thank you!'
-    STDERR.write ">>> end of input, sending 'fi'\n"
+    logmsg "server", "end of input, sending 'fi'"
     $lock = false
-    return "fi"
+    return "fi"                                                        # return
   elsif !$confirmed
+    logmsg :server, "locked, re-sending last reply"
     $lock = false
-    return $last_reply
-  else # translate next sentence
+    return $last_reply                                                 # return
+  else
+    # translate next sentence
+    # 1. generate grammar
+    # 2. translate
+    # 3. detokenize
+    # 4. reply
     source.strip!
-    # generate grammar for current sentence
-    grammar = "#{WORK_DIR}/g/#{Digest::SHA256.hexdigest(source)}.grammar" # FIXME: keep grammars?
-    msg = "- ||| #{source} ||| #{grammar}"                                # FIXME: content identifier useful?
-      STDERR.write "[extractor] > asking to generate grammar: '#{msg}'\n"
-    $env[:extractor][:socket].send msg
-      STDERR.write "[extractor] waiting for confirmation ...\n"
-      STDERR.write "[extractor] < says it generated #{$env[:extractor][:socket].recv.force_encoding("UTF-8").strip}\n"
-    # translation
+    # 1. generate grammar for current sentence
+    grammar = "#{WORK_DIR}/g/#{Digest::SHA256.hexdigest(source)}.grammar"
+    msg = "- ||| #{source} ||| #{grammar}"
+    send_recv :extractor, msg               # FIXME: content identifier useful?
+    # 2. translation
     msg = "act:translate ||| <seg grammar=\"#{grammar}\"> #{source} </seg>"
-      STDERR.write "[dtrain] > asking to translate: '#{msg}'\n"
-    $env[:dtrain][:socket].send msg
-      STDERR.write "[dtrain] waiting for translation ...\n"
-    transl = $env[:dtrain][:socket].recv.force_encoding "UTF-8"
-      STDERR.write "[dtrain] < received translation: '#{transl}'\n"
-    # detokenizer
-    $env[:detokenizer][:socket].send transl
-      STDERR.write "[detokenizer] waiting ...\n"
-    transl = $env[:detokenizer][:socket].recv.force_encoding("UTF-8").strip
-      STDERR.write "[detokenizer] < received final translation: '#{transl}'\n"
-    # reply
+    transl = send_recv :dtrain, msg
+    # 3. detokenizer
+    transl = send_recv :detokenizer, transl
+    # 4. reply
     $last_reply = "#{$db['progress']}\t#{source}\t#{transl.strip}\t#{raw_source}"
     $lock = false
     $confirmed = false
-    STDERR.write ">>> response: '#{$last_reply}'"
-    return $last_reply
+    logmsg :server, "response: '#{$last_reply}'"
+    return $last_reply                                                 # return
   end
 
-  return "oh oh" # FIXME: do something sensible
+  return "oh oh"                          # return FIXME: do something sensible
 end
 
-# client confirms received translation
-get '/confirm' do
+get '/debug' do                                                    # debug view
+  fn = "#{WORK_DIR}/dtrain.debug.json"
+  data = JSON.parse ReadFile.read(fn).force_encoding("UTF-8")
+
+  haml :debug, :locals => { :data => data }
+end
+
+get '/confirm' do                        # client confirms received translation
   cross_origin
-  STDERR.write "confirmed = #{$confirmed}\n"
   $confirmed = true
+  logmsg :server, "confirmed = #{$confirmed}"
 
   return "#{$confirmed}"
 end
 
-# stop daemons and shut down server
-get '/shutdown' do
+get '/shutdown' do                          # stop daemons and shut down server
+  logmsg :server, "shutting down daemons"
   stop_all_daemons
 
-  "ready to shutdown"
+  return "ready to shutdown"
 end
 
-# reset current session
-get '/reset' do
+get '/reset' do                                         # reset current session
   return "locked" if $lock
-  $db = JSON.parse ReadFile.read DB_FILE # FIXME: database ..
+  $db = JSON.parse ReadFile.read DB_FILE                   # FIXME: database ..
   $db['post_edits'].clear
   $db['post_edits_raw'].clear
   update_database
@@ -213,10 +243,9 @@ get '/reset' do
   return "#{$db.to_s}"
 end
 
-# load other db file than configured
-get '/load/:name' do
+get '/load/:name' do                       # load other db file than configured
   return "locked" if $lock
-  $db = JSON.parse ReadFile.read "/fast_scratch/simianer/lfpe/example_pattr/#{params[:name]}.json.original"
+  $db = JSON.parse ReadFile.read "#{DATA_DIR}/#{params[:name]}.json.original"
   $db['post_edits'].clear
   $db['post_edits_raw'].clear
   update_database

@@ -1,0 +1,71 @@
+- require 'zipf'
+!!!
+%html
+  %head
+    %title debug view (for TODO)
+  %link(rel="stylesheet" type="text/css" href="debug.css")
+  %body
+    %h1 debug view (for TODO)
+    %table
+      %tr
+        %td.noborder
+          %strong source:
+        %td.left #{data["source"]}
+      %tr
+        %td.noborder
+          %strong post-edit:
+        %td.left #{data["target"]}
+      %tr
+        %td.noborder
+          %strong original mt:
+        %td.left #{data["1best"]}
+      %tr
+        %td.noborder
+          %strong best match (bleu=#{data["best_match_score"]}):
+        %td.left #{data["best_match"]}
+    %h2 meta
+    %p <strong>k:</strong> #{data["samples_size"]}
+    %p <strong>number of updates:</strong> #{data["num_up"]}
+    %p <strong>updated features:</strong> #{data["updated_features"]}
+    %p <strong>learning rate:</strong> #{data["learning_rate"]}
+    %h2 k-best
+    %p bleu | model score | original rank | translation \n features
+    %p.red update needed
+    %ol
+      - kbest = []
+      - data["kbest"].each { |i| x=splitpipe(i); kbest << [ x[0].to_f, x[1].to_f, x[2].to_i, x[3], x[4] ] }
+      - kbest.sort! { |i,j| j[0] <=> i[0] }
+      - kbest.each_with_index do |k,j|
+        - b = kbest[0,j].map { |l| l[0]>k[0] && l[1]<k[1] }.include? true
+        -if b
+          %li.red
+            %strong #{"%.2f"%(k[0].to_f*100)} | #{k[1]} | #{k[2]} | #{k[4]} <br/>
+            %pre #{k[3]}
+        - else
+          %li
+            %strong #{"%.2f"%(k[0].to_f*100)} | #{k[1]} | #{k[2]} | #{k[4]} <br/>
+            %pre #{k[3]}
+        - if [9,89].include? j
+          %hr
+    %h2 weight updates
+    %table
+      %tr
+        %th feature
+        %th before
+        %th after
+        %th diff
+        %th raw diff
+      - data["weights_after"].keys.each.sort { |a,b| a[0] <=> b[0] }.each do |k|
+        %tr
+          %td.noborder <strong> #{k} </strong>
+          %td #{"%+.3f"%data["weights_before"][k].round(4)}
+          %td #{"%+.3f"%data["weights_after"][k].round(4)}
+          - diff = data["weights_before"][k].abs-data["weights_after"][k].abs
+          - if diff < 0
+            %td.red #{"%+.3f"%(diff).round(4)}
+          - elsif diff > 0
+            %td.green #{"%+.3f"%(diff).round(4)}
+          - else
+            %td #{"%+.3f"%(diff).round(4)}
+          %td #{"%+.1f"%((data["weights_before"][k].abs-data["weights_after"][k].abs)/data["learning_rate"]).round(2)}
+

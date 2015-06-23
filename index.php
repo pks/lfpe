@@ -44,7 +44,7 @@
 <strong>Document overview</strong>
 <table id="overview">
 <?php
-$j = file_get_contents("/fast_scratch/simianer/lfpe/example_session/".$_GET["key"].".json"); # FIXME: from database
+$j = file_get_contents($_GET["dir"]."/".$_GET["key"].".json"); # FIXME: get overview/state from database
 $a = json_decode($j);
 $i = 0;
 foreach($a->raw_source_segments as $s) {

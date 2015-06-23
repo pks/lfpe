@@ -1,0 +1,7 @@
+.red { color: red }
+.green { color: green }
+th { border: 1px solid #000 }
+td { border: 1px solid #000; text-align:right }
+td.noborder { border: 0 }
+td.left { text-align: left }
+

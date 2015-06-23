@@ -1,6 +1,0 @@
-#!/bin/bash -x
-
-export LD_LIBRARY_PATH=/fast_scratch/simianer/lfpe/nanomsg-0.5-beta/lib
-export PYTHONPATH=~/.local/lib/python2.7/site-packages
-./kill;./kill;rm ../example_session/work/lockfile; ./server.rb ../example_session/conf.rb 2>server.err > server.out
-
