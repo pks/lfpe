@@ -210,10 +210,10 @@ get '/next' do      # (receive post-edit, update models), send next translation
 end
 
 get '/debug' do                                                    # debug view
-  fn = "#{WORK_DIR}/dtrain.debug.json"
+  fn = "#{WORK_DIR}/dtrain.debug.json"                      # TODO: other tools
   data = JSON.parse ReadFile.read(fn).force_encoding("UTF-8")
 
-  haml :debug, :locals => { :data => data }
+  haml :debug, :locals => { :data => data, :session_key => SESSION_KEY }
 end
 
 get '/confirm' do                        # client confirms received translation
