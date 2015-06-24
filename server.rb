@@ -25,9 +25,9 @@ end
 # Daemons
 # #############################################################################
 $daemons = {
-  :detokenizer  => "/fast_scratch/simianer/lfpe/lfpe/util/de-tok.rb -a D -S '__ADDR__' -p #{SCRIPTS} -l #{TARGET_LANG}",
-  :tokenizer    => "/fast_scratch/simianer/lfpe/lfpe/util/de-tok.rb -a T -S '__ADDR__' -p #{SCRIPTS} -l #{TARGET_LANG}",
-  :truecaser    => "/fast_scratch/simianer/lfpe/lfpe/util/truecase.rb -S '__ADDR__' -m #{MOSES} -n #{DATA_DIR}/truecaser", # FIXME: run as real daemon
+  :tokenizer    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
+  :detokenizer  => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
+  :truecaser    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{DATA_DIR}/truecaser",
   :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{DATA_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights.final -a '__ADDR__'",
   :extractor    => "python -m cdec.sa.extract -c #{DATA_DIR}/sa.ini --online -u -S '__ADDR__'",
   :aligner_fwd  => "#{CDEC}/word-aligner/net_fa -f #{DATA_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
