@@ -29,7 +29,7 @@
     %p <strong>updated features:</strong> #{data["updated_features"]}
     %p <strong>learning rate:</strong> #{data["learning_rate"]}
     %h2 k-best
-    %p bleu | model score | original rank | translation \n features
+    %p bleu | model score | original rank | \|e\| | translation \n features
     %p.red update needed
     %ol
       - kbest = []
@@ -39,11 +39,11 @@
         - b = kbest[0,j].map { |l| l[0]>k[0] && l[1]<k[1] }.include? true
         -if b
           %li.red
-            %strong #{"%.2f"%(k[0].to_f*100)} | #{k[1]} | #{k[2]} | #{k[4]} <br/>
+            %strong #{"%.2f"%(k[0].to_f*100)} | #{k[1]} | #{k[2]} | #{k[4].split.size} |#{k[4]} <br/>
             %pre #{k[3]}
         - else
           %li
-            %strong #{"%.2f"%(k[0].to_f*100)} | #{k[1]} | #{k[2]} | #{k[4]} <br/>
+            %strong #{"%.2f"%(k[0].to_f*100)} | #{k[1]} | #{k[2]} | #{k[4].split.size} | #{k[4]} <br/>
             %pre #{k[3]}
         - if [9,89].include? j
           %hr
@@ -68,4 +68,39 @@
           - else
             %td #{"%+.3f"%(diff).round(4)}
           %td #{"%+.1f"%((data["weights_before"][k].abs-data["weights_after"][k].abs)/data["learning_rate"]).round(2)}
+    %h3 dense features explained
+    %table
+      %tr
+        %td.noborder EgivenFCoherent (TM)
+        %td.left -log10[ c(e, f) / sample c(f) ]
+      %tr
+        %td.noborder Glue (per edge/rule) (dyn)
+        %td.left absolute count of used rules from glue grammar
+      %tr
+        %td.noborder IsSingletonF/E (per edge/rule) (TM)
+        %td.left true|false (1|0) (sum)
+      %tr
+        %td.noborder IsSingletonFE (per edge/rule) (TM)
+        %td.left true|false (1|0) (sum)
+      %tr
+        %td.noborder LanguageModel
+        %td.left -log?[ score ]
+      %tr
+        %td.noborder MaxLexFgivenE
+        %td.left Sum_f -log10(maxScore) (maxScore = max_e(ttable(f))
+      %tr
+        %td.noborder MaxLexEgivenF
+        %td.left Sum_e -log10(maxScore) (maxScore = max_f(ttable(e))
+      %tr
+        %td.noborder PassThrough
+        %td.left absolute count of used PassThrough rules (1 per word)
+      %tr
+        %td.noborder SampleCountF
+        %td.left log10 [ sample c(f) ]
+      %tr
+        %td.noborder WordPenalty (per edge/rule) (dyn)
+        %td.left log_10(e)*|e| = 1/log(10) * |e| (*-1) = -0.43429448190325176*|e|
+      %tr
+        %td.noborder SourceWordPenalty (per edge/rule) (dyn)
+        %td.left ^^^ (|e| <=> |f|)
 
