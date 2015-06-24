@@ -27,11 +27,11 @@ end
 $daemons = {
   :tokenizer    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
   :detokenizer  => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
-  :truecaser    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{DATA_DIR}/truecaser",
-  :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{DATA_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights.final -a '__ADDR__'",
-  :extractor    => "python -m cdec.sa.extract -c #{DATA_DIR}/sa.ini --online -u -S '__ADDR__'",
-  :aligner_fwd  => "#{CDEC}/word-aligner/net_fa -f #{DATA_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
-  :aligner_back => "#{CDEC}/word-aligner/net_fa -f #{DATA_DIR}/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
+  :truecaser    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecaser",
+  :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights.final -a '__ADDR__'",
+  :extractor    => "python -m cdec.sa.extract -c #{SESSION_DIR}/sa.ini --online -u -S '__ADDR__'",
+  :aligner_fwd  => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
+  :aligner_back => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
   :atools       => "#{CDEC}/utils/atools_net -c grow-diag-final-and -S '__ADDR__'"
 }
 
@@ -245,7 +245,7 @@ end
 
 get '/load/:name' do                       # load other db file than configured
   return "locked" if $lock
-  $db = JSON.parse ReadFile.read "#{DATA_DIR}/#{params[:name]}.json.original"
+  $db = JSON.parse ReadFile.read "#{SESSION_DIR}/#{params[:name]}.json.original"
   $db['post_edits'].clear
   $db['post_edits_raw'].clear
   update_database
