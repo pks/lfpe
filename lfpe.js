@@ -1,3 +1,14 @@
+function init()
+{
+  document.getElementById("target_textarea").value = "";
+  document.getElementById("raw_source_textarea").value = "";
+  document.getElementById("source").value = "";
+  document.getElementById("current_seg_id").value = "";
+  document.getElementById("paused").value = "";
+
+  return false;
+}
+
 function CreateCORSRequest(method, url)
 {
   var xhr = new XMLHttpRequest();

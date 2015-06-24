@@ -6,7 +6,7 @@
   <link rel="stylesheet" type="text/css" href="lfpe.css" />
 </head>
 
-<body onload="">
+<body onload="init()">
 
 <!-- Wrapper -->
 <div id="wrapper">
