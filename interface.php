@@ -57,7 +57,9 @@ foreach($a->raw_source_segments as $s) {
 <div id="help">
 <strong>Help</strong><br />
 <p>Press the 'Next' to submit your post-edit and to request the next segment to translate
-(or just press enter when the 'Target' textarea is in focus).</p>
+(or just press enter when the 'Target' textarea is in focus). You can stop your session at any time and continue it later; The 'Pause'
+button has currently no function. Please only use <em>one</em> browser window at once.<br/>
+The interface was tested with Firefox 31.</p>
 <p class="xtrasmall">Support: <a href="mailto://simianer &auml;t cl.uni-heidelberg.de">Mail</a></p>
 <p class="xtrasmall">Session: #<?php echo $_GET["key"]; ?> | <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $a->port; ?>/debug" target="_blank">Debug</a></p>
 </div>

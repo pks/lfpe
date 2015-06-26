@@ -4,7 +4,8 @@ export LD_LIBRARY_PATH=/fast_scratch/simianer/lfpe/lib/nanomsg-0.5-beta/lib:$LD_
 export PYTHONPATH=/fast_scratch/simianer/lfpe/lib/python:$PYTHONPATH
 export GEM_PATH=/fast_scratch/simianer/lfpe/lib/ruby/:$GEM_PATH
 UTIL=/fast_scratch/simianer/lfpe/lfpe/util
-SESSION=tiny_test
+SESSION=$1
 DIR=/fast_scratch/simianer/lfpe/sessions/$SESSION
-clear;$UTIL/kill;$UTIL/kill;$UTIL/kill;rm $DIR/work/lockfile; cp $DIR/data.json.original $DIR/data.json; $UTIL/../server.rb $DIR/conf.rb
+#clear;$UTIL/kill;$UTIL/kill;$UTIL/kill;
+rm $DIR/work/lockfile; cp $DIR/data.json.original $DIR/data.json; $UTIL/../server.rb $DIR/conf.rb
 
