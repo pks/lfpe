@@ -4,8 +4,8 @@ html {
 }
 
 textarea {
-  font-size: 20px;
-  width: 100%
+  font-size: 2em;
+  width:     100%
 }
 
 button {
@@ -16,6 +16,8 @@ button {
 }
 
 .bold { font-weight:bold }
+.small { font-size:.8em }
+.xtrasmall { font-size:.6em }
 
 div#wrapper {
   margin:  2em;
@@ -29,7 +31,8 @@ span#status {
 }
 
 /* Document overview */
-table#overview { font-size:80% }
+div#overview_wrapper { margin-top:1em }
+table#overview { font-size:.8em }
 table#overview td.seg_text { width: 45% }
 table#overview td { border-bottom: 1px solid #000 }
 /* /Document overview */
@@ -44,7 +47,10 @@ p#footer {
 }
 
 /* Header */
-div#header { margin-bottom: 2em }
+div#header {
+  margin-bottom: 2em;
+  text-align:right
+}
 img#uni {}
 img#cl {
   margin-bottom:20px;
@@ -54,12 +60,15 @@ img#cl {
 /* /Header */
 
 /* Help */
-p#help {
+div#help {
+  margin-top: 2em;
   font-size:  .8em;
   width:      40%;
   color:      #ccc;
   text-align: justify
 }
-p#help:hover { color: #000 }
+div#help a { color:#ccc }
+div#help:hover { color: #000 }
+div#help:hover a { color: #000 }
 /* /Help */
 

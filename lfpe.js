@@ -5,6 +5,7 @@ function init()
   document.getElementById("source").value = "";
   document.getElementById("current_seg_id").value = "";
   document.getElementById("paused").value = "";
+  document.getElementById("next").removeAttribute("disabled");
 
   return false;
 }
@@ -61,7 +62,8 @@ function Next()
   button.setAttribute("disabled", "disabled");
   target_textarea.setAttribute("disabled", "disabled");
 
-  var base_url = "http://coltrane.cl.uni-heidelberg.de:60666"; // FIXME: variable
+  var port = document.getElementById("port").value;
+  var base_url = "http://coltrane.cl.uni-heidelberg.de:"+port;
 
   var key = document.getElementById("key").value;
   next_url = base_url+"/next?key="+key;
@@ -140,7 +142,7 @@ function Next()
       source.value = src;
 
       // confirm to server
-      var xhr_confirm = CreateCORSRequest('get', "http://coltrane.cl.uni-heidelberg.de:60666/confirm");
+      var xhr_confirm = CreateCORSRequest('get', base_url+"/confirm");
       xhr_confirm.send(); // FIXME: handle errors
     }
   };
