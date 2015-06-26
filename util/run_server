@@ -1,8 +1,10 @@
 #!/bin/bash -x
 
-export LD_LIBRARY_PATH=/fast_scratch/simianer/lfpe/nanomsg-0.5-beta/lib
-export PYTHONPATH=/fast_scratch/simianer/lfpe/python
+export LD_LIBRARY_PATH=/fast_scratch/simianer/lfpe/lib/nanomsg-0.5-beta/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=/fast_scratch/simianer/lfpe/lib/python:$PYTHONPATH
+export GEM_PATH=/fast_scratch/simianer/lfpe/lib/ruby/:$GEM_PATH
 UTIL=/fast_scratch/simianer/lfpe/lfpe/util
-SESSION=/fast_scratch/simianer/lfpe/sessions/tiny_test
-clear;$UTIL/kill;$UTIL/kill;$UTIL/kill;rm $SESSION/work/lockfile; cp $SESSION/data.json.original $SESSION/data.json; $UTIL/../server.rb $SESSION/conf.rb
+SESSION=tiny_test
+DIR=/fast_scratch/simianer/lfpe/sessions/$SESSION
+clear;$UTIL/kill;$UTIL/kill;$UTIL/kill;rm $DIR/work/lockfile; cp $DIR/data.json.original $DIR/data.json; $UTIL/../server.rb $DIR/conf.rb
 

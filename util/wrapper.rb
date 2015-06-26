@@ -36,12 +36,14 @@ else
 end
 pin, pout, perr = Open3.popen3(cmd)
 while true
-  inp = sock.recv.strip+"\n"
+  inp = sock.recv.strip
   break if !inp||inp=="shutdown"
-  pin.write inp
+  pin.write inp+"\n"
   sock.send pout.gets.strip
 end
 
+STDERR.write "[wrapper] shutting down\n"
 pin.close; pout.close; perr.close
 sock.send "off"
+exit 0
 
