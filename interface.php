@@ -8,15 +8,7 @@
 
 <body onload="init()">
 
-<!-- Wrapper -->
-<div id="wrapper">
-
-<!-- Header -->
-<div id="header">
-  <img id="uni" src="img/logo_neu_204x107.jpg" />
-  <img id="cl"  src="img/institut_cl.png" />
-</div>
-<!-- /Header -->
+<?php include("header.php"); ?>
 
 <!-- Source and target -->
 <table>
@@ -40,11 +32,12 @@
 <!-- /Next button -->
 
 <!-- Document overview -->
-<div>
+<div id="overview_wrapper">
 <strong>Document overview</strong>
 <table id="overview">
 <?php
-$j = file_get_contents($_GET["dir"]."/".$_GET["key"].".json"); # FIXME: get overview/state from database
+$SESSION_DIR="/fast_scratch/simianer/lfpe/sessions";
+$j = file_get_contents($SESSION_DIR."/".$_GET["key"]."/data.json");
 $a = json_decode($j);
 $i = 0;
 foreach($a->raw_source_segments as $s) {
@@ -61,29 +54,25 @@ foreach($a->raw_source_segments as $s) {
 <!-- /Document overview -->
 
 <!-- Help -->
-<p id="help">
+<div id="help">
 <strong>Help</strong><br />
-Press the 'Next' to submit your post-edit and to request the next segment to translate
-(or just press enter when the 'Target' textarea is in focus).
-</p>
+<p>Press the 'Next' to submit your post-edit and to request the next segment to translate
+(or just press enter when the 'Target' textarea is in focus).</p>
+<p class="xtrasmall">Support: <a href="mailto://simianer &auml;t cl.uni-heidelberg.de">Mail</a></p>
+<p class="xtrasmall">Session: #<?php echo $_GET["key"]; ?> | <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $a->port; ?>/debug" target="_blank">Debug</a></p>
+</div>
 <!-- /Help -->
 
-<!-- Footer -->
-<p id="footer">
-  &copy;2015 Heidelberg University/Institute for Computational Linguistics
-</p>
-<!-- /Footer -->
+<?php include("footer.php"); ?>
 
-</div>
-<!-- /Wrapper -->
+</body>
+</html>
 
 <!-- Data -->
 <textarea style="display:none" id="key"><?php echo $_GET['key']; ?></textarea>
 <textarea style="display:none" id="source"></textarea>
 <textarea style="display:none" id="current_seg_id">0</textarea>
 <textarea style="display:none" id="paused">0</textarea>
+<textarea style="display:none" id="port"><?php echo $a->port; ?></textarea>
 <!-- /Data -->
-
-</body>
-</html>
 
