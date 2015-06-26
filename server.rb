@@ -5,7 +5,6 @@ require 'sinatra/cross_origin'
 require "sinatra/reloader"
 require 'nanomsg'
 require 'zipf'
-require 'digest'
 require 'json'
 require 'haml'
 
@@ -27,8 +26,8 @@ end
 $daemons = {
   :tokenizer    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
   :detokenizer  => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
-  :truecaser    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecaser",
-  :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights.final -a '__ADDR__'",
+  :truecaser    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
+  :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights -a '__ADDR__'",
   :extractor    => "python -m cdec.sa.extract -c #{SESSION_DIR}/sa.ini --online -u -S '__ADDR__'",
   :aligner_fwd  => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
   :aligner_back => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
@@ -78,7 +77,7 @@ end
 
 def update_database
   $db['progress'] += 1
-  j = JSON.generate $db                                  # FIXME: real database
+  j = JSON.generate $db                                # FIXME: proper database
   f = WriteFile.new DB_FILE
   f.write j.to_s
   f.close
@@ -86,7 +85,7 @@ end
 
 def init
   # database connection
-  $db = JSON.parse ReadFile.read DB_FILE                 # FIXME: real database
+  $db = JSON.parse ReadFile.read DB_FILE               # FIXME: proper database
   # working directory
   `mkdir -p #{WORK_DIR}/g`
   # setup environment, start daemons
@@ -101,7 +100,7 @@ def init
 end
 
 def send_recv daemon, msg                            # simple pair communcation
-  socket = $env[daemon][:socket]
+  socket = $env[daemon][:socket]                     # query -> answer
   logmsg daemon, "> sending message: '#{msg}'"
   socket.send msg
   logmsg daemon, "waiting ..."
@@ -122,7 +121,7 @@ init if !FileTest.exist?(LOCK_FILE)
 get '/' do
   cross_origin
 
-  return ""
+  return ""                                                            # return
 end
 
 get '/next' do      # (receive post-edit, update models), send next translation
@@ -130,7 +129,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
   # already processing request?
   return "locked" if $lock                                             # return
   $lock = true
-  key = params[:key]                              # FIXME: do something with it
+  key = params[:key]            # FIXME: do something with it, e.g. simple auth
 
   # received post-edit -> update models
   # 0. save raw post-edit
@@ -156,14 +155,14 @@ get '/next' do      # (receive post-edit, update models), send next translation
       logmsg "db", "saving processed post-edit"
       $db['post_edits'] << reference.strip
     # 4. update weights
-      grammar = "#{WORK_DIR}/g/#{Digest::SHA256.hexdigest(source)}.grammar"
+      grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
       annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
       send_recv :dtrain, "#{annotated_source} ||| #{reference}"
     # 5. update grammar extractor
     # 5a. get forward alignment
       a_fwd = send_recv :aligner_fwd, "#{source} ||| #{reference}"
     # 5b. get backward alignment
-      a_back = send_recv :aligner_back, "#{reference} ||| #{source}"
+      a_back = send_recv :aligner_back, "#{source} ||| #{reference}"
     # 5c. symmetrize alignment
       a = send_recv :atools, "#{a_fwd} ||| #{a_back}"
     # 5d actual extractor
@@ -190,7 +189,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     # 4. reply
     source.strip!
     # 1. generate grammar for current sentence
-    grammar = "#{WORK_DIR}/g/#{Digest::SHA256.hexdigest(source)}.grammar"
+    grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
     msg = "- ||| #{source} ||| #{grammar}"
     send_recv :extractor, msg               # FIXME: content identifier useful?
     # 2. translation
@@ -228,12 +227,12 @@ get '/shutdown' do                          # stop daemons and shut down server
   logmsg :server, "shutting down daemons"
   stop_all_daemons
 
-  return "ready to shutdown"
+  return "stopped all daemons, ready to shutdown"
 end
 
 get '/reset' do                                         # reset current session
   return "locked" if $lock
-  $db = JSON.parse ReadFile.read DB_FILE                   # FIXME: database ..
+  $db = JSON.parse ReadFile.read DB_FILE               # FIXME: proper database
   $db['post_edits'].clear
   $db['post_edits_raw'].clear
   update_database
@@ -241,6 +240,30 @@ get '/reset' do                                         # reset current session
   $confirmed = true
 
   return "#{$db.to_s}"
+end
+
+get '/set_learning_rate/:rate' do
+  logmsg :server, "set learning rate, #{params[:rate]}"
+  return "locked" if $lock
+  send_recv :dtrain, "set_learning_rate #{params[:rate].to_f}"
+
+  return "done"
+end
+
+get '/set_sparse_learning_rate/:rate' do
+  logmsg :server, "set sparse learning rate, #{params[:rate]}"
+  return "locked" if $lock
+  send_recv :dtrain, "set_sparse_learning_rate #{params[:rate].to_f}"
+
+  return "done"
+end
+
+get '/reset_weights' do
+  logmsg :server, "reset weights"
+  return "locked" if $lock
+  send_recv :dtrain, "reset_weights"
+
+  return "done"
 end
 
 get '/load/:name' do                       # load other db file than configured
