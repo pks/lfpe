@@ -166,7 +166,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     # 5c. symmetrize alignment
       a = send_recv :atools, "#{a_fwd} ||| #{a_back}"
     # 5d actual extractor
-      send_recv :extractor, "- ||| #{source} ||| #{reference} ||| #{a}"
+      send_recv :extractor, "default_context ||| #{source} ||| #{reference} ||| #{a}"
     # 6. update database
       logmsg "db", "updating database"
       update_database
@@ -190,8 +190,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     source.strip!
     # 1. generate grammar for current sentence
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
-    msg = "- ||| #{source} ||| #{grammar}"
-    send_recv :extractor, msg               # FIXME: content identifier useful?
+    send_recv :extractor, "default_context ||| #{source} ||| #{grammar}"
     # 2. translation
     msg = "act:translate ||| <seg grammar=\"#{grammar}\"> #{source} </seg>"
     transl = send_recv :dtrain, msg
@@ -262,6 +261,14 @@ get '/reset_weights' do
   logmsg :server, "reset weights"
   return "locked" if $lock
   send_recv :dtrain, "reset_weights"
+
+  return "done"
+end
+
+get '/reset_extractor' do
+  logmsg :server, "reset extractor"
+  return "locked" if $lock
+  send_recv :extractor, "default_context ||| drop"
 
   return "done"
 end
