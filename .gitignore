@@ -1,3 +1,4 @@
 *.out
 *.err
 out.*
+util/run_beta_test
