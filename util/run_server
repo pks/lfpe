@@ -6,6 +6,10 @@ export GEM_PATH=/fast_scratch/simianer/lfpe/lib/ruby/:$GEM_PATH
 UTIL=/fast_scratch/simianer/lfpe/lfpe/util
 SESSION=$1
 DIR=/fast_scratch/simianer/lfpe/sessions/$SESSION
-#clear;$UTIL/kill;$UTIL/kill;$UTIL/kill;
-rm $DIR/work/lockfile; cp $DIR/data.json.original $DIR/data.json; $UTIL/../server.rb $DIR/conf.rb
+
+rm $DIR/work/lockfile
+rm -r $DIR/work/
+mkdir -p $DIR/work
+cp $DIR/data.json.original $DIR/data.json
+$UTIL/../server.rb $DIR/conf.rb &>$DIR/work/session.out
 
