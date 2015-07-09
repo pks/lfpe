@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Post-editing application (key: <?php echo $_GET["key"]; ?></title>
+  <title>Post-editing application (Session: #<?php echo $_GET["key"]; ?>)</title>
   <script src="lfpe.js"></script>
   <link rel="stylesheet" type="text/css" href="lfpe.css" />
 </head>
@@ -23,45 +23,51 @@
 </table>
 <!-- /Source and target -->
 
-<!-- Next button -->
+<!-- Buttons -->
 <div>
   <button id="pause_button" type="button" onclick="pause()">Pause</button>
   <button id="next" type="button" onclick="Next()">Start/Continue</button>
   <span id="status"><strong>Working</strong> <img src="img/ajax-loader-large.gif" width="20px" /></span>
 </div>
-<!-- /Next button -->
+<!-- /Buttons -->
 
-<!-- Document overview -->
+<!-- Session overview -->
 <div id="overview_wrapper">
-<strong>Document overview</strong>
+<strong>Session overview</strong>
 <table id="overview">
 <?php
 $SESSION_DIR="/fast_scratch/simianer/lfpe/sessions";
-$j = file_get_contents($SESSION_DIR."/".$_GET["key"]."/data.json");
-$a = json_decode($j);
+$json = file_get_contents($SESSION_DIR."/".$_GET["key"]."/data.json");
+$db = json_decode($json);
+
+$class = "";
 $i = 0;
-foreach($a->raw_source_segments as $s) {
-  if ($i <= $a->progress) {
-    echo "<tr id='seg_".$i."'><td>".($i+1).".</td><td>".$s."</td><td class='seg_text' id='seg_".$i."_t'>".$a->post_edits_raw[$i]."</td></tr>";
+foreach($db->raw_source_segments as $s) {
+  if (in_array($i, $db->docs)) {
+    $class = "doc_title";
   } else {
-    echo "<tr id='seg_".$i."'><td>".($i+1).".</td><td>".$s."</td><td class='seg_text' id='seg_".$i."_t'></td></tr>";
+    $class = "";
   }
+  $translation = "";
+  if ($i <= $db->progress) {
+    $translation = $db->post_edits_raw[$i];
+  }
+  echo "<tr class='".$class."' id='seg_".$i."'><td>".($i+1).".</td><td>".$s."</td><td class='seg_text' id='seg_".$i."_t'>".$translation."</td></tr>";
   $i += 1;
 }
 ?>
 </table>
 </div>
-<!-- /Document overview -->
+<!-- /Session overview -->
 
 <!-- Help -->
 <div id="help">
 <strong>Help</strong><br />
 <p>Press the 'Next' to submit your post-edit and to request the next segment to translate
-(or just press enter when the 'Target' textarea is in focus). You can stop your session at any time and continue it later; The 'Pause'
-button has currently no function. Please only use <em>one</em> browser window at once.<br/>
+(or just press enter when the 'Target' text area is in focus). You can stop your session at any time and continue it later; However, if you have to pause your session, wait until the activity notification disappears and then press 'Pause'. Alternatively, reload the site. Please only use <em>one</em> browser window at once.<br/>
 The interface was tested with Firefox 31.</p>
-<p class="xtrasmall">Support: <a href="mailto://simianer &auml;t cl.uni-heidelberg.de">Mail</a></p>
-<p class="xtrasmall">Session: #<?php echo $_GET["key"]; ?> | <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $a->port; ?>/debug" target="_blank">Debug</a></p>
+<p class="xtrasmall">Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a></p>
+<p class="xtrasmall">Session: #<?php echo $_GET["key"]; ?> | <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a></p>
 </div>
 <!-- /Help -->
 
@@ -75,6 +81,8 @@ The interface was tested with Firefox 31.</p>
 <textarea style="display:none" id="source"></textarea>
 <textarea style="display:none" id="current_seg_id">0</textarea>
 <textarea style="display:none" id="paused">0</textarea>
-<textarea style="display:none" id="port"><?php echo $a->port; ?></textarea>
+<textarea style="display:none" id="oov_correct">0</textarea>
+<textarea style="display:none" id="displayed_oov_hint">0</textarea>
+<textarea style="display:none" id="port"><?php echo $db->port; ?></textarea>
 <!-- /Data -->
 

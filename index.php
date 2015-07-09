@@ -19,6 +19,8 @@
 <p>Beta test:
 <select class="small">
   <option value="beta_test_A" onclick="document.getElementById('key').value=this.value;">A</option>
+  <option value="beta_test_A_nolearn" onclick="document.getElementById('key').value=this.value;">A (no learning)</option>
+  <option value="beta_test_A_nomt" onclick="document.getElementById('key').value=this.value;">A (no MT)</option>
   <option value="beta_test_A_sparse" onclick="document.getElementById('key').value=this.value;">A (sparse)</option>
   <option value="beta_test_B" onclick="document.getElementById('key').value=this.value;">B</option>
   <option value="beta_test_B_sparse" onclick="document.getElementById('key').value=this.value;">B (sparse)</option>
@@ -32,7 +34,6 @@
 </div>
 
 <?php include("footer.php"); ?>
-
 
 </body>
 </html>

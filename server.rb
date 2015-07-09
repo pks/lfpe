@@ -15,6 +15,7 @@ require_relative "#{ARGV[0]}" # load configuration for this session
 $lock       = false           # lock if currently learning/translating
 $last_reply = nil             # cache last reply
 $confirmed = true             # client received translation?
+$additional_rules = []
 if !FileTest.exist? LOCK_FILE # locked?
   $db  = {}                   # FIXME: that is supposed to be a database connection
   $env = {}                   # environment variables (socket connections to daemons)
@@ -131,6 +132,18 @@ get '/next' do      # (receive post-edit, update models), send next translation
   $lock = true
   key = params[:key]            # FIXME: do something with it, e.g. simple auth
 
+  if params[:correct]
+    logmsg :server, "correct: #{params[:correct]}"
+    grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+    src, tgt = splitpipe(params[:correct])
+    src = src.split(';').map { |i| i.strip }
+    tgt = tgt.split(';').map { |i| i.strip }
+    src.each_with_index { |s,i|
+      rule = "[X] ||| #{s} ||| #{tgt[i]} ||| ForceRule=1 ||| 0-0"
+      $additional_rules << rule
+    }
+    $confirmed = true
+  end
   # received post-edit -> update models
   # 0. save raw post-edit
   # 1. tokenize
@@ -147,6 +160,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     # 0. save raw post-edit
     source, reference = params[:example].strip.split(" ||| ")
     $db['post_edits_raw'] << reference.strip
+    $db['durations'] << params['duration'].to_i
     # 1. tokenize
       reference = send_recv :tokenizer, reference
     # 2. truecase
@@ -154,6 +168,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     # 3. save processed post-edits
       logmsg "db", "saving processed post-edit"
       $db['post_edits'] << reference.strip
+    if !NOLEARN && !NOMT
     # 4. update weights
       grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
       annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
@@ -169,12 +184,13 @@ get '/next' do      # (receive post-edit, update models), send next translation
       send_recv :extractor, "default_context ||| #{source} ||| #{reference} ||| #{a}"
     # 6. update database
       logmsg "db", "updating database"
+    end
       update_database
   end
   source     = $db['source_segments'][$db['progress']]
   raw_source = $db['raw_source_segments'][$db['progress']]
   if !source # input is done -> displays 'Thank you!'
-    logmsg "server", "end of input, sending 'fi'"
+    logmsg :server, "end of input, sending 'fi'"
     $lock = false
     return "fi"                                                        # return
   elsif !$confirmed
@@ -183,20 +199,55 @@ get '/next' do      # (receive post-edit, update models), send next translation
     return $last_reply                                                 # return
   else
     # translate next sentence
+    # 0. no mt?
     # 1. generate grammar
-    # 2. translate
-    # 3. detokenize
-    # 4. reply
+    # 2. check for OOV
+    # 3. translate
+    # 4. detokenize
+    # 5. reply
     source.strip!
+    # 0. no mt?
+    if NOMT
+      $lock = false
+      logmsg :server, "no mt"
+      return "#{$db['progress']}\t#{source}\t \t#{raw_source}"         # return
+    end
     # 1. generate grammar for current sentence
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
     send_recv :extractor, "default_context ||| #{source} ||| #{grammar}"
-    # 2. translation
+    # - additional rules
+    $additional_rules.each { |rule|
+     logmsg :server, "adding rule '#{rule}' to grammar '#{grammar}'"
+     `echo "#{rule}" >> #{grammar}`
+    }
+    # 2. check for OOV
+    src_r = ReadFile.readlines(grammar).map {
+      |l| splitpipe(l)[1].strip.split
+    }.flatten.uniq
+    oovs = []
+    source.split.each { |token|
+      if !src_r.include? token
+        oovs << token
+        logmsg :server, "OOV token: '#{token}'"
+      end
+    }
+    oovs.uniq!
+    logmsg :server, "OOVs: #{oovs.to_s}"
+    if oovs.size > 0
+      $last_reply = "OOV\t#{$db['progress']}\t#{oovs.map{|i| "\"#{i}\""}.join("\t")}"
+      logmsg :server, "OOV reply: '#{$last_reply}'"
+      $lock = false
+      $confirmed = false
+      return $last_reply                                               # return
+    end
+    # 3. translation
     msg = "act:translate ||| <seg grammar=\"#{grammar}\"> #{source} </seg>"
     transl = send_recv :dtrain, msg
-    # 3. detokenizer
+    $db['mt_raw'] << transl
+    # 4. detokenizer
     transl = send_recv :detokenizer, transl
-    # 4. reply
+    $db['mt'] << transl
+    # 5. reply
     $last_reply = "#{$db['progress']}\t#{source}\t#{transl.strip}\t#{raw_source}"
     $lock = false
     $confirmed = false
@@ -222,25 +273,6 @@ get '/confirm' do                        # client confirms received translation
   return "#{$confirmed}"
 end
 
-get '/shutdown' do                          # stop daemons and shut down server
-  logmsg :server, "shutting down daemons"
-  stop_all_daemons
-
-  return "stopped all daemons, ready to shutdown"
-end
-
-get '/reset' do                                         # reset current session
-  return "locked" if $lock
-  $db = JSON.parse ReadFile.read DB_FILE               # FIXME: proper database
-  $db['post_edits'].clear
-  $db['post_edits_raw'].clear
-  update_database
-  $db['progress'] = 0
-  $confirmed = true
-
-  return "#{$db.to_s}"
-end
-
 get '/set_learning_rate/:rate' do
   logmsg :server, "set learning rate, #{params[:rate]}"
   return "locked" if $lock
@@ -255,6 +287,18 @@ get '/set_sparse_learning_rate/:rate' do
   send_recv :dtrain, "set_sparse_learning_rate #{params[:rate].to_f}"
 
   return "done"
+end
+
+get '/reset' do                                         # reset current session
+  return "locked" if $lock
+  $db = JSON.parse ReadFile.read DB_FILE               # FIXME: proper database
+  $db['post_edits'].clear
+  $db['post_edits_raw'].clear
+  update_database
+  $db['progress'] = 0
+  $confirmed = true
+
+  return "#{$db.to_s}"
 end
 
 get '/reset_weights' do
@@ -273,15 +317,16 @@ get '/reset_extractor' do
   return "done"
 end
 
-get '/load/:name' do                       # load other db file than configured
-  return "locked" if $lock
-  $db = JSON.parse ReadFile.read "#{SESSION_DIR}/#{params[:name]}.json.original"
-  $db['post_edits'].clear
-  $db['post_edits_raw'].clear
-  update_database
-  $db['progress'] = 0
-  $confirmed = true
+get '/reset_add_rules' do
+  $additional_rules.clear
 
-  "#{$db.to_s}"
+  return "done"
+end
+
+get '/shutdown' do                          # stop daemons and shut down server
+  logmsg :server, "shutting down daemons"
+  stop_all_daemons
+
+  return "stopped all daemons, ready to shutdown"
 end
 

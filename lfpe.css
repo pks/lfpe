@@ -30,21 +30,13 @@ span#status {
   float:   right
 }
 
-/* Document overview */
+/* Session overview */
 div#overview_wrapper { margin-top:1em }
 table#overview { font-size:.8em }
 table#overview td.seg_text { width: 45% }
 table#overview td { border-bottom: 1px solid #000 }
-/* /Document overview */
-
-p#footer {
-  text-align:  right;
-  font-size:   .5em;
-  font-weight: bold;
-  margin:      0;
-  padding:     0;
-  color:       #303030
-}
+table#overview .doc_title { background-color: #eee }
+/* /Session overview */
 
 /* Header */
 div#header {
@@ -58,6 +50,17 @@ img#cl {
   vertical-align:bottom
 }
 /* /Header */
+
+/* Footer */
+p#footer {
+  text-align:  right;
+  font-size:   .5em;
+  font-weight: bold;
+  margin:      0;
+  padding:     0;
+  color:       #303030
+}
+/* /Footer */
 
 /* Help */
 div#help {
