@@ -6,20 +6,29 @@
   %link(rel="stylesheet" type="text/css" href="debug.css")
   %body
     %h1 debug view
-    %p (for session ##{session_key})
-    %p
-      %a{:href => "/reset", :target => "_blank"} reset progress,
-      %a{:href => "/reset_weights", :target => "_blank"} reset weights,
-      %a{:href => "/reset_extractor", :target => "_blank"} reset extractor,
-      %a{:href => "/reset_add_rules", :target => "_blank"} reset add. rules,
-      %a{:href => "/shutdown", :target => "_blank"} shutdown,
-      %span learning rate
+    %h2 for session ##{session_key}
+    - if data["kbest"].empty?
+      %p.red
+        %strong No data to show!
+    %ul
+      %li
+        %a{:href => "/reset", :target => "_blank"} reset progress
+      %li
+        %a{:href => "/reset_weights", :target => "_blank"} reset weights
+      %li
+        %a{:href => "/reset_extractor", :target => "_blank"} reset extractor
+      %li
+        %a{:href => "/reset_add_rules", :target => "_blank"} reset add. rules
+      %li
+        %a{:href => "/shutdown", :target => "_blank"} shutdown
+      %p
+        %strong learning rate:
       %select
-        - [1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001,0.000001].each do |i|
+        - [1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001,0.000001,0.0000001,0.00000001,0.000000001,0.0000000001].each do |i|
           %option{:value => i, :onclick => "window.open(\"http://\"+window.location.host+\"/set_learning_rate/#{i}\");"} #{i}
-      %span , learning rate (sparse)
+      %span | sparse features:
       %select
-        - [1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001,0.000001].each do |i|
+        - [1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001,0.000001,0.0000001,0.00000001,0.000000001,0.0000000001].each do |i|
           %option{:value => i, :onclick => "window.open(\"http://\"+window.location.host+\"/set_sparse_learning_rate/#{i}\");"} #{i}
     %table
       %tr
@@ -46,7 +55,7 @@
     %p <strong>learning rate (sparse):</strong> #{data["learning_rate_sparse"]}
     %h2 k-best
     %p bleu | model score | original rank | \|e\| | translation \n features
-    %p.red update needed
+    %p.red update needed ("any of the higher ranked (by BLEU) hypotheses has a lower model score")
     %ol
       - kbest = []
       - data["kbest"].each { |i| x=splitpipe(i); kbest << [ x[0].to_f, x[1].to_f, x[2].to_i, x[3], x[4] ] }
@@ -91,16 +100,19 @@
     %h3 dense features explained
     %table
       %tr
-        %td.noborder EgivenFCoherent (TM)
+        %td.noborder EgivenFCoherent (rule)
         %td.left -log10[ c(e, f) / sample c(f) ]
+      %tr
+        %td.noborder ForceRule (rule)
+        %td.left only feature of new rules, weight fixed at 1
       %tr
         %td.noborder Glue
         %td.left absolute number of rules used from glue grammar
       %tr
-        %td.noborder IsSingletonF/E (TM)
+        %td.noborder IsSingletonF/E (rule)
         %td.left true|false (1|0) (sum)
       %tr
-        %td.noborder IsSingletonFE (TM)
+        %td.noborder IsSingletonFE (rule)
         %td.left true|false (1|0) (sum)
       %tr
         %td.noborder LanguageModel
@@ -109,16 +121,16 @@
         %td.noborder LanguageModel_OOV
         %td.left abs. count of OOV unigrams
       %tr
-        %td.noborder MaxLexFgivenE (TM)
+        %td.noborder MaxLexFgivenE (rule)
         %td.left Sum_f -log10(maxScore) (maxScore = max_e(ttable(f))
       %tr
-        %td.noborder MaxLexEgivenF (TM)
+        %td.noborder MaxLexEgivenF (rule)
         %td.left Sum_e -log10(maxScore) (maxScore = max_f(ttable(e))
       %tr
         %td.noborder PassThrough
         %td.left absolute count of used PassThrough rules (1 per word)
       %tr
-        %td.noborder SampleCountF
+        %td.noborder SampleCountF (rule)
         %td.left log10 [ sample c(f) ]
       %tr
         %td.noborder WordPenalty
@@ -129,4 +141,10 @@
       %tr
         %td.noborder R:*
         %td.left rule indicator features, sum over full derivation per rule
+      %tr
+        %td.noborder Shape_*
+        %td.left Indicator features for rule shapes
+      %tr
+        %td.noborder IsSupportedOnline
+        %td.left counts how many rules have support from local context (Denkowski)
 
