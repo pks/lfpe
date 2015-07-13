@@ -139,6 +139,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     src = src.split(';').map { |i| i.strip }
     tgt = tgt.split(';').map { |i| i.strip }
     src.each_with_index { |s,i|
+      next if s==''||tgt[i]==''
       rule = "[X] ||| #{s} ||| #{tgt[i]} ||| ForceRule=1 ||| 0-0"
       $additional_rules << rule
     }
@@ -201,6 +202,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     # translate next sentence
     # 0. no mt?
     # 1. generate grammar
+    # - additional rules
     # 2. check for OOV
     # 3. translate
     # 4. detokenize
@@ -260,7 +262,14 @@ end
 
 get '/debug' do                                                    # debug view
   fn = "#{WORK_DIR}/dtrain.debug.json"                      # TODO: other tools
-  data = JSON.parse ReadFile.read(fn).force_encoding("UTF-8")
+  data = {}
+  # make debug.haml work
+  data["kbest"] = []
+  data["weights_before"] = {}
+  data["weights_after"] = {}
+  if File.exist? fn
+    data = JSON.parse ReadFile.read(fn).force_encoding("UTF-8")
+  end
 
   haml :debug, :locals => { :data => data, :session_key => SESSION_KEY }
 end
@@ -298,7 +307,7 @@ get '/reset' do                                         # reset current session
   $db['progress'] = 0
   $confirmed = true
 
-  return "#{$db.to_s}"
+  return "done"
 end
 
 get '/reset_weights' do
