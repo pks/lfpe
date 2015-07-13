@@ -41,8 +41,9 @@ function init()
   document.getElementById("paused").value              = "";
   document.getElementById("oov_correct").value         = false;
   document.getElementById("displayed_oov_hint").value  = false;
-          document.getElementById("next").removeAttribute("disabled");
-  document.getElementById("pause_button").removeAttribute("disabled");
+  document.getElementById("target_textarea").setAttribute("disabled", "disabled");
+             document.getElementById("next").removeAttribute("disabled");
+     document.getElementById("pause_button").removeAttribute("disabled");
 
   return false;
 }
@@ -99,11 +100,29 @@ function pause()
   }
 }
 
+/*
+ * hacky way to remove class from node
+ *
+ */
 function removeClass(node, className)
 {
   node.className =
     node.className.replace(" "+className,'');
+  node.className =
+    node.className.replace(" "+className,''); // ???
+
+  return false;
 }
+
+/*
+ * trim string
+ *
+ */
+function trim(s)
+{
+  return s.replace(/^\s+|\s+$/g, '');
+}
+
 
 /*
  * next button
@@ -133,17 +152,28 @@ function Next()
 
   next_url = base_url+"/next?key="+key;
 
-  var post_edit = target_textarea.value;
+  var post_edit = trim(target_textarea.value);
   if (oov_correct.value=="false" && post_edit != "") {
     // compose request
     next_url += "&example="+source.value+" %7C%7C%7C "+post_edit+"&duration="+Timer.get();
     // update document overview
     document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=post_edit;
-  } else if (oov_correct.value=="true" && post_edit != "") {
+  } else if (oov_correct.value=="true") {
+    if (post_edit == "") {
+      alert("Please provide translations for each word in the 'Source' text area, separated by ';'.");
+      target_textarea.removeAttribute("disabled", "disabled");
+         pause_button.removeAttribute("disabled", "disabled");
+               button.removeAttribute("disabled", "disabled");
+      return;
+    }
     next_url += "&correct="+raw_source_textarea.value+" %7C%7C%7C "+post_edit
   } else {
     if (source.value != "") {
-      alert("Error: 1"); // FIXME: do something reasonable
+      alert("Please provide a post-edit.");
+      target_textarea.removeAttribute("disabled", "disabled");
+         pause_button.removeAttribute("disabled", "disabled");
+               button.removeAttribute("disabled", "disabled");
+      return;
     }
   }
 
@@ -227,7 +257,7 @@ function Next()
       target_textarea.removeAttribute("disabled", "disabled");
          pause_button.removeAttribute("disabled", "disabled");
       document.getElementById("seg_"+id).className += " bold";
-      if (x[0] > 0) {
+      if (id > 0) {
         removeClass(document.getElementById("seg_"+(id-1)), "bold");
       }
       target_textarea.rows     = Math.round(translation.length/80)+1;
