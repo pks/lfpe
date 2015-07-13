@@ -99,6 +99,12 @@ function pause()
   }
 }
 
+function removeClass(node, className)
+{
+  node.className =
+    node.className.replace(" "+className,'');
+}
+
 /*
  * next button
  *
@@ -168,7 +174,7 @@ function Next()
       button.innerHTML                  = "Session finished, thank you!";
             button.setAttribute("disabled", "disabled");
       pause_button.setAttribute("disabled", "disabled");
-      document.getElementById("seg_"+current_seg_id.value).className = "";
+      removeClass(document.getElementById("seg_"+current_seg_id.value), "bold");
     } else {
       // got response: OOV\tseg id\ttoken_1\ttoken_2\t...
       //               0    1       2        3        ...
@@ -193,9 +199,9 @@ function Next()
         target_textarea.selectionEnd   = 0;
         oov_correct.value              = true;
         var id                         = x[1];
-        document.getElementById("seg_"+id).className = "bold";
+        document.getElementById("seg_"+id).className += " bold";
         if (id > 0) {
-          document.getElementById("seg_"+(id-1)).className = "";
+          removeClass(document.getElementById("seg_"+(id-1)), "bold");
         }
         if (document.getElementById("displayed_oov_hint").value == "false") {
           alert("Please translate the following words (separated by semicolons) to enable translation of the next sentence. Use proper casing.");
@@ -220,9 +226,9 @@ function Next()
                button.removeAttribute("disabled");
       target_textarea.removeAttribute("disabled", "disabled");
          pause_button.removeAttribute("disabled", "disabled");
-      document.getElementById("seg_"+id).className = "bold";
+      document.getElementById("seg_"+id).className += " bold";
       if (x[0] > 0) {
-        document.getElementById("seg_"+(id-1)).className = "";
+        removeClass(document.getElementById("seg_"+(id-1)), "bold");
       }
       target_textarea.rows     = Math.round(translation.length/80)+1;
       raw_source_textarea.rows = Math.round(raw_source.length/80)+1;
