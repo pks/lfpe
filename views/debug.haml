@@ -2,11 +2,11 @@
 !!!
 %html
   %head
-    %title debug view (for session ##{session_key})
+    %title debug view (session ##{session_key})
   %link(rel="stylesheet" type="text/css" href="debug.css")
   %body
     %h1 debug view
-    %h2 for session ##{session_key}
+    %h2 session ##{session_key}
     - if data["kbest"].empty?
       %p.red
         %strong No data to show!
@@ -55,7 +55,7 @@
     %p <strong>learning rate (sparse):</strong> #{data["learning_rate_sparse"]}
     %h2 k-best
     %p bleu | model score | original rank | \|e\| | translation \n features
-    %p.red update needed ("any of the higher ranked (by BLEU) hypotheses has a lower model score")
+    %p.red update needed ("any of the above hypotheses has a lower model score")
     %ol
       - kbest = []
       - data["kbest"].each { |i| x=splitpipe(i); kbest << [ x[0].to_f, x[1].to_f, x[2].to_i, x[3], x[4] ] }
@@ -97,14 +97,14 @@
             %td #{"%+.1f"%((data["weights_after"][k]-data["weights_before"][k])/data["learning_rate"]).round(2)}
           - else
             %td #{"%+.1f"%((data["weights_after"][k]-data["weights_before"][k])/data["learning_rate_sparse"]).round(2)}
-    %h3 dense features explained
+    %h3 features explained
     %table
       %tr
         %td.noborder EgivenFCoherent (rule)
         %td.left -log10[ c(e, f) / sample c(f) ]
       %tr
         %td.noborder ForceRule (rule)
-        %td.left only feature of new rules, weight fixed at 1
+        %td.left only feature of additional rules, weight fixed at 1
       %tr
         %td.noborder Glue
         %td.left absolute number of rules used from glue grammar
@@ -116,7 +116,7 @@
         %td.left true|false (1|0) (sum)
       %tr
         %td.noborder LanguageModel
-        %td.left -log?[ score ]
+        %td.left -log10[ score ]
       %tr
         %td.noborder LanguageModel_OOV
         %td.left abs. count of OOV unigrams
@@ -143,7 +143,7 @@
         %td.left rule indicator features, sum over full derivation per rule
       %tr
         %td.noborder Shape_*
-        %td.left Indicator features for rule shapes
+        %td.left indicator features for rule shapes
       %tr
         %td.noborder IsSupportedOnline
         %td.left counts how many rules have support from local context (Denkowski)
