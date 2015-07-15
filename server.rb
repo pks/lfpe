@@ -289,8 +289,14 @@ get '/debug' do                                                    # debug view
   if File.exist? fn
     data = JSON.parse ReadFile.read(fn).force_encoding("UTF-8")
   end
+  data2 = {}
+  data2 = JSON.parse ReadFile.read(DB_FILE).force_encoding("UTF-8")
+  if data2["durations"].size == 0
+    data2["durations"] << -1
+  end
 
-  haml :debug, :locals => { :data => data, :session_key => SESSION_KEY }
+
+  haml :debug, :locals => { :data => data, :data2 => data2, :session_key => SESSION_KEY }
 end
 
 get '/confirm' do                        # client confirms received translation

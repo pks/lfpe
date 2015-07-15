@@ -53,6 +53,7 @@
     %p <strong>updated features:</strong> #{data["updated_features"]}
     %p <strong>learning rate:</strong> #{data["learning_rate"]}
     %p <strong>learning rate (sparse):</strong> #{data["learning_rate_sparse"]}
+    %p <strong>duration:</strong> #{data2["durations"][[data2["progress"].to_i-1].max]}ms
     %h2 k-best
     %p bleu | model score | original rank | \|e\| | translation \n features
     %p.red update needed ("any of the above hypotheses has a lower model score")
