@@ -79,6 +79,7 @@ The interface was only tested with Firefox 31.</p>
 <!-- Data -->
 <textarea style="display:none" id="key"><?php echo $_GET['key']; ?></textarea>
 <textarea style="display:none" id="source"></textarea>
+<textarea style="display:none" id="last_post_edit"></textarea>
 <textarea style="display:none" id="current_seg_id">0</textarea>
 <textarea style="display:none" id="paused">0</textarea>
 <textarea style="display:none" id="oov_correct">0</textarea>
