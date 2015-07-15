@@ -123,7 +123,6 @@ function trim(s)
   return s.replace(/^\s+|\s+$/g, '');
 }
 
-
 /*
  * next button
  *
@@ -139,6 +138,7 @@ function Next()
   var source              = document.getElementById("source");
   var status              = document.getElementById("status");
   var oov_correct         = document.getElementById("oov_correct");
+  var last_post_edit      = document.getElementById("last_post_edit");
 
   // disable button and textarea
            button.setAttribute("disabled", "disabled");
@@ -154,10 +154,14 @@ function Next()
 
   var post_edit = trim(target_textarea.value);
   if (oov_correct.value=="false" && post_edit != "") {
-    // compose request
-    next_url += "&example="+source.value+" %7C%7C%7C "+post_edit+"&duration="+Timer.get();
-    // update document overview
-    document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=post_edit;
+      // compose request
+      next_url += "&example="+encodeURIComponent(source.value)+"%20%7C%7C%7C%20"+encodeURIComponent(post_edit)+"&duration="+Timer.get();
+      // no change?
+      if (post_edit == last_post_edit.value) {
+        next_url += "&nochange=1";
+      }
+      // update document overview
+      document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=post_edit;
   } else if (oov_correct.value=="true") {
     if (post_edit == "") {
       alert("Please provide translations for each word in the 'Source' text area, separated by ';'.");
@@ -166,7 +170,7 @@ function Next()
                button.removeAttribute("disabled", "disabled");
       return;
     }
-    next_url += "&correct="+raw_source_textarea.value+" %7C%7C%7C "+post_edit
+    next_url += "&correct="+encodeURIComponent(raw_source_textarea.value)+"%20%7C%7C%7C%20"+encodeURIComponent(post_edit)
   } else {
     if (source.value != "") {
       alert("Please provide a post-edit.");
@@ -269,6 +273,7 @@ function Next()
       // remember aux data in DOM
       current_seg_id.value = id;
       source.value         = src;
+      last_post_edit.value = translation;
 
       // confirm to server
       var xhr_confirm = CreateCORSRequest('get', base_url+"/confirm");
