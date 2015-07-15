@@ -111,6 +111,14 @@ def send_recv daemon, msg                            # simple pair communcation
   return ans
 end
 
+def cleanstr s
+  s.gsub! "[", " "
+  s.gsub! "]", " "
+  s.gsub! "|", " "
+
+  return s
+end
+
 # #############################################################################
 # Run init() [just once]
 # #############################################################################
@@ -131,16 +139,21 @@ get '/next' do      # (receive post-edit, update models), send next translation
   return "locked" if $lock                                             # return
   $lock = true
   key = params[:key]            # FIXME: do something with it, e.g. simple auth
-
   if params[:correct]
     logmsg :server, "correct: #{params[:correct]}"
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
     src, tgt = splitpipe(params[:correct])
+    tgt = cleanstr(tgt)
     src = src.split(';').map { |i| i.strip }
     tgt = tgt.split(';').map { |i| i.strip }
     src.each_with_index { |s,i|
       next if s==''||tgt[i]==''
-      rule = "[X] ||| #{s} ||| #{tgt[i]} ||| ForceRule=1 ||| 0-0"
+      a = ""
+      tgt[i].split.each_index { |k|
+        a += " 0-#{k}"
+      }
+      a.strip!
+      rule = "[X] ||| #{s} ||| #{tgt[i]} ||| ForceRule=1 ||| #{a}"
       $additional_rules << rule
     }
     $confirmed = true
@@ -160,6 +173,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
   if params[:example]
     # 0. save raw post-edit
     source, reference = params[:example].strip.split(" ||| ")
+    reference = cleanstr(reference)
     $db['post_edits_raw'] << reference.strip
     $db['durations'] << params['duration'].to_i
     # 1. tokenize
@@ -167,9 +181,14 @@ get '/next' do      # (receive post-edit, update models), send next translation
     # 2. truecase
       reference = send_recv :truecaser, reference
     # 3. save processed post-edits
-      logmsg "db", "saving processed post-edit"
+      logmsg :db, "saving processed post-edit"
       $db['post_edits'] << reference.strip
-    if !NOLEARN && !NOMT
+    nochange = false
+    if params[:nochange]
+      logmsg :server, "no change -> no updates!"
+      nochange = true
+    end
+    if !NOLEARN && !NOMT && !nochange
     # 4. update weights
       grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
       annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
@@ -184,7 +203,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     # 5d actual extractor
       send_recv :extractor, "default_context ||| #{source} ||| #{reference} ||| #{a}"
     # 6. update database
-      logmsg "db", "updating database"
+      logmsg :db, "updating database"
     end
       update_database
   end
