@@ -200,6 +200,12 @@ function Next()
   // show 'working' message
   status.style.display = "block";
 
+  // confirm to server
+  if (document.getElementById("init").value != "") {
+    var xhr_confirm = CreateCORSRequest('get', base_url+"/confirm");
+    xhr_confirm.send(); // FIXME: handle errors
+  }
+
   // build request
   var xhr = CreateCORSRequest('get', next_url);
   if (!xhr) {
@@ -293,8 +299,8 @@ function Next()
       last_post_edit.value = translation;
 
       // confirm to server
-      var xhr_confirm = CreateCORSRequest('get', base_url+"/confirm");
-      xhr_confirm.send(); // FIXME: handle errors
+      //var xhr_confirm = CreateCORSRequest('get', base_url+"/confirm");
+      //xhr_confirm.send(); // FIXME: handle errors
 
       Timer.start();
     }
