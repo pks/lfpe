@@ -27,7 +27,7 @@
 <div>
   <button id="pause_button" type="button" onclick="pause()">Pause</button>
   <button id="next" type="button" onclick="Next()">Start/Continue</button>
-  <span id="status"><strong>Working</strong> <img src="img/ajax-loader-large.gif" width="20px" /></span>
+  <span id="status"><strong>Working, please wait for next segment</strong> <img src="img/ajax-loader-large.gif" width="20px" /></span>
 </div>
 <!-- /Buttons -->
 
@@ -85,5 +85,6 @@ The interface was only tested with Firefox 31.</p>
 <textarea style="display:none" id="oov_correct">0</textarea>
 <textarea style="display:none" id="displayed_oov_hint">0</textarea>
 <textarea style="display:none" id="port"><?php echo $db->port; ?></textarea>
+<textarea style="display:none" id="init">0</textarea>
 <!-- /Data -->
 

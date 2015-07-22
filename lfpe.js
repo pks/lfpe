@@ -41,6 +41,7 @@ function init()
   document.getElementById("paused").value              = "";
   document.getElementById("oov_correct").value         = false;
   document.getElementById("displayed_oov_hint").value  = false;
+  document.getElementById("init").value                = "";
   document.getElementById("target_textarea").setAttribute("disabled", "disabled");
              document.getElementById("next").removeAttribute("disabled");
      document.getElementById("pause_button").removeAttribute("disabled");
@@ -78,24 +79,39 @@ function catch_return(e)
   return false;
 }
 
+function check_oov_correction()
+{
+  var need = trim(document.getElementById("raw_source_textarea").value).split(";").length;
+  var a = trim(document.getElementById("target_textarea").value).split(";");
+  a = a.filter(function(i){ return i!=""; })
+
+  return need==a.length;
+}
+
 /*
  * pause/unpause timer
  *
  */
 function pause()
 {
-  var paused      = document.getElementById("paused");
-  var button      = document.getElementById("pause_button");
-  var next_button = document.getElementById("next");
+  var paused          = document.getElementById("paused");
+  var button          = document.getElementById("pause_button");
+  var next_button     = document.getElementById("next");
+  var target_textarea = document.getElementById("target_textarea")
+  var initialized     = document.getElementById("init");
   if (paused.value == 0) {
     button.innerHTML = "Unpause";
     paused.value = 1;
     next.setAttribute("disabled", "disabled");
+    target_textarea.setAttribute("disabled", "disabled");
     Timer.pause();
   } else {
     button.innerHTML = "Pause";
     paused.value = 0;
     next.removeAttribute("disabled");
+    if (initialized.value != "") {
+      target_textarea.removeAttribute("disabled");
+    }
     Timer.unpause();
   }
 }
@@ -163,7 +179,7 @@ function Next()
       // update document overview
       document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=post_edit;
   } else if (oov_correct.value=="true") {
-    if (post_edit == "") {
+    if (!check_oov_correction()) {
       alert("Please provide translations for each word in the 'Source' text area, separated by ';'.");
       target_textarea.removeAttribute("disabled", "disabled");
          pause_button.removeAttribute("disabled", "disabled");
@@ -192,6 +208,7 @@ function Next()
 
   // 'next' request's callbacks
   xhr.onload = function() {
+    document.getElementById("init").value = 1; // for pause()
      // translation system is currently handling a request
      // FIXME: maybe poll server for result?
     if (xhr.responseText == "locked") {
@@ -238,7 +255,7 @@ function Next()
           removeClass(document.getElementById("seg_"+(id-1)), "bold");
         }
         if (document.getElementById("displayed_oov_hint").value == "false") {
-          alert("Please translate the following words (separated by semicolons) to enable translation of the next sentence. Use proper casing.");
+          alert("Please translate the following words (separated by semicolons) to enable translation of the next sentence. Source words are always in lower case. Use correct casing for suggested translation.");
           document.getElementById("displayed_oov_hint").value = true;
         }
 
