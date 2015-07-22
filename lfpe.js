@@ -79,6 +79,10 @@ function catch_return(e)
   return false;
 }
 
+/*
+ * check oov correction input
+ *
+ */
 function check_oov_correction()
 {
   var need = trim(document.getElementById("raw_source_textarea").value).split(";").length;
@@ -126,6 +130,21 @@ function removeClass(node, className)
     node.className.replace(" "+className,'');
   node.className =
     node.className.replace(" "+className,''); // ???
+
+  return false;
+}
+
+/*
+ *
+ *
+ */
+function toggleDisplay(node)
+{
+  if (node.style.display=='none') {
+    node.style.display = 'block';
+  } else {
+    node.style.display = 'none';
+  }
 
   return false;
 }
@@ -225,8 +244,8 @@ function Next()
     }
     var x = xhr.responseText.split("\t");
     if (x == "fi") { // done -> hide/disable functional elements
-      raw_source_textarea.style.display = "none";
-      target_textarea.style.display     = "none";
+      raw_source_textarea.setAttribute("disabled", "disabled");
+          target_textarea.setAttribute("disabled", "disabled");
       status.style.display              = "none";
       button.innerHTML                  = "Session finished, thank you!";
             button.setAttribute("disabled", "disabled");

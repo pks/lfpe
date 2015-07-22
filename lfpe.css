@@ -30,6 +30,12 @@ span#status {
   float:   right
 }
 
+/* Edit */
+#raw_source_textarea, #target_textarea {
+  font-family: "Times New Roman", Georgia, Serif;
+}
+/* /Edit */
+
 /* Session overview */
 div#overview_wrapper { margin-top:1em }
 table#overview { font-size:.8em }
@@ -64,10 +70,9 @@ p#footer {
 
 /* Help */
 div#help {
-  margin-top: 2em;
+  margin-top: .5em;
   font-size:  .8em;
   width:      70%;
-  color:      #ccc;
   text-align: justify
 }
 div#help a { color:#ccc }
