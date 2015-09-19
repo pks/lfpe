@@ -141,8 +141,8 @@ source_rgroups.each { |i|
 
 h = {}
 h[:phrase_alignment] =  phrase_align
-h[:source_groups] = source_groups.map { |a| a.map { |i| i.first } }
-h[:target_groups] = groups.map { |a| a.map { |i| i.first } }
+h[:source_groups] = source_groups.map { |a| a.map { |i| i.first }.join " " }
+h[:target_groups] = groups.map { |a| a.map { |i| i.first }.join " " }
 
 return h.to_json
 end
