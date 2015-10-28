@@ -1,0 +1,3 @@
+<p>Press the 'Next' button to submit your post-edit and to request the next segment for translation.
+Alternatively, just press enter when you finished the post-edit and the 'Target' text area is in focus. Warning: Past post-edits can not be altered. The session can be stopped at any time and continued later; However, if you have to pause your session, wait until the activity notification disappears and then press 'Pause', as we are collecting timing information. You may also just reload this site and re-request the next segment upon your return. Please only use <em>one</em> browser window at once. Going back to earlier examples is not possible, please take great care when interacting with the system.<br/>
+The interface was only tested with Firefox 31.</p>

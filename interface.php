@@ -85,9 +85,7 @@ foreach($db->raw_source_segments as $s) {
 <!-- Help -->
 <button id="help_button" onclick="toggleDisplay(document.getElementById('help'));">Help</button>
 <div id="help" style="display:none">
-<p>Press the 'Next' button to submit your post-edit and to request the next segment for translation.
-Alternatively, just press enter when you finished the post-edit and the 'Target' text area is in focus. Warning: Past post-edits can not be altered. The session can be stopped at any time and continued later; However, if you have to pause your session, wait until the activity notification disappears and then press 'Pause', as we are collecting timing information. You may also just reload this site and re-request the next segment upon your return. Please only use <em>one</em> browser window at once. Going back to earlier examples is not possible, please take great care when interacting with the system.<br/>
-The interface was only tested with Firefox 31.</p>
+<?php include("help.inc.php"); ?>
 <p class="xtrasmall">Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a></p>
 <p class="xtrasmall">Session: #<?php echo $_GET["key"]; ?> | <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a></p>
 </div>
