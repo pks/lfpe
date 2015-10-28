@@ -2,17 +2,6 @@
 
 require 'zipf'
 
-def conv_cdec_show_deriv s
-  s.gsub! /\(/, "\n"
-  s.gsub! /[{}]/, ""
-  a = s.split "\n"
-  a.map! { |i|
-    i.strip.gsub /(\s*\))+$/, ""
-  }
-  a.reject! { |i| i.strip=="" }
-  return a
-end
-
 class RuleAndSpan
   attr_accessor :span, :symbol, :source, :target, :subspans, :done, :id
 
@@ -42,35 +31,16 @@ class RuleAndSpan
   end
 end
 
-def proc_deriv s
-a = conv_cdec_show_deriv s
-
-by_span = {}
-spans = []
-id = 0
-a.each { |line|
-  rs = RuleAndSpan.new line, id
-  id += 1
-  by_span[rs.span] = rs
-  if rs.is_terminal_rule?
-    spans << rs.span
-  end
-}
-
-spans.reverse.each_with_index { |s,k|
-  (spans.size-(k+2)).downto(0) { |l|
-    t = spans[l]
-    if s[0] >= t[0] and s[1] <= t[1]
-      by_span[t].subspans << s
-      break
-    end
+def conv_cdec_show_deriv s
+  a = s.split("}").map { |i|
+    i.gsub /^[()\s]*/, ""
+  }.reject { |i|
+    i.size==0 }.map { |i|
+      i.gsub /^\{/, ""
   }
-}
 
-# fix order
-spans.each { |s|
-  by_span[s].subspans.reverse!
-}
+  return a
+end
 
 def derive span, spans, by_span, o, groups, source
   if groups.size==0 || groups.last.size>0
@@ -100,52 +70,76 @@ def derive span, spans, by_span, o, groups, source
   span.done = true
 end
 
-so = []
-source_groups = []
-spans.each { |span|
-  next if by_span[span].done
-  derive by_span[span], spans, by_span, so, source_groups, true
-}
-#puts "SOURCE"
-#puts so.join " "
-#puts source_groups.to_s
-#puts "##{source_groups.size}"
+def proc_deriv s
+  a = conv_cdec_show_deriv s
 
-spans.each { |s| by_span[s].done = false }
-
-o = []
-groups = []
-spans.each { |span|
-  next if by_span[span].done
-  derive by_span[span], spans, by_span, o, groups, false
-}
-#puts "TARGET"
-#puts o.join " "
-#puts groups.to_s
-#puts "##{groups.size}"
-
-source_rgroups = []
-rgroups = []
-source_groups.each { |i| source_rgroups << i.first[1] }
-groups.each { |i| rgroups << i.first[1] }
-
-phrase_align = []
-source_rgroups.each { |i|
-  phrase_align << []
-  rgroups.each_with_index { |j,k|
-    if i==j
-      phrase_align.last << k
+  by_span = {}
+  spans = []
+  id = 0
+  a.each { |line|
+    rs = RuleAndSpan.new line, id
+    id += 1
+    by_span[rs.span] = rs
+    if rs.is_terminal_rule?
+      spans << rs.span
     end
   }
-}
 
-h = {}
-h[:phrase_alignment] =  phrase_align
-h[:source_groups] = source_groups.map { |a| a.map { |i| i.first }.join " " }
-h[:target_groups] = groups.map { |a| a.map { |i| i.first }.join " " }
+  spans.reverse.each_with_index { |s,k|
+    (spans.size-(k+2)).downto(0) { |l|
+      t = spans[l]
+      if s[0] >= t[0] and s[1] <= t[1]
+        by_span[t].subspans << s
+        break
+      end
+    }
+  }
 
-return h.to_json
+  # fix order
+  spans.each { |s|
+    by_span[s].subspans.reverse!
+  }
+
+  so = []
+  source_groups = []
+  spans.each { |span|
+    next if by_span[span].done
+    derive by_span[span], spans, by_span, so, source_groups, true
+  }
+
+  spans.each { |s| by_span[s].done = false }
+
+  o = []
+  groups = []
+  spans.each { |span|
+    next if by_span[span].done
+    derive by_span[span], spans, by_span, o, groups, false
+  }
+
+  source_rgroups = []
+  rgroups = []
+  source_groups.each { |i| source_rgroups << i.first[1] }
+  groups.each { |i| rgroups << i.first[1] }
+
+  phrase_align = []
+  source_rgroups.each { |i|
+    phrase_align << []
+    rgroups.each_with_index { |j,k|
+      if i==j
+        phrase_align.last << k
+      end
+    }
+  }
+
+  h = {}
+  h[:phrase_alignment] =  phrase_align
+  h[:source_groups] = source_groups.map { |a| a.map { |i| i.first }.join " " }
+  h[:target_groups] = groups.map { |a| a.map { |i| i.first }.join " " }
+
+  return h.to_json
 end
 
-puts proc_deriv STDIN.gets.strip
+if __FILE__ == $0
+  puts JSON.parse(proc_deriv(STDIN.gets.strip))["target_groups"].join " "
+end
 
