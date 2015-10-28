@@ -2,26 +2,47 @@
 <head>
   <meta charset="utf-8" />
   <title>Post-editing application (Session: #<?php echo $_GET["key"]; ?>)</title>
+  <script src="common.js"></script>
   <script src="lfpe.js"></script>
   <link rel="stylesheet" type="text/css" href="lfpe.css" />
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  <script src="derivation_editor/raphael.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://raw.githubusercontent.com/marmelab/Raphael.InlineTextEditing/fd578f0eddd4172e6d9b3fde4cb67576cf546dc1/raphael.inline_text_editing.js" charset="utf-8"></script>
+  <script src="derivation_editor/edit.js" charset="utf-8"></script>
 </head>
 
-<body onload="init()">
+<body>
 
 <?php include("header.php"); ?>
 
-<!-- Source and target -->
-<table>
-<tr>
-  <td align="right">Source:</td>
-  <td><textarea id="raw_source_textarea" name="source" cols="80" rows="1" disabled></textarea></td>
-</tr>
-<tr>
-  <td align="right">Target:</td>
-  <td><textarea id="target_textarea" name="target" cols="80" rows="1" onkeypress="catch_return(event)"></textarea></td>
-</tr>
-</table>
-<!-- /Source and target -->
+<!-- Derivation editor -->
+<div id="derivation_editor">
+  <div id="holder"><img style="margin:.4em" src="placeholder.png" /></div>
+  <input type="button" value="+" onClick="add_obj()" />
+  <input type="button" value="Reset" onClick="reset_derivation_edtior(true);" />
+</div>
+<!-- /Derivation editor-->
+
+<!-- Source and target textboxes -->
+<div id="textboxes">
+  <table>
+    <tr>
+      <td align="right">Source:</td>
+      <td><textarea id="raw_source_textarea" name="source" cols="80" rows="1" disabled></textarea></td>
+    </tr>
+    <tr>
+      <td align="right">Target:</td>
+      <td><textarea id="target_textarea" name="target" cols="80" rows="1" onkeypress="catch_return(event)"></textarea></td>
+    </tr>
+  </table>
+</div>
+<div id="oov_form">
+  <p class="small" style="margin-bottom:0"><strong>Unknown words:</strong><br />
+  Please enter a translation for each source word.</p>
+  <div id="oov_fields"></div>
+</div>
+<!-- /Source and target textboxes -->
+
 
 <!-- Buttons -->
 <div>
@@ -61,7 +82,7 @@ foreach($db->raw_source_segments as $s) {
 <!-- /Session overview -->
 
 <!-- Help -->
-<button id="help_button" onclick="toggleDisplay(document.getElementById('help'));">Help</button> 
+<button id="help_button" onclick="toggleDisplay(document.getElementById('help'));">Help</button>
 <div id="help" style="display:none">
 <p>Press the 'Next' button to submit your post-edit and to request the next segment for translation.
 Alternatively, just press enter when you finished the post-edit and the 'Target' text area is in focus. Warning: Past post-edits can not be altered. The session can be stopped at any time and continued later; However, if you have to pause your session, wait until the activity notification disappears and then press 'Pause', as we are collecting timing information. You may also just reload this site and re-request the next segment upon your return. Please only use <em>one</em> browser window at once. Going back to earlier examples is not possible, please take great care when interacting with the system.<br/>
@@ -86,5 +107,7 @@ The interface was only tested with Firefox 31.</p>
 <textarea style="display:none" id="displayed_oov_hint">0</textarea>
 <textarea style="display:none" id="port"><?php echo $db->port; ?></textarea>
 <textarea style="display:none" id="init">0</textarea>
+<textarea style="display:none" id="ui_type"><?php echo $_GET["ui_type"]; ?></textarea>
+<textarea style="display:none" id="data"></textarea>
 <!-- /Data -->
 

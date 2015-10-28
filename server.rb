@@ -7,6 +7,7 @@ require 'nanomsg'
 require 'zipf'
 require 'json'
 require 'haml'
+require_relative './derivation_to_json/derivation_to_json'
 
 # #############################################################################
 # Load configuration file and setup global variables
@@ -24,11 +25,12 @@ end
 # #############################################################################
 # Daemons
 # #############################################################################
+DIR="/fast_scratch/simianer/lfpe/"
 $daemons = {
-  :tokenizer    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
-  :detokenizer  => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
-  :truecaser    => "/fast_scratch/simianer/lfpe/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
-  :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights -a '__ADDR__'",
+  :tokenizer    => "#{DIR}/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
+  :detokenizer  => "#{DIR}/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
+  :truecaser    => "#{DIR}/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
+  :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights -a '__ADDR__' -E",
   :extractor    => "python -m cdec.sa.extract -c #{SESSION_DIR}/sa.ini --online -u -S '__ADDR__'",
   :aligner_fwd  => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
   :aligner_back => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
@@ -46,7 +48,6 @@ set :allow_credentials, true
 set :max_age,           "1728000"
 set :expose_headers,    ['Content-Type']
 set :public_folder,     File.dirname(__FILE__) + '/static'
-
 
 # #############################################################################
 # Helper functions
@@ -144,8 +145,8 @@ get '/next' do      # (receive post-edit, update models), send next translation
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
     src, tgt = splitpipe(params[:correct])
     tgt = cleanstr(tgt)
-    src = src.split(';').map { |i| i.strip }
-    tgt = tgt.split(';').map { |i| i.strip }
+    src = src.split("\t").map { |i| i.strip }
+    tgt = tgt.split("\t").map { |i| i.strip }
     src.each_with_index { |s,i|
       next if s==''||tgt[i]==''
       a = ""
@@ -212,7 +213,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
   if !source # input is done -> displays 'Thank you!'
     logmsg :server, "end of input, sending 'fi'"
     $lock = false
-    return "fi"                                                        # return
+    return {'fin'=>true}.to_json                                       # return
   elsif !$confirmed
     logmsg :server, "locked, re-sending last reply"
     $lock = false
@@ -231,7 +232,11 @@ get '/next' do      # (receive post-edit, update models), send next translation
     if NOMT
       $lock = false
       logmsg :server, "no mt"
-      return "#{$db['progress']}\t#{source}\t \t#{raw_source}"         # return
+      obj = Hash.new
+      obj["progress"] = $db["progress"]
+      obj["source"] = source
+      obj["raw_source"] = raw_source
+      return obj.to_json                                               # return
     end
     # 1. generate grammar for current sentence
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
@@ -254,8 +259,11 @@ get '/next' do      # (receive post-edit, update models), send next translation
     }
     oovs.uniq!
     logmsg :server, "OOVs: #{oovs.to_s}"
-    if oovs.size > 0
-      $last_reply = "OOV\t#{$db['progress']}\t#{oovs.map{|i| "\"#{i}\""}.join("\t")}"
+    if oovs.size > 0                                               # OOVs FIXME
+      obj = Hash.new
+      obj["oovs"] = oovs
+      obj["progress"] = $db['progress']
+      $last_reply = obj.to_json
       logmsg :server, "OOV reply: '#{$last_reply}'"
       $lock = false
       $confirmed = false
@@ -263,20 +271,35 @@ get '/next' do      # (receive post-edit, update models), send next translation
     end
     # 3. translation
     msg = "act:translate ||| <seg grammar=\"#{grammar}\"> #{source} </seg>"
-    transl = send_recv :dtrain, msg
-    $db['mt_raw'] << transl
+    obj_str = proc_deriv(send_recv(:dtrain, msg))
+    obj = JSON.parse obj_str
+    obj["transl"] = obj["target_groups"].join " "
     # 4. detokenizer
-    transl = send_recv :detokenizer, transl
-    $db['mt'] << transl
+    obj["transl_detok"] = send_recv(:detokenizer, obj["transl"]).strip
+    obj["target_groups"].each_index { |j|
+      prev = obj["target_groups"][j][0]
+      obj["target_groups"][j] = send_recv(:detokenizer, obj["target_groups"][j]).strip
+      obj["target_groups"][j][0]=prev if j > 0
+    }
+    obj["source"] = source
+    obj["progress"]= $db['progress']
+    obj["raw_source"] = raw_source
+    w_idx = 0
+    obj["source_groups"].each_index { |j|
+      a = obj["source_groups"][j].split
+      a.each_with_index
+    }
+    # save
+    # FIXME
     # 5. reply
-    $last_reply = "#{$db['progress']}\t#{source}\t#{transl.strip}\t#{raw_source}"
+    $last_reply = obj.to_json
     $lock = false
     $confirmed = false
     logmsg :server, "response: '#{$last_reply}'"
     return $last_reply                                                 # return
   end
 
-  return "oh oh"                          # return FIXME: do something sensible
+  return "{}"                                                  # return [ERROR]
 end
 
 get '/debug' do                                                    # debug view
