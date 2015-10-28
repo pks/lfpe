@@ -2,13 +2,14 @@
 <head>
   <meta charset="utf-8" />
   <title>Post-editing application (Session: #<?php echo $_GET["key"]; ?>)</title>
-  <script src="common.js"></script>
-  <script src="lfpe.js"></script>
-  <link rel="stylesheet" type="text/css" href="lfpe.css" />
+  <link rel="stylesheet" type="text/css" href="static/lfpe.css" />
+  <script src="js/common.js" charset="utf-8"></script>
+  <script src="js/lfpe.js" charset="utf-8"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" charset="utf-8"></script>
   <script src="https://raw.githubusercontent.com/DmitryBaranovskiy/raphael/v2.1.2/raphael-min.js" type="text/javascript" charset="utf-8"></script>
   <script src="https://raw.githubusercontent.com/marmelab/Raphael.InlineTextEditing/fd578f0eddd4172e6d9b3fde4cb67576cf546dc1/raphael.inline_text_editing.js" charset="utf-8"></script>
-  <script src="derivation_editor/derivation-editor.js" charset="utf-8"></script>
+  <script src="js/derivation_editor/derivation-editor.js" charset="utf-8"></script>
+
 </head>
 
 <body>
@@ -17,7 +18,7 @@
 
 <!-- Derivation editor -->
 <div id="derivation_editor">
-  <div id="holder"><img style="margin:.4em" src="placeholder.png" /></div>
+  <div id="holder"><img style="margin:.4em" src="static/placeholder.png" /></div>
   <input type="button" value="+" onClick="DE_add_object()" />
   <input type="button" value="Reset" onClick="DE_init();" />
 </div>
@@ -48,7 +49,7 @@
 <div>
   <button id="pause_button" type="button" onclick="pause()">Pause</button>
   <button id="next" type="button" onclick="Next()">Start/Continue</button>
-  <span id="status"><strong>Working, please wait for next segment</strong> <img src="img/ajax-loader-large.gif" width="20px" /></span>
+  <span id="status"><strong>Working, please wait for next segment</strong> <img src="static/ajax-loader-large.gif" width="20px" /></span>
 </div>
 <!-- /Buttons -->
 

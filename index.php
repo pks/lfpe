@@ -3,7 +3,7 @@
   <meta charset="utf-8" />
   <title>Post-editing application</title>
   <script src="lfpe.js"></script>
-  <link rel="stylesheet" type="text/css" href="lfpe.css" />
+  <link rel="stylesheet" type="text/css" href="static/lfpe.css" />
 </head>
 
 <body onload="">
