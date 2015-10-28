@@ -154,7 +154,7 @@ function Next()
 
   // extract data from interfaces
   if (ui_type == 'g') {
-    post_edit = JSON.parse(extract_data())["target"].join(" ")
+    post_edit = JSON.parse(DE_extract_data())["target"].join(" ")
   } else {
     post_edit = trim(target_textarea.value);
   }
@@ -299,7 +299,7 @@ function Next()
 
       // load data into graphical UI
       if (ui_type == "g") {
-        load_data();
+        DE_init();
       }
 
       // start timer
