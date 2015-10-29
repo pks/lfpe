@@ -13,7 +13,7 @@
 <form method="get" action="interface.php">
   <strong>Please enter your session key:</strong> <input type="text" id="key" name="key" />
   &nbsp;&nbsp;&nbsp;&nbsp;Session type:
-  <select>
+  <select name="ui_type">
     <option value="t">textual</option>
     <option value="g">graphical</option>
 </select>
