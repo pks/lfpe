@@ -181,7 +181,7 @@ function Next()
        src.push(trim(document.getElementById("oov_src"+i).value));
        tgt.push(trim(document.getElementById("oov_tgt"+i).value));
        if (tgt[tgt.length-1] == "") { // empty correction
-         alert("Please provide translations for all OOV words.");
+         alert("Please provide translations for all words.");
          not_working();
 
          return;
@@ -192,6 +192,7 @@ function Next()
        { document.getElementById("oov_fields").children[0].remove(); }
      //$("#oov_form").css("display", "none");
     $("#oov_form").toggle("blind");
+    $("#next").val("Next");
      next_url += "&correct="+encodeURIComponent(src.join("\t"))
                  +"%20%7C%7C%7C%20"+encodeURIComponent(tgt.join("\t"))
   // ???
@@ -223,7 +224,7 @@ function Next()
      // translation system is currently handling a request
      // FIXME: maybe poll server for result?
      if (xhr.responseText == "locked") {
-       alert("Translation system is locked, try again in a moment (reload page and click 'Start/Continue' again).");
+       alert("Translation system is locked, try again in a moment (reload the page and click 'Start/Continue').");
        not_working();
 
        return;
@@ -234,10 +235,13 @@ function Next()
 
     // done, disable interface
     if (data["fin"]) {
-      raw_source_textarea.setAttribute("disabled", "disabled");
+      //raw_source_textarea.setAttribute("disabled", "disabled");
           target_textarea.setAttribute("disabled", "disabled");
       status.style.display              = "none";
       button.innerHTML                  = "Session finished, thank you!";
+      $("#raw_source_textarea").html("");
+      $("#target_textarea").val("");
+      $("#target_textarea").attr("rows", 1);
             button.setAttribute("disabled", "disabled");
       pause_button.setAttribute("disabled", "disabled");
       if (current_seg_id.value)
@@ -259,11 +263,16 @@ function Next()
         node_src.setAttribute("disabled", "disabled");
         append_to.appendChild(node_src);
         append_to.appendChild(node_tgt);
+        node_tgt.onkeypress = function (event) {
+          catch_return(event);
+        }
       }
       oov_correct.value = true;
 
       //$("#oov_form").css("display", "block");
       $("#oov_form").toggle("blind");
+      $("#next").html("Next");
+      $("#oov_tgt0").focus();
       not_working();
 
     // translation mode
@@ -277,7 +286,8 @@ function Next()
       oov_correct.value         = false;
       status.style.display      = "none";
       target_textarea.value     = translation;
-      raw_source_textarea.value = raw_source;
+      //raw_source_textarea.value = raw_source;
+      $("#raw_source_textarea").html(raw_source);
       button.innerHTML          = "Next";
                button.removeAttribute("disabled");
       target_textarea.removeAttribute("disabled", "disabled");
@@ -286,8 +296,8 @@ function Next()
       if (id > 0) {
         removeClass(document.getElementById("seg_"+(id-1)), "bold");
       }
-      target_textarea.rows     = Math.round(translation.length/80)+1;
-      raw_source_textarea.rows = Math.round(raw_source.length/80)+1;
+      target_textarea.rows     = Math.round(translation.length/80+0.5);
+      //raw_source_textarea.rows = Math.round(raw_source.length/80+0.5);
       target_textarea.focus();
       target_textarea.selectionStart = 0;
       target_textarea.selectionEnd   = 0;
@@ -325,7 +335,7 @@ function Next()
 function init_text_editor()
 {
   document.getElementById("target_textarea").value     = "";
-  document.getElementById("raw_source_textarea").value = "";
+  //document.getElementById("raw_source_textarea").value = "";
   document.getElementById("target_textarea").setAttribute("disabled", "disabled");
 
   return false;
