@@ -327,7 +327,7 @@ get '/debug' do                                                    # debug view
   end
 
 
-  haml :debug, :locals => { :data => data, :data2 => data2, :session_key => SESSION_KEY }
+  haml :debug, :locals => { :data => data, :data2 => data2, :additional_rules => $additional_rules, :session_key => SESSION_KEY }
 end
 
 get '/confirm' do                        # client confirms received translation
