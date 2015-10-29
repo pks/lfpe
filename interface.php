@@ -19,8 +19,8 @@
 <!-- Derivation editor -->
 <div id="derivation_editor">
   <div id="holder"><img style="margin:.4em" src="static/placeholder.png" /></div>
-  <input type="button" value="+" onClick="DE_add_object()" />
-  <input type="button" value="Reset" onClick="DE_init();" />
+  <input type="button" value="+" onclick="DE_add_object()" />
+  <input type="button" value="Reset" onclick="DE_init();" />
 </div>
 <!-- /Derivation editor-->
 
@@ -48,14 +48,14 @@
 <!-- Buttons -->
 <div>
   <button id="pause_button" type="button" onclick="pause()">Pause</button>
-  <button id="next" type="button" onclick="Next()">Start/Continue</button>
+  <button id="next" type="button" onclick="Next();">Start/Continue</button>
   <span id="status"><strong>Working, please wait for next segment</strong> <img src="static/ajax-loader-large.gif" width="20px" /></span>
 </div>
 <!-- /Buttons -->
 
 <!-- Session overview -->
 <div id="overview_wrapper">
-<strong>Session overview</strong>
+<p style="margin:.5em;margin-bottom:.25em"><strong>Session overview</strong></p>
 <table id="overview">
 <?php
 $SESSION_DIR="/fast_scratch/simianer/lfpe/sessions";
@@ -74,7 +74,7 @@ foreach($db->raw_source_segments as $s) {
   if ($i <= $db->progress) {
     $translation = $db->post_edits_raw[$i];
   }
-  echo "<tr class='".$class."' id='seg_".$i."'><td>".($i+1).".</td><td>".$s."</td><td class='seg_text' id='seg_".$i."_t'>".$translation."</td></tr>";
+  echo "<tr class='".$class."' id='seg_".$i."'><td class='num'>".($i+1).".</td><td>".$s."</td><td class='seg_text' id='seg_".$i."_t'>".$translation."</td></tr>";
   $i += 1;
 }
 ?>
@@ -83,13 +83,15 @@ foreach($db->raw_source_segments as $s) {
 <!-- /Session overview -->
 
 <!-- Help -->
-<button id="help_button" onclick="toggleDisplay(document.getElementById('help'));">Help</button>
+<button id="help_button" onclick="$('#help').toggle('blind')">Help</button>
 <div id="help" style="display:none">
 <?php include("help.inc.php"); ?>
 <p class="xtrasmall">Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a></p>
 <p class="xtrasmall">Session: #<?php echo $_GET["key"]; ?> | <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a></p>
 </div>
 <!-- /Help -->
+
+<p class="small" style="text-align:right"><a href="#">^</a></p>
 
 <?php include("footer.php"); ?>
 

@@ -89,7 +89,8 @@ function working()
   var last_post_edit      = document.getElementById("last_post_edit");
 
   // show 'working' message
-  status.style.display = "block";
+  //status.style.display = "block";
+  $("#status").fadeToggle();
 
   // disable button and textarea
            button.setAttribute("disabled", "disabled");
@@ -115,7 +116,8 @@ function not_working()
   var last_post_edit      = document.getElementById("last_post_edit");
 
   // hide 'working' message
-  status.style.display = "none";
+  //status.style.display = "none";
+  $("#status").fadeToggle();
 
   // enable buttons
           document.getElementById("next").removeAttribute("disabled");
@@ -188,7 +190,8 @@ function Next()
      var l = document.getElementById("oov_fields").children.length;
      for (var i=0; i<l; i++)
        { document.getElementById("oov_fields").children[0].remove(); }
-     $("#oov_form").css("display", "none");
+     //$("#oov_form").css("display", "none");
+    $("#oov_form").toggle("blind");
      next_url += "&correct="+encodeURIComponent(src.join("\t"))
                  +"%20%7C%7C%7C%20"+encodeURIComponent(tgt.join("\t"))
   // ???
@@ -259,7 +262,8 @@ function Next()
       }
       oov_correct.value = true;
 
-      $("#oov_form").css("display", "block");
+      //$("#oov_form").css("display", "block");
+      $("#oov_form").toggle("blind");
       not_working();
 
     // translation mode

@@ -19,13 +19,17 @@ button {
 .small { font-size:.8em }
 .xtrasmall { font-size:.6em }
 
+a {
+  color: #000;
+  text-decoration: underline
+}
+
 div#wrapper {
   margin:  2em;
   padding: 1em
 }
 
 span#status {
-  display: none;
   float:   right
 }
 
@@ -50,7 +54,7 @@ span#status {
 
 /* Derivation editor */
 #derivation_editor input {
-  background: #ccc;
+  background: #eee;
   font-size: 60%;
   padding: .4em
 }
@@ -60,8 +64,10 @@ span#status {
 div#overview_wrapper { margin-top:1em }
 table#overview { font-size:.8em }
 table#overview td.seg_text { width: 45% }
-table#overview td { border-bottom: 1px solid #000 }
-table#overview .doc_title { background-color: #eee }
+table#overview td { border-bottom: 1px solid #ccc; border-left:1px solid #ccc; padding: .25em }
+table#overview tr:hover { background: #ccc }
+table#overview .doc_title { background-color: #eee; font-style:italic }
+table#overview td.num { text-align:right; font-style:italic}
 /* /Session overview */
 
 /* Header */

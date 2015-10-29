@@ -2,8 +2,8 @@
 <head>
   <meta charset="utf-8" />
   <title>Post-editing application</title>
-  <script src="lfpe.js"></script>
-  <link rel="stylesheet" type="text/css" href="static/lfpe.css" />
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" charset="utf-8"></script>
+  <link rel="stylesheet" type="text/css" href="static/main.css" />
 </head>
 
 <body onload="">
@@ -11,11 +11,17 @@
 <?php include("header.php"); ?>
 
 <form method="get" action="interface.php">
-  Please enter your session key: <input type="text" id="key" name="key" />
+  <strong>Please enter your session key:</strong> <input type="text" id="key" name="key" />
+  &nbsp;&nbsp;&nbsp;&nbsp;Session type:
+  <select>
+    <option value="t">textual</option>
+    <option value="g">graphical</option>
+</select>
+&nbsp;&nbsp;&nbsp;&nbsp;
 <input type="submit" value="Submit" />
 </form>
 
-<div class="small" style="margin-top:10em">
+<div class="small" style="background:#eee;margin: 5em 0 5em 0;padding:.5em; max-width:20%">
 <p>Beta test:
 <select class="small">
   <option value="beta_test_A" onclick="document.getElementById('key').value=this.value;">A</option>

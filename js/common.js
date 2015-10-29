@@ -20,12 +20,13 @@ function removeClass(node, className)
  *
  *
  */
-function toggleDisplay(node)
+function toggleDisplay(id)
 {
+  node = $(id);
   if (node.style.display=='none') {
-    node.style.display = 'block';
+    node.fadeIn();
   } else {
-    node.style.display = 'none';
+    node.fadeOut();
   }
 
   return false;
