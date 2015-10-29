@@ -3,9 +3,16 @@ html {
   font-size: 18px
 }
 
+input {
+  transition: all .5s;
+  -webkit-transition: all .5s; /* Safari */
+}
+
 textarea {
   font-size: 2em;
-  width:     100%
+  width:     100%;
+  transition: all .5s;
+  -webkit-transition: all .5s; /* Safari */
 }
 
 button {
@@ -20,9 +27,10 @@ button {
 .xtrasmall { font-size:.6em }
 
 a {
-  color: #000;
+  color: #ccc;
   text-decoration: underline
 }
+a:hover { color: #000 }
 
 div#wrapper {
   margin:  2em;
@@ -39,6 +47,10 @@ span#status {
 }
 #raw_source_textarea, #target_textarea {
   font-family: "Times New Roman", Georgia, Serif;
+}
+#raw_source_textarea {
+  font-size: 2em;
+  padding: 0.1em
 }
 #oov_form { display: none }
 #oov_fields {
@@ -66,7 +78,7 @@ table#overview { font-size:.8em }
 table#overview td.seg_text { width: 45% }
 table#overview td { border-bottom: 1px solid #ccc; border-left:1px solid #ccc; padding: .25em }
 table#overview tr:hover { background: #ccc }
-table#overview .doc_title { background-color: #eee; font-style:italic }
+table#overview .doc_title { background-color: #eee }
 table#overview td.num { text-align:right; font-style:italic}
 /* /Session overview */
 
