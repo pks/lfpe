@@ -38,7 +38,7 @@ function toggleDisplay(id)
  */
 function trim(s)
 {
-  return s.replace(/^\s+|\s+$/g, '');
+  return s.replace(/(\||\n|\t)/g, " ").replace(/^\s+|\s+$/g, '').replace(/\s+/g, " ");
 }
 
 /*
