@@ -5,7 +5,7 @@ require 'open3'
 require 'trollop'
 
 conf = Trollop::options do
-  opt :action,         "tokenize,  detokenize or truecase", :short => "-a", :type => :string, :required => true
+  opt :action,         "tokenize,  detokenize, truecase, or lowercase", :short => "-a", :type => :string, :required => true
   opt :addr,           "socket address",                    :short => "-S", :type => :string, :required => true
   opt :ext,            "path to externals",                 :short => "-e", :type => :string, :required => true
   opt :lang,           "language",                          :short => "-l", :type => :string
@@ -31,6 +31,8 @@ elsif conf[:action] == "truecase"
   if !conf[:truecase_model]
     STDERR.write "[truecaser] No model given for truecaser, exiting!\n"; exit
   end
+elsif conf[:action] == "lowercase"
+  cmd = "#{conf[:ext]}/lowercase.perl"
 else
   STDERR.write "[wrapper] Unknown action #{conf[:action]}, exiting!\n"; exit
 end
