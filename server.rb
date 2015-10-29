@@ -13,23 +13,24 @@ require_relative './derivation_to_json/derivation_to_json'
 # Load configuration file and setup global variables
 # #############################################################################
 require_relative "#{ARGV[0]}" # load configuration for this session
-$lock       = false           # lock if currently learning/translating
-$last_reply = nil             # cache last reply
-$confirmed = true             # client received translation?
-$additional_rules = []
+$lock             = false     # lock if currently learning/translating
+$last_reply       = nil       # cache last reply
+$confirmed        = true      # client received translation?
+$additional_rules = []        # corrected OOVs
 if !FileTest.exist? LOCK_FILE # locked?
-  $db  = {}                   # FIXME: that is supposed to be a database connection
+  $db  = {}                   # data file (JSON format)
   $env = {}                   # environment variables (socket connections to daemons)
 end
 
 # #############################################################################
 # Daemons
 # #############################################################################
-DIR="/fast_scratch/simianer/lfpe/"
+DIR="/fast_scratch/simianer/lfpe"
 $daemons = {
   :tokenizer    => "#{DIR}/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
   :detokenizer  => "#{DIR}/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
   :truecaser    => "#{DIR}/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
+  #:lowercaser   => "#{DIR}/lfpe/util/wrapper.rb -a lowercase  -S '__ADDR__' -e #{EXTERNAL}",
   :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights -a '__ADDR__' -E",
   :extractor    => "python -m cdec.sa.extract -c #{SESSION_DIR}/sa.ini --online -u -S '__ADDR__'",
   :aligner_fwd  => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
@@ -79,7 +80,7 @@ end
 
 def update_database
   $db['progress'] += 1
-  j = JSON.generate $db                                # FIXME: proper database
+  j = JSON.generate $db
   f = WriteFile.new DB_FILE
   f.write j.to_s
   f.close
@@ -87,7 +88,7 @@ end
 
 def init
   # database connection
-  $db = JSON.parse ReadFile.read DB_FILE               # FIXME: proper database
+  $db = JSON.parse ReadFile.read DB_FILE
   # working directory
   `mkdir -p #{WORK_DIR}/g`
   # setup environment, start daemons
@@ -139,7 +140,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
   # already processing request?
   return "locked" if $lock                                             # return
   $lock = true
-  key = params[:key]            # FIXME: do something with it, e.g. simple auth
+  key = params[:key]            # TODO: do something with it, e.g. simple auth?
   if params[:correct]
     logmsg :server, "correct: #{params[:correct]}"
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
@@ -190,15 +191,18 @@ get '/next' do      # (receive post-edit, update models), send next translation
       nochange = true
     end
     if !NOLEARN && !NOMT && !nochange
+      logmsg :server, "updating ..."
     # 4. update weights
       grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
       annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
       send_recv :dtrain, "#{annotated_source} ||| #{reference}"
     # 5. update grammar extractor
     # 5a. get forward alignment
-      a_fwd = send_recv :aligner_fwd, "#{source} ||| #{reference}"
+      source_lc = source.downcase
+      reference_lc = reference.downcase
+      a_fwd = send_recv :aligner_fwd, "#{source_lc} ||| #{reference_lc}"
     # 5b. get backward alignment
-      a_back = send_recv :aligner_back, "#{source} ||| #{reference}"
+      a_back = send_recv :aligner_back, "#{source_lc} ||| #{reference_lc}"
     # 5c. symmetrize alignment
       a = send_recv :atools, "#{a_fwd} ||| #{a_back}"
     # 5d actual extractor
@@ -210,12 +214,15 @@ get '/next' do      # (receive post-edit, update models), send next translation
   end
   source     = $db['source_segments'][$db['progress']]
   raw_source = $db['raw_source_segments'][$db['progress']]
-  if !source # input is done -> displays 'Thank you!'
-    logmsg :server, "end of input, sending 'fi'"
+  if !source # input is done -> displays thank you
+    logmsg :server, "end of input, sending 'fin'"
     $lock = false
     return {'fin'=>true}.to_json                                       # return
-  elsif !$confirmed
+  elsif !$confirmed \
+    || ($confirmed && $last_reply && $last_reply!="" \
+        && !params[:example] && !$last_reply.to_json["oovs"]) # send last reply
     logmsg :server, "locked, re-sending last reply"
+    logmsg :server, "last_reply: '#{$last_reply}'"
     $lock = false
     return $last_reply                                                 # return
   else
@@ -246,7 +253,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
      logmsg :server, "adding rule '#{rule}' to grammar '#{grammar}'"
      `echo "#{rule}" >> #{grammar}`
     }
-    # 2. check for OOV
+    # 2. check for OOVs
     src_r = ReadFile.readlines(grammar).map {
       |l| splitpipe(l)[1].strip.split
     }.flatten.uniq
@@ -259,7 +266,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     }
     oovs.uniq!
     logmsg :server, "OOVs: #{oovs.to_s}"
-    if oovs.size > 0                                               # OOVs FIXME
+    if oovs.size > 0                                                     # OOVs
       obj = Hash.new
       obj["oovs"] = oovs
       obj["progress"] = $db['progress']
@@ -290,7 +297,8 @@ get '/next' do      # (receive post-edit, update models), send next translation
       a.each_with_index
     }
     # save
-    # FIXME
+    $db["mt_raw"] = obj["transl"]
+    $db["mt"] = obj["transl_detok"]
     # 5. reply
     $last_reply = obj.to_json
     $lock = false
@@ -348,14 +356,15 @@ end
 
 get '/reset' do                                         # reset current session
   return "locked" if $lock
-  $db = JSON.parse ReadFile.read DB_FILE               # FIXME: proper database
+  $db = JSON.parse ReadFile.read DB_FILE
   $db['post_edits'].clear
   $db['post_edits_raw'].clear
   update_database
   $db['progress'] = 0
   $confirmed = true
+  $last_reply = nil
 
-  return "done"
+  return "reset done"
 end
 
 get '/reset_weights' do
@@ -363,7 +372,7 @@ get '/reset_weights' do
   return "locked" if $lock
   send_recv :dtrain, "reset_weights"
 
-  return "done"
+  return "reset weights done"
 end
 
 get '/reset_extractor' do
@@ -371,13 +380,13 @@ get '/reset_extractor' do
   return "locked" if $lock
   send_recv :extractor, "default_context ||| drop"
 
-  return "done"
+  return "reset extractor done"
 end
 
 get '/reset_add_rules' do
   $additional_rules.clear
 
-  return "done"
+  return "reset add. rules done"
 end
 
 get '/shutdown' do                          # stop daemons and shut down server
