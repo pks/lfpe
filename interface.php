@@ -3,9 +3,9 @@
   <meta charset="utf-8" />
   <title>Post-editing application (Session: #<?php echo $_GET["key"]; ?>)</title>
   <link rel="stylesheet" type="text/css" href="static/main.css" />
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" charset="utf-8"></script>
   <script src="js/common.js" charset="utf-8"></script>
   <script src="js/lfpe.js" charset="utf-8"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" charset="utf-8"></script>
   <script src="https://raw.githubusercontent.com/DmitryBaranovskiy/raphael/v2.1.2/raphael-min.js" type="text/javascript" charset="utf-8"></script>
   <script src="https://raw.githubusercontent.com/marmelab/Raphael.InlineTextEditing/fd578f0eddd4172e6d9b3fde4cb67576cf546dc1/raphael.inline_text_editing.js" charset="utf-8"></script>
   <script src="js/derivation_editor/derivation-editor.js" charset="utf-8"></script>
@@ -29,17 +29,20 @@
   <table>
     <tr>
       <td align="right">Source:</td>
-      <td><textarea id="raw_source_textarea" name="source" cols="80" rows="1" disabled></textarea></td>
+      <!--<td><textarea id="raw_source_textarea" name="source" cols="80" rows="1" disabled></textarea></td>-->
+      <td id="raw_source_textarea"></td>
     </tr>
     <tr>
       <td align="right">Target:</td>
-      <td><textarea id="target_textarea" name="target" cols="80" rows="1" onkeypress="catch_return(event)"></textarea></td>
+      <td><textarea id="target_textarea" name="target" cols="80" rows="1" onkeypress="catch_return(event);" disabled></textarea></td>
     </tr>
   </table>
 </div>
 <div id="oov_form">
   <p class="small" style="margin-bottom:0"><strong>Unknown words:</strong><br />
-  Please enter a translation for each source word.</p>
+  Please enter a translation for each source word, then click 'Next' or press return.<br />
+<span class="small">Note that the source word may be distorted.</span>
+</p>
   <div id="oov_fields"></div>
 </div>
 <!-- /Source and target textboxes -->
