@@ -4,6 +4,8 @@
   %head
     %title debug view (session ##{session_key})
   %link(rel="stylesheet" type="text/css" href="debug.css")
+  %script{:src =>"http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js", :charset=>"utf-8"}
+  %script{:src => "http://coltrane.cl.uni-heidelberg.de/lfpe/js/debug.js"}
   %body
     %h1 debug view
     %h2 session ##{session_key}
@@ -12,15 +14,16 @@
         %strong No data to show!
     %ul
       %li
-        %a{:href => "/reset", :target => "_blank"} reset progress
+        %a.ajax{:tgt => "/reset", :href => "#"} reset progress
       %li
-        %a{:href => "/reset_weights", :target => "_blank"} reset weights
+        %a.ajax{:tgt => "/reset_weights", :href => "#"} reset weights
       %li
-        %a{:href => "/reset_extractor", :target => "_blank"} reset extractor
+        %a.ajax{:tgt => "/reset_extractor", :href => "#"} reset extractor
       %li
-        %a{:href => "/reset_add_rules", :target => "_blank"} reset add. rules
+        %a.ajax{:tgt => "/reset_add_rules", :href => "#"} reset add. rules
       %li
-        %a{:href => "/shutdown", :target => "_blank"} shutdown
+        %a.ajax{:tgt => "/shutdown", :href => "#"} shutdown
+      %p#ajax_result
       %p
         %strong learning rate:
       %select
