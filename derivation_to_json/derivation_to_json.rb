@@ -140,6 +140,9 @@ def proc_deriv s
 end
 
 if __FILE__ == $0
-  puts JSON.parse(proc_deriv(STDIN.gets.strip))["target_groups"].join " "
+  json = proc_deriv(STDIN.gets.strip)
+  obj = JSON.parse(json)
+  STDERR.write "#{json}\n"
+  puts obj["target_groups"].join " "
 end
 
