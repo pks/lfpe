@@ -27,15 +27,16 @@ end
 # #############################################################################
 DIR="/fast_scratch/simianer/lfpe"
 $daemons = {
-  :tokenizer    => "#{DIR}/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
-  :detokenizer  => "#{DIR}/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
-  :truecaser    => "#{DIR}/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
+  :tokenizer        => "#{DIR}/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
+  :detokenizer      => "#{DIR}/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
+  :detokenizer_src  => "#{DIR}/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
+  :truecaser        => "#{DIR}/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
   #:lowercaser   => "#{DIR}/lfpe/util/wrapper.rb -a lowercase  -S '__ADDR__' -e #{EXTERNAL}",
-  :dtrain       => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights -a '__ADDR__' -E",
-  :extractor    => "python -m cdec.sa.extract -c #{SESSION_DIR}/sa.ini --online -u -S '__ADDR__'",
-  :aligner_fwd  => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
-  :aligner_back => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
-  :atools       => "#{CDEC}/utils/atools_net -c grow-diag-final-and -S '__ADDR__'"
+  :dtrain           => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights -a '__ADDR__' -E",
+  :extractor        => "python -m cdec.sa.extract -c #{SESSION_DIR}/sa.ini --online -u -S '__ADDR__'",
+  :aligner_fwd      => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
+  :aligner_back     => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
+  :atools           => "#{CDEC}/utils/atools_net -c grow-diag-final-and -S '__ADDR__'"
 }
 
 # #############################################################################
@@ -292,9 +293,11 @@ get '/next' do      # (receive post-edit, update models), send next translation
     obj["progress"]= $db['progress']
     obj["raw_source"] = raw_source
     w_idx = 0
-    obj["source_groups"].each_index { |j|
-      a = obj["source_groups"][j].split
-      a.each_with_index
+    obj["source_groups"][0][0] = obj["source_groups"][0][0].upcase
+    obj["source_groups"].each_with_index { |i,j|
+      prev = obj["source_groups"][j][0]
+      obj["source_groups"][j] = send_recv(:detokenizer_src, obj["source_groups"][j]).strip
+      obj["source_groups"][j][0]=prev if j > 0
     }
     # save
     $db["mt_raw"] = obj["transl"]
