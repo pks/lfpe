@@ -39,10 +39,11 @@
   </table>
 </div>
 <div id="oov_form">
-  <p class="small" style="margin-bottom:0"><strong>Unknown words:</strong><br />
-  Please enter a translation for each source word, then click 'Next' or press return.<br />
-<span class="small">Note that the source word may be distorted.</span>
+  <p style="margin-bottom:0"><strong>Unknown words</strong><br />
+  <span class="small">Please enter a translation for each source word, then click 'Next' or press return.<br />
+Note that the source word may be distorted.</span>
 </p>
+<p><span style="text-decoration:underline;font-size:0.8em">Context:</span> <span id="oov_context"></span></p>
   <div id="oov_fields"></div>
 </div>
 <!-- /Source and target textboxes -->
@@ -108,6 +109,7 @@ foreach($db->raw_source_segments as $s) {
 <textarea style="display:none" id="current_seg_id">0</textarea>
 <textarea style="display:none" id="paused">0</textarea>
 <textarea style="display:none" id="oov_correct">0</textarea>
+<textarea style="display:none" id="oov_num_items">0</textarea>
 <textarea style="display:none" id="displayed_oov_hint">0</textarea>
 <textarea style="display:none" id="port"><?php echo $db->port; ?></textarea>
 <textarea style="display:none" id="init">0</textarea>

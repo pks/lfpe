@@ -15,6 +15,11 @@ textarea {
   -webkit-transition: all .5s; /* Safari */
 }
 
+textarea, input {
+  transition: all .5s;
+  -webkit-transition: all .5s; /* Safari */
+}
+
 button {
   margin:     1em;
   padding:    .25em;

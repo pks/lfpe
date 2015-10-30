@@ -174,10 +174,10 @@ function Next()
       document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=post_edit;
   // OOV correction mode
   } else if (oov_correct.value=="true") {
-     var l = document.getElementById("oov_fields").children.length;
+     var l = document.getElementById("oov_num_items").value;
      var src = [];
      var tgt = [];
-     for (var i=0; i<l/2; i++) {
+     for (var i=0; i<l; i++) {
        src.push(trim(document.getElementById("oov_src"+i).value));
        tgt.push(trim(document.getElementById("oov_tgt"+i).value));
        if (tgt[tgt.length-1] == "") { // empty correction
@@ -252,6 +252,13 @@ function Next()
     // enter OOV correct mode
     } else if (data["oovs"]) {
       var append_to = document.getElementById("oov_fields");
+      document.getElementById("oov_num_items").value = data["oovs"].length;
+      if ($("#ui_type").val() == "t") {
+        $("#textboxes").fadeTo(200,0.1);
+      } else {
+        $("#derivation_editor").fadeTo(200,0.1);
+      }
+      $("#oov_context").html(data["raw_source"].replace(/\*\*\*/g,"<strong>").replace(/###/g,"</strong>"));
       for (var i=0; i<data["oovs"].length; i++) {
         var node_src = document.createElement("input");
         var node_tgt = document.createElement("input");
@@ -263,7 +270,10 @@ function Next()
         node_src.setAttribute("disabled", "disabled");
         append_to.appendChild(node_src);
         append_to.appendChild(node_tgt);
+        append_to.appendChild(document.createElement("br"));
+        $("#oov_src"+i).attr({width: 'auto', size: $("#oov_src"+i).val().length});
         node_tgt.onkeypress = function (event) {
+          $(this).attr({width: 'auto', size: 5+$(this).val().length});
           catch_return(event);
         }
       }
@@ -277,6 +287,12 @@ function Next()
 
     // translation mode
     } else {
+      if ($("#ui_type").val() == "t") {
+        $("#textboxes").fadeTo(200,1);
+      } else {
+        $("#derivation_editor").fadeTo(200,1);
+      }
+
       var id          = data["progress"];
       var src         = data["source"];
       var translation = data["transl_detok"];

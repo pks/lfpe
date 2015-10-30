@@ -271,6 +271,11 @@ get '/next' do      # (receive post-edit, update models), send next translation
       obj = Hash.new
       obj["oovs"] = oovs
       obj["progress"] = $db['progress']
+      raw_source_annot = "#{raw_source}"
+      oovs.each { |o|
+        raw_source_annot.gsub! "#{o}", "***#{o}###"
+      }
+      obj["raw_source"] = raw_source_annot
       $last_reply = obj.to_json
       logmsg :server, "OOV reply: '#{$last_reply}'"
       $lock = false
