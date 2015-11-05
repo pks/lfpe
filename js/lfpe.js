@@ -88,6 +88,12 @@ function working()
   var oov_correct         = document.getElementById("oov_correct");
   var last_post_edit      = document.getElementById("last_post_edit");
 
+  if ($("#ui_type").val() == "t") {
+    $("#textboxes").fadeTo(200,0.1);
+  } else {
+    $("#derivation_editor").fadeTo(200,0.1);
+  }
+
   // show 'working' message
   //status.style.display = "block";
   $("#status").fadeToggle();
@@ -102,7 +108,7 @@ function working()
  *
  *
  */
-function not_working()
+function not_working(fadein=true)
 {
   // elements
   var button              = document.getElementById("next");
@@ -114,6 +120,14 @@ function not_working()
   var status              = document.getElementById("status");
   var oov_correct         = document.getElementById("oov_correct");
   var last_post_edit      = document.getElementById("last_post_edit");
+
+  if (fadein) {
+  if ($("#ui_type").val() == "t") {
+    $("#textboxes").fadeTo(200,1);
+  } else {
+    $("#derivation_editor").fadeTo(200,1);
+  }
+  }
 
   // hide 'working' message
   //status.style.display = "none";
@@ -182,7 +196,7 @@ function Next()
        tgt.push(trim(document.getElementById("oov_tgt"+i).value));
        if (tgt[tgt.length-1] == "") { // empty correction
          alert("Please provide translations for all words.");
-         not_working();
+         //not_working();
 
          return;
        }
@@ -283,7 +297,7 @@ function Next()
       $("#oov_form").toggle("blind");
       $("#next").html("Next");
       $("#oov_tgt0").focus();
-      not_working();
+      not_working(false);
 
     // translation mode
     } else {
