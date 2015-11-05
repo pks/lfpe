@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
 
 require 'zipf'
+require 'stringio'
 
 class RuleAndSpan
-  attr_accessor :span, :symbol, :source, :target, :subspans, :done, :id
+  attr_accessor :span, :symbol, :source, :target, :subspans, :done, :id, :trule
 
   def initialize s, id
     spans, srcs, tgts = splitpipe s.strip
@@ -29,17 +30,112 @@ class RuleAndSpan
 
     return false
   end
+
+  def match_with_rule r
+    if @source.join(" ").gsub(/\[\d+\]/, "[X]")==r.f \
+    && @target.join(" ").gsub(/\[\d+\]/, "[X]")==r.e
+      return true
+    end
+
+    return false
+  end
+end
+
+class Rule
+  attr_accessor :nt, :f, :e, :v, :a, :ha, :source_groups, :target_groups
+
+  def initialize s
+    splitpipe(s).each_with_index { |i,j|
+      i = i.strip.lstrip
+      if j == 0 # NT
+        @nt = i
+      elsif j == 1 # french
+        @f = i.gsub(/\[\d+\]/, "[X]")
+        @fa = @f.split
+        @source_groups = @f.split("[X]").map{|i|i.strip.lstrip}
+        @source_groups.reject! { |i| i=="" }
+      elsif j == 2 # english
+        @e = i.gsub(/\[\d+\]/, "[X]")
+        @ea = @e.split
+        @target_groups = @e.split("[X]").map{|i|i.strip.lstrip}
+        @target_groups.reject! { |i| i=="" }
+      elsif j == 3 # vector
+        @v = i
+      elsif j == 4 # alignment
+        @a = i
+        @ha = {}
+        @a.split.each { |i|
+          x,y = i.split("-")
+          x = x.to_i
+          y = y.to_i
+          rx = 0
+          (0).upto(x-1) { |k|
+            if @fa[k].match /\[X\]/
+              rx += 1
+            end
+          }
+          ry = 0
+          (0).upto(y-1) { |k|
+            if @ea[k].match /\[X\]/
+              ry += 1
+            end
+          }
+          x -= rx
+          y -= ry
+          if @ha[x]
+            @ha[x] << y 
+          else
+            @ha[x] = [y]
+          end
+        }
+      else # error
+      end
+    }
+  end
+
+  def group_has_link ngroup_source, ngroup_target
+    offset_source = 0
+    (0).upto(ngroup_source-1) { |i|
+      offset_source += @source_groups[i].split.size
+    }
+    offset_target = 0
+    (0).upto(ngroup_target-1) { |i|
+      offset_target += @target_groups[i].split.size
+    }
+    (offset_source).upto(-1+offset_source+@source_groups[ngroup_source].split.size) { |i|
+      next if !@ha[i]
+      @ha[i].each { |k|
+        if (offset_target..(-1+offset_target+@target_groups[ngroup_target].split.size)).include? k
+          return true
+        end
+      }
+    }
+
+    return false
+  end
+
+  def to_s
+    "#{@nt} ||| #{@f} ||| #{@e} ||| #{@v} ||| #{@a}\n"
+  end
 end
 
 def conv_cdec_show_deriv s
-  a = s.split("}").map { |i|
+  rules = []
+  xx = StringIO.new s
+  d_s = xx.gets
+  while line = xx.gets
+    r = Rule.new(line)
+    rules << r
+  end
+
+  a = d_s.split("}").map { |i|
     i.gsub /^[()\s]*/, ""
   }.reject { |i|
     i.size==0 }.map { |i|
       i.gsub /^\{/, ""
   }
 
-  return a
+  return a, rules
 end
 
 def derive span, spans, by_span, o, groups, source
@@ -63,7 +159,7 @@ def derive span, spans, by_span, o, groups, source
         end
       }
     else
-      groups.last << ["#{w}", span.id]
+      groups.last << ["#{w}", span.id, span.trule]
       o << w
     end
   }
@@ -71,13 +167,18 @@ def derive span, spans, by_span, o, groups, source
 end
 
 def proc_deriv s
-  a = conv_cdec_show_deriv s
+  a, rules = conv_cdec_show_deriv s
 
   by_span = {}
   spans = []
   id = 0
   a.each { |line|
     rs = RuleAndSpan.new line, id
+    rules.each { |r|
+      if rs.match_with_rule r
+        rs.trule = r
+      end
+    }
     id += 1
     by_span[rs.span] = rs
     if rs.is_terminal_rule?
@@ -120,15 +221,28 @@ def proc_deriv s
   rgroups = []
   source_groups.each { |i| source_rgroups << i.first[1] }
   groups.each { |i| rgroups << i.first[1] }
+  rules_by_span_id = {}
+  source_groups.each { |i|
+    rules_by_span_id[i.first[1]] = i.first[2]
+  }
 
   phrase_align = []
-  source_rgroups.each { |i|
+  count_source = {}
+  count_target = {}
+  count_source.default = 0
+  count_target.default = 0
+  source_rgroups.each_with_index { |i|
     phrase_align << []
     rgroups.each_with_index { |j,k|
       if i==j
-        phrase_align.last << k
+        if rules_by_span_id[i].group_has_link count_source[i], count_target[j]
+          phrase_align.last << k
+        end
+        count_target[j] += 1
       end
     }
+    count_source[i] += 1
+    count_target.clear
   }
 
   h = {}
@@ -140,7 +254,11 @@ def proc_deriv s
 end
 
 if __FILE__ == $0
-  json = proc_deriv(STDIN.gets.strip)
+  s = ""
+  while line = STDIN.gets
+    s += line
+  end
+  json = proc_deriv(s)
   obj = JSON.parse(json)
   STDERR.write "#{json}\n"
   puts obj["target_groups"].join " "

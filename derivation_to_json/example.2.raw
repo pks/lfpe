@@ -1,0 +1,10 @@
+({<0,21> [Goal] ||| [S] ||| [1]}({<0,21> [S] ||| [S] [X] ||| [1] [2]}({<0,13> [S] ||| [X] ||| [1]}({<0,13> [X] ||| [X] metalloxid @-@ halbleitern , ||| [1] @-@ oxide semiconductors and which}({<0,9> [X] ||| die [X] auf basis von ||| the [1] which are based on metal}({<1,6> [X] ||| [X] bezieht sich auf gassensoren ||| [1] relates to gas sensors}({<1,2> [X] ||| neuerung ||| invention}) ) ) ) ) ({<13,21> [X] ||| die sehr [X] sind . ||| are very [1] .}({<15,19> [X] ||| empfindlich und wenig temperaturabhängig ||| sensitive and not appreciably temperature @-@ dependent}) ) ) )
+[X] ||| neuerung ||| invention ||| ForceRule=1 ||| 0-0
+[X] ||| [X] bezieht sich auf gassensoren ||| [1] relates to gas sensors ||| IsSupportedOnline=0 IsSingletonFE=0 IsSingletonF=0 MaxLexEgivenF=1.45124 MaxLexFgivenE=2.73473 CountEF=0.477121 SampleCountF=0.477121 EgivenFCoherent=-0 ||| 1-1 1-2 2-1 4-3 4-4
+[X] ||| die [X] auf basis von ||| the [1] which are based on metal ||| IsSupportedOnline=0 IsSingletonFE=1 IsSingletonF=1 MaxLexEgivenF=5.95916 MaxLexFgivenE=3.2265 CountEF=0.30103 SampleCountF=0.30103 EgivenFCoherent=-0 ||| 0-0 2-4 3-4 3-5 4-6
+[X] ||| [X] metalloxid @-@ halbleitern , ||| [1] @-@ oxide semiconductors and which ||| IsSupportedOnline=0 IsSingletonFE=1 IsSingletonF=1 MaxLexEgivenF=3.79715 MaxLexFgivenE=2.26688 CountEF=0.30103 SampleCountF=0.30103 EgivenFCoherent=-0 ||| 1-2 2-1 3-3 4-5
+[S] ||| [X] ||| [1]
+[X] ||| empfindlich und wenig temperaturabhängig ||| sensitive and not appreciably temperature @-@ dependent ||| IsSupportedOnline=0 IsSingletonFE=1 IsSingletonF=1 MaxLexEgivenF=6.5059 MaxLexFgivenE=1.51642 CountEF=0.30103 SampleCountF=0.30103 EgivenFCoherent=-0 ||| 0-0 1-1 2-3 3-3 3-4 3-6
+[X] ||| die sehr [X] sind . ||| are very [1] . ||| IsSupportedOnline=0 IsSingletonFE=1 IsSingletonF=1 MaxLexEgivenF=0.456219 MaxLexFgivenE=2.16613 CountEF=0.30103 SampleCountF=0.30103 EgivenFCoherent=-0 ||| 0-0 1-1 3-3 4-3
+[S] ||| [S] [X] ||| [1] [2] ||| Glue=1
+[Goal] ||| [S] ||| [1]

@@ -1,2 +1,4 @@
-This hack reads cdec's "--show_derivations" into a an object.
+This (horrid) hack reads cdec's "--show_derivations" and "--extract_rules"
+into data structures  and tries to align "groups" in source and target sides
+of rules in a smart, presentable way.
 
