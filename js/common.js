@@ -1,6 +1,9 @@
-var data,
-    ui_type;
-
+/*
+ * (common) global vars
+ *
+ */
+var data,    // data (from JSON)
+    ui_type; // 't' (text) or 'g' (graphical)
 
 /*
  * hacky way to remove class from node
@@ -17,7 +20,7 @@ function removeClass(node, className)
 }
 
 /*
- *
+ * toggle display of element (by id)
  *
  */
 function toggleDisplay(id)

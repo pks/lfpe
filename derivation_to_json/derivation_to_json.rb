@@ -83,7 +83,7 @@ class Rule
           x -= rx
           y -= ry
           if @ha[x]
-            @ha[x] << y 
+            @ha[x] << y
           else
             @ha[x] = [y]
           end

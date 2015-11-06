@@ -15,7 +15,7 @@
 
 <body>
 
-<?php include("header.php"); ?>
+<?php include("header.inc.php"); ?>
 
 <!-- Derivation editor -->
 <div id="derivation_editor">
@@ -102,7 +102,7 @@ foreach($db->raw_source_segments as $s) {
 
 <p class="small" style="text-align:right"><a href="#">^</a></p>
 
-<?php include("footer.php"); ?>
+<?php include("footer.inc.php"); ?>
 
 </body>
 </html>

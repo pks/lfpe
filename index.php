@@ -8,7 +8,7 @@
 
 <body onload="">
 
-<?php include("header.php"); ?>
+<?php include("header.inc.php"); ?>
 
 <form method="get" action="interface.php">
   <strong>Please enter your session key:</strong> <input type="text" id="key" name="key" />
@@ -40,7 +40,7 @@
 </p>
 </div>
 
-<?php include("footer.php"); ?>
+<?php include("footer.inc.php"); ?>
 
 </body>
 </html>

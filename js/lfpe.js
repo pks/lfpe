@@ -72,7 +72,7 @@ function catch_return(e)
 }
 
 /*
- *
+ * working/not working
  *
  */
 function working()
@@ -103,11 +103,6 @@ function working()
      pause_button.setAttribute("disabled", "disabled");
   target_textarea.setAttribute("disabled", "disabled");
 }
-
-/*
- *
- *
- */
 function not_working(fadein=true)
 {
   // elements

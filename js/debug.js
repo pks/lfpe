@@ -9,6 +9,3 @@ $().ready(function()
   })
 })
 
-$("#reset").click(function(){
-
-}); 
