@@ -7,7 +7,8 @@
   <script src="js/common.js" charset="utf-8"></script>
   <script src="js/lfpe.js" charset="utf-8"></script>
   <script src="https://raw.githubusercontent.com/DmitryBaranovskiy/raphael/v2.1.2/raphael-min.js" type="text/javascript" charset="utf-8"></script>
-  <script src="https://raw.githubusercontent.com/marmelab/Raphael.InlineTextEditing/fd578f0eddd4172e6d9b3fde4cb67576cf546dc1/raphael.inline_text_editing.js" charset="utf-8"></script>
+  <!--<script src="https://raw.githubusercontent.com/marmelab/Raphael.InlineTextEditing/fd578f0eddd4172e6d9b3fde4cb67576cf546dc1/raphael.inline_text_editing.js" charset="utf-8"></script>-->
+  <script src="js/derivation_editor/raphael.inline_text_editing.js" charset="utf-8"></script>
   <script src="js/derivation_editor/derivation-editor.js" charset="utf-8"></script>
 
 </head>
