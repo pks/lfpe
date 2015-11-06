@@ -170,7 +170,7 @@ function Next()
 
   // extract data from interfaces
   if (ui_type == 'g') {
-    post_edit = JSON.parse(DE_extract_data())["target"].join(" ")
+    post_edit = trim(JSON.parse(DE_extract_data())["target"].join(" "))
   } else {
     post_edit = trim(target_textarea.value);
   }
