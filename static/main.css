@@ -1,29 +1,29 @@
 html {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 18px
+  font-size:   18px
 }
 
 input {
-  transition: all .5s;
-  -webkit-transition: all .5s; /* Safari */
+  transition:         all .5s;
+  -webkit-transition: all .5s
 }
 
 textarea {
-  font-size: 2em;
-  width:     100%;
-  transition: all .5s;
-  -webkit-transition: all .5s; /* Safari */
+  font-size:          2em;
+  width:              100%;
+  transition:         all .5s;
+  -webkit-transition: all .5s
 }
 
 textarea, input {
-  transition: all .5s;
-  -webkit-transition: all .5s; /* Safari */
+  transition:         all .5s;
+  -webkit-transition: all .5s
 }
 
 button {
-  margin:     1em;
-  padding:    .25em;
-  background: #fff;
+  margin:      1em;
+  padding:     .25em;
+  background:  #fff;
   font-weight: bold
 }
 
@@ -32,7 +32,7 @@ button {
 .xtrasmall { font-size:.6em }
 
 a {
-  color: #ccc;
+  color:           #ccc;
   text-decoration: underline
 }
 a:hover { color: #000 }
@@ -51,12 +51,15 @@ span#status {
   display: none
 }
 #raw_source_textarea, #target_textarea {
-  font-family: "Times New Roman", Georgia, Serif;
+  font-family: "Times New Roman", Georgia, Serif
 }
 #raw_source_textarea {
   font-size: 2em;
   padding: 0.1em
 }
+/* /Edit */
+
+/* OOV */
 #oov_form { display: none }
 #oov_fields {
   padding: 1em;
@@ -67,7 +70,7 @@ span#status {
   text-align: center;
   padding: .4em
 }
-/* /Edit */
+/* /OOV */
 
 /* Derivation editor */
 #derivation_editor input {
@@ -84,20 +87,10 @@ table#overview td.seg_text { width: 45% }
 table#overview td { border-bottom: 1px solid #ccc; border-left:1px solid #ccc; padding: .25em }
 table#overview tr:hover { background: #ccc }
 table#overview .doc_title { background-color: #eee }
-table#overview td.num { text-align:right; font-style:italic}
+table#overview td.num { text-align:right; font-style:italic }
 /* /Session overview */
 
 /* Header */
-div#header {
-  margin-bottom: 2em;
-  text-align:right
-}
-img#uni {}
-img#cl {
-  margin-bottom:20px;
-  margin-left:10px;
-  vertical-align:bottom
-}
 /* /Header */
 
 /* Footer */
@@ -107,6 +100,12 @@ p#footer {
   margin:      0;
   padding:     0;
   color:       #303030
+}
+img#uni {}
+img#cl {
+  margin-bottom:  20px;
+  margin-left:    10px;
+  vertical-align: bottom
 }
 /* /Footer */
 
