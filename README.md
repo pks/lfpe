@@ -1,4 +1,4 @@
-# lfpe
+# learning from post-edits
 
 # setup
 ## nanomsg lib
