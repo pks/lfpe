@@ -1,4 +1,4 @@
-AuthName "Postedit Login"
+AuthName "Post-Editing Interface"
 AuthType Basic
-AuthUserFile /workspace/post_editing/conf/.htpasswd
+AuthUserFile /fast_scratch/simianer/lfpe/.htpasswd
 require valid-user

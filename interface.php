@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Post-editing application (Session: #<?php echo $_GET["key"]; ?>)</title>
+  <title>Post-Editing Interface (Session: #<?php echo $_GET["key"]; ?>)</title>
   <link rel="stylesheet" type="text/css" href="static/main.css" />
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" charset="utf-8"></script>
   <script src="js/common.js" charset="utf-8"></script>
