@@ -53,7 +53,7 @@ Note that the source word may be distorted.</span>
 <div>
   <button id="pause_button" type="button" onclick="pause()">Pause</button>
   <button id="next" type="button" onclick="Next();">Start/Continue</button>
-  <span id="status"><strong>Working, please wait for next segment</strong> <img src="static/ajax-loader-large.gif" width="20px" /></span>
+  <span id="status"><strong>Working, please wait for next translation</strong> <img src="static/ajax-loader-large.gif" width="20px" /></span>
 </div>
 <!-- /Buttons -->
 

@@ -14,7 +14,7 @@
   <strong>Please enter your session key:</strong> <input type="text" id="key" name="key" />
   &nbsp;&nbsp;&nbsp;&nbsp;Session type:
   <select name="ui_type">
-    <option value="t">textual</option>
+    <option value="t">text</option>
     <option value="g">graphical</option>
 </select>
 &nbsp;&nbsp;&nbsp;&nbsp;

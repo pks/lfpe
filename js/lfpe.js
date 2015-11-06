@@ -216,6 +216,7 @@ function Next()
       target_textarea.removeAttribute("disabled", "disabled");
          pause_button.removeAttribute("disabled", "disabled");
                button.removeAttribute("disabled", "disabled");
+      not_working();
       return;
     }
   }
