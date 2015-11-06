@@ -311,7 +311,11 @@ function Next()
       // update interface
       oov_correct.value         = false;
       status.style.display      = "none";
-      target_textarea.value     = translation;
+      if (!translation) {
+        target_textarea.value   = "";
+      } else {
+        target_textarea.value   = translation;
+      }
       //raw_source_textarea.value = raw_source;
       $("#raw_source_textarea").html(raw_source);
       button.innerHTML          = "Next";
@@ -322,7 +326,8 @@ function Next()
       if (id > 0) {
         removeClass(document.getElementById("seg_"+(id-1)), "bold");
       }
-      target_textarea.rows     = Math.round(translation.length/80+0.5);
+      if (translation)
+        target_textarea.rows     = Math.round(translation.length/80+0.5);
       //raw_source_textarea.rows = Math.round(raw_source.length/80+0.5);
       target_textarea.focus();
       target_textarea.selectionStart = 0;
