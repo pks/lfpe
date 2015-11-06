@@ -7,8 +7,8 @@ Alternatively, in the textual interface, you may just press return when you fini
 <ul>
   <li><strong>Reordering of target phrases:</strong> Drag and drop the phrase (box).</li>
   <li><strong>Adding/removing links:</strong> Select a source phrase by clicking on its box, then click on a target phrase (click selected source phrase again to cancel linking).</li>
-  <li><strong>Edit text:</strong> Double click on text, click outside once to stop editing.</li>
-  <li><strong>Adding target phrases:</strong> Click '+' button to add a new phrase.</li>
+  <li><strong>Edit text:</strong> Double click on text, click outside once to stop editing (or press return).</li>
+  <li><strong>Adding target phrases:</strong> Click '+' button to add a new phrase at the end of the translation. Ctrl-click an existing phrase to add a new phrase to the right of it.</li>
   <li><strong>Removing target phrases:</strong> Drag phrase onto left-hand red box. You can also shift-click on a phrase and press 'delete'. Selecting multiple phrases using shift-click is also possible.</li>
   <li><strong>Reset:</strong> Click 'Reset' button to start from scratch.</li>
 </ul>
