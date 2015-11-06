@@ -58,6 +58,10 @@ Note that the source word may be distorted.</span>
 </div>
 <!-- /Buttons -->
 
+<!-- Debug -->
+<div id="debug"></div>
+<!-- /Debug -->
+
 <!-- Session overview -->
 <div id="overview_wrapper">
 <p style="margin:.5em;margin-bottom:.25em"><strong>Session overview</strong></p>
