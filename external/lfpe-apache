@@ -1,0 +1,18 @@
+<VirtualHost *:80>
+	ServerName postedit.cl.uni-heidelberg.de
+
+	ServerAdmin simianer@cl.uni-heidelberg.de
+
+	DocumentRoot /fast_scratch/simianer/lfpe/lfpe
+
+	ErrorLog /fast_scratch/simianer/lfpe/lfpe/logs/apache2.error.log
+	LogLevel warn
+	CustomLog /fast_scratch/simianer/lfpe/lfpe/logs/apache2.access.log combined
+
+	<Directory /fast_scratch/simianer/lfpe/lfpe>
+                Options +FollowSymLinks
+                AllowOverride All
+                order allow,deny
+                allow from all
+	</Directory>
+</VirtualHost>
