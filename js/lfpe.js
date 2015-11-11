@@ -162,23 +162,31 @@ function Next()
 
   // post edit
   var post_edit = '';
+  var send_data = new Object();
 
   // extract data from interfaces
   if (ui_type == 'g') {
-    post_edit = trim(JSON.parse(DE_extract_data())["target"].join(" "))
+    send_data = JSON.parse(DE_extract_data());
+    post_edit = trim(send_data["target"].join(" "));
+    send_data["post_edit"] = post_edit;
   } else {
     post_edit = trim(target_textarea.value);
+    send_data["post_edit"] = post_edit;
   }
 
   // send data
   // ???
   if (oov_correct.value=="false" && post_edit != "") {
+      send_data["duration"] = Timer.get();
+      send_data["source_value"] = source.value;
       // compose request
-      next_url += "&example="+encodeURIComponent(source.value)+"%20%7C%7C%7C%20"+encodeURIComponent(post_edit)+"&duration="+Timer.get();
+      //next_url += "&example="+encodeURIComponent(source.value)+"%20%7C%7C%7C%20"+encodeURIComponent(post_edit)+"&duration="+Timer.get();
       // no change?
       if (post_edit == last_post_edit.value) {
-        next_url += "&nochange=1";
+        //next_url += "&nochange=1";
+        send_data["nochange"] = true;
       }
+      next_url += "&example="+encodeURIComponent(JSON.stringify(send_data));
       // update document overview
       document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=post_edit;
   // OOV correction mode

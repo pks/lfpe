@@ -22,7 +22,7 @@ if conf[:action] == "detokenize"
     STDERR.write "[detokenizer] No language given, exiting!\n"; exit
   end
 elsif conf[:action] == "tokenize"
-  cmd = "#{conf[:ext]}/tokenizer-no-escape.perl -q -b -a -l #{conf[:lang]}"
+  cmd = "#{conf[:ext]}/tokenizer-no-escape.perl -q -b -l #{conf[:lang]}"
   if !conf[:lang]
     STDERR.write "[tokenizer] No language given, exiting!\n"; exit
   end

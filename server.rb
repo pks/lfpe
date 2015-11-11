@@ -174,11 +174,16 @@ get '/next' do      # (receive post-edit, update models), send next translation
   # 5d. actual update
   # 6. update database
   if params[:example]
+    logmsg :server, params[:example]
+    rcv_obj = JSON.parse params[:example]
     # 0. save raw post-edit
-    source, reference = params[:example].strip.split(" ||| ")
+    #source, reference = params[:example].strip.split(" ||| ")
+    source = rcv_obj["source_value"]
+    reference = rcv_obj["target"].join " "
     reference = cleanstr(reference)
+    $db['feedback'] << params[:example]
     $db['post_edits_raw'] << reference.strip
-    $db['durations'] << params['duration'].to_i
+    $db['durations'] << rcv_obj['duration'].to_i
     # 1. tokenize
       reference = send_recv :tokenizer, reference
     # 2. truecase
@@ -187,7 +192,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
       logmsg :db, "saving processed post-edit"
       $db['post_edits'] << reference.strip
     nochange = false
-    if params[:nochange]
+    if rcv_obj[:nochange]
       logmsg :server, "no change -> no updates!"
       nochange = true
     end
@@ -210,8 +215,11 @@ get '/next' do      # (receive post-edit, update models), send next translation
       send_recv :extractor, "default_context ||| #{source} ||| #{reference} ||| #{a}"
     # 6. update database
       logmsg :db, "updating database"
+      $db['updated'] << true
+    else
+      $db['updated'] << false
     end
-      update_database
+    update_database
   end
   source     = $db['source_segments'][$db['progress']]
   raw_source = $db['raw_source_segments'][$db['progress']]
@@ -284,7 +292,8 @@ get '/next' do      # (receive post-edit, update models), send next translation
     end
     # 3. translation
     msg = "act:translate ||| <seg grammar=\"#{grammar}\"> #{source} </seg>"
-    obj_str = proc_deriv(send_recv(:dtrain, msg))
+    deriv_s = send_recv(:dtrain, msg)
+    obj_str = proc_deriv(deriv_s)
     obj = JSON.parse obj_str
     obj["transl"] = obj["target_groups"].join " "
     # 4. detokenizer
@@ -305,8 +314,10 @@ get '/next' do      # (receive post-edit, update models), send next translation
       obj["source_groups"][j][0]=prev if j > 0
     }
     # save
-    $db["mt_raw"] = obj["transl"]
-    $db["mt"] = obj["transl_detok"]
+    $db["derivations"] << deriv_s
+    $db["derivations_proc"] << obj_str
+    $db["mt_raw"] << obj["transl"]
+    $db["mt"] << obj["transl_detok"]
     # 5. reply
     $last_reply = obj.to_json
     $lock = false
@@ -367,8 +378,15 @@ get '/reset' do                                         # reset current session
   $db = JSON.parse ReadFile.read DB_FILE
   $db['post_edits'].clear
   $db['post_edits_raw'].clear
+  $db['mt'].clear
+  $db['mt_raw'].clear
+  $db['updated'].clear
+  $db['durations'].clear
+  $db['derivations'].clear
+  $db['derivations_proc'].clear
+  $db['feedback'].clear
+  $db['progress'] = -1
   update_database
-  $db['progress'] = 0
   $confirmed = true
   $last_reply = nil
 

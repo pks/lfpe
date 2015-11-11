@@ -5,7 +5,7 @@
     %title debug view (session ##{session_key})
   %link(rel="stylesheet" type="text/css" href="debug.css")
   %script{:src =>"http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js", :charset=>"utf-8"}
-  %script{:src => "http://coltrane.cl.uni-heidelberg.de/lfpe/js/debug.js"}
+  %script{:src => "http://postedit.cl.uni-heidelberg.de/js/debug.js"}
   %body
     %h1 debug view
     %h2 session ##{session_key}
@@ -36,27 +36,53 @@
     %table
       %tr
         %td.noborder
+          %strong progress:
+        %td.left #{[0,data2["progress"]-1].max}
+      %tr
+        %td.noborder
           %strong source:
-        %td.left #{data["source"]}
+        %td.left #{data2["source_segments"][[0,data2["progress"]-1].max]}
+      %tr
+        %td.noborder
+          %strong source (original):
+        %td.left #{data2["raw_source_segments"][[0,data2["progress"]-1].max]}
       %tr
         %td.noborder
           %strong post-edit:
-        %td.left #{data["target"]}
+        %td.left #{data2["post_edits_raw"][data2["progress"]-1]}
+      %tr
+        %td.noborder
+          %strong post-edit (processed):
+        %td.left #{data2["post_edits"][data2["progress"]-1]}
       %tr
         %td.noborder
           %strong original mt:
-        %td.left #{data["1best"]}
+        %td.left #{data2["mt_raw"][data2["progress"]-1]}
+      %tr
+        %td.noborder
+          %strong shown mt:
+        %td.left #{data2["mt"][data2["progress"]-1]}
       %tr
         %td.noborder
           %strong best match (bleu=#{data["best_match_score"]}):
         %td.left #{data["best_match"]}
+    %h2 derivation
+    %pre #{data2["derivations"][data2["progress"]-1]}
+    %p
+      %strong processed
+    - if data2["derivations_proc"][data2["progress"]-1]
+      %pre #{JSON.pretty_generate(JSON.parse(data2["derivations_proc"][data2["progress"]-1]))}
+    %h2 manual update
+    - if data2["feedback"][data2["progress"]-1]
+      %pre #{JSON.pretty_generate(JSON.parse(data2["feedback"][data2["progress"]-1]))}
     %h2 meta
     %p <strong>k:</strong> #{data["samples_size"]}
     %p <strong>number of updates:</strong> #{data["num_up"]}
     %p <strong>updated features:</strong> #{data["updated_features"]}
     %p <strong>learning rate:</strong> #{data["learning_rate"]}
     %p <strong>learning rate (sparse):</strong> #{data["learning_rate_sparse"]}
-    %p <strong>duration:</strong> #{data2["durations"][[data2["progress"].to_i-1].max]}ms
+    %p <strong>duration:</strong> #{data2["durations"][data2["progress"].to_i-1]}ms
+    %p <strong>updated:</strong> #{data2["updated"][data2["progress"].to_i-1]}
     %h2
       additional rules (forced rules)
     %pre #{additional_rules.join("\n")}
