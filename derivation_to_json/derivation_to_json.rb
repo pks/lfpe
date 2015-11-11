@@ -245,8 +245,47 @@ def proc_deriv s
     count_target.clear
   }
 
+  # find non-aligned target
+  rgroups.each_with_index { |i,j|
+    if !phrase_align.flatten.index(j)
+      add_to = []
+      phrase_align.each_with_index { |a,k|
+        a.each { |q|
+          if rgroups[q]==i
+            add_to << k
+          end
+        }
+      }
+      puts add_to.to_s
+      puts phrase_align.to_s
+      add_to.each { |k|
+        phrase_align[k] << j
+      }
+      puts phrase_align.to_s
+    end
+  }
+
+  # find non-aligned source
+  phrase_align.each_with_index { |i,j|
+    add = []
+    if i.size == 0
+      x = source_rgroups[j]
+      rgroups.each_with_index { |j,k|
+        if j==x
+          add << k
+        end
+      }
+    end
+    add.each { |k|
+      phrase_align[j] << k
+    }
+  }
+
   h = {}
   h[:phrase_alignment] =  phrase_align
+  h[:source_rgroups] = source_rgroups
+  h[:target_rgroups] = rgroups
+  h[:rules_by_span_id] = rules_by_span_id
   h[:source_groups] = source_groups.map { |a| a.map { |i| i.first }.join " " }
   h[:target_groups] = groups.map { |a| a.map { |i| i.first }.join " " }
 
