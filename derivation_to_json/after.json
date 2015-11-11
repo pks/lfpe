@@ -1,0 +1,53 @@
+{
+  "source": [
+    "Weiterhin gehört",
+    "zur Erfindung",
+    "die Verwendung dieser Zusammensetzungen zur",
+    "Therapie und Prophylaxe von",
+    "Herz-Kreislauf-Erkrankungen",
+    ", Erkrankungen",
+    "im Zusammenhang",
+    "mit einer erhöhten",
+    "Thrombozytenaggregation,",
+    "Stoffwechsel-Erkrankungen",
+    ", Knochenerkrankungen",
+    "oder",
+    "Krebserkrankungen",
+    "."
+  ],
+  "target": [
+    "Additionally,",
+    "the invention relates to",
+    "the use of said compositions for the",
+    "therapy and prophylaxis of",
+    "cardiovascular diseases",
+    ", diseases",
+    "in conjunction",
+    "with an increased",
+    "platelet aggregation,",
+    "\tmetabolic diseases",
+    ", osteopathy",
+    "or",
+    "cancerous diseases",
+    "."
+  ],
+  "align": [
+    "0-0",
+    "1-1",
+    "2-2",
+    "3-3",
+    "4-4",
+    "5-5",
+    "6-6",
+    "7-7",
+    "8-8",
+    "9-9",
+    "10-10",
+    "11-11",
+    "12-12",
+    "13-13"
+  ],
+  "post_edit": "Additionally, the invention relates to the use of said compositions for the therapy and prophylaxis of cardiovascular diseases , diseases in conjunction with an increased platelet aggregation, metabolic diseases , osteopathy or cancerous diseases .",
+  "duration": 212272,
+  "source_value": "weiterhin gehört zur Erfindung die Verwendung dieser Zusammensetzungen zur Therapie und Prophylaxe von Herz-Kreislauf-Erkrankungen , Erkrankungen im Zusammenhang mit einer erhöhten Thrombozytenaggregation , Stoffwechsel-Erkrankungen , Knochenerkrankungen oder Krebserkrankungen ."
+}
