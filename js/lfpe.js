@@ -102,6 +102,8 @@ function working()
            button.setAttribute("disabled", "disabled");
      pause_button.setAttribute("disabled", "disabled");
   target_textarea.setAttribute("disabled", "disabled");
+
+  DE_locked = true;
 }
 function not_working(fadein=true)
 {
@@ -131,6 +133,8 @@ function not_working(fadein=true)
   // enable buttons
           document.getElementById("next").removeAttribute("disabled");
   document.getElementById("pause_button").removeAttribute("disabled");
+
+  DE_locked = false;
 }
 
 /*
