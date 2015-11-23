@@ -373,7 +373,7 @@ get '/set_sparse_learning_rate/:rate' do
   return "done"
 end
 
-get '/reset' do                                         # reset current session
+get '/reset_progress' do                                # reset current session
   return "locked" if $lock
   $db = JSON.parse ReadFile.read DB_FILE
   $db['post_edits'].clear
