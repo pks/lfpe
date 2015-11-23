@@ -168,6 +168,8 @@ function Next()
   if (ui_type == 'g') {
     send_data = JSON.parse(DE_extract_data());
     post_edit = trim(send_data["target"].join(" "));
+    if (DE_target_done.length != DE_target_shapes.length)
+      post_edit = "";
     send_data["post_edit"] = post_edit;
   } else {
     post_edit = trim(target_textarea.value);
@@ -215,7 +217,7 @@ function Next()
   // ???
   } else {
     if (source.value != "") {
-      alert("Please provide a post-edit.");
+      alert("Please provide a post-edit and mark all phrases as finished.");
       target_textarea.removeAttribute("disabled", "disabled");
          pause_button.removeAttribute("disabled", "disabled");
                button.removeAttribute("disabled", "disabled");
