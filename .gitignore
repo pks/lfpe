@@ -3,3 +3,5 @@
 out.*
 derivation_editor/
 util/run_beta_test
+logs/
+
