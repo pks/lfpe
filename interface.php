@@ -80,7 +80,7 @@ foreach($db->raw_source_segments as $s) {
     $class = "";
   }
   $translation = "";
-  if ($i <= $db->progress) {
+  if ($i < $db->progress) {
     $translation = $db->post_edits_raw[$i];
   }
   echo "<tr class='".$class."' id='seg_".$i."'><td class='num'>".($i+1).".</td><td>".$s."</td><td class='seg_text' id='seg_".$i."_t'>".$translation."</td></tr>";
