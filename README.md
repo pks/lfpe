@@ -13,7 +13,7 @@
     -A INPUT -i eth0 -p tcp -m multiport --dports 50000:50100 -j ACCEPT
 
 ## apache
-    /etc/apache2/conf.d/lfpe.conf
+    /etc/apache2/sites-available/lfpe
 
 ## python
     export PYTHONPATH=/fast_scratch/simianer/lfpe/lib/python:$PYTHONPATH
