@@ -79,8 +79,12 @@ def stop_all_daemons
   }
 end
 
-def update_database
-  $db['progress'] += 1
+def update_database reset=false
+  if !reset
+    $db['progress'] += 1
+  else
+    $db['progress'] = 0
+  end
   j = JSON.generate $db
   f = WriteFile.new DB_FILE
   f.write j.to_s
@@ -386,7 +390,7 @@ get '/reset_progress' do                                # reset current session
   $db['derivations_proc'].clear
   $db['feedback'].clear
   $db['progress'] = -1
-  update_database
+  update_database true
   $confirmed = true
   $last_reply = nil
 
