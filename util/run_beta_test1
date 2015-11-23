@@ -1,0 +1,6 @@
+#!/bin/zsh -x
+
+./kill; ./kill; ./kill; for i in ../../sessions/product_de-en_beta_test_*; do
+  ./run_server $(basename $i) &; sleep 300;
+done
+
