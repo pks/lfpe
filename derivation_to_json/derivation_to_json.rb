@@ -42,9 +42,10 @@ class RuleAndSpan
 end
 
 class Rule
-  attr_accessor :nt, :f, :e, :v, :a, :ha, :source_groups, :target_groups
+  attr_accessor :nt, :f, :e, :v, :a, :ha, :source_groups, :target_groups, :raw_rule_str
 
   def initialize s
+    @raw_rule_str = s.strip
     splitpipe(s).each_with_index { |i,j|
       i = i.strip.lstrip
       if j == 0 # NT
@@ -115,7 +116,8 @@ class Rule
   end
 
   def to_s
-    "#{@nt} ||| #{@f} ||| #{@e} ||| #{@v} ||| #{@a}\n"
+    #"#{@nt} ||| #{@f} ||| #{@e} ||| #{@v} ||| #{@a}\n"
+    "#{raw_rule_str}"
   end
 end
 
@@ -138,7 +140,7 @@ def conv_cdec_show_deriv s
   return a, rules
 end
 
-def derive span, spans, by_span, o, groups, source
+def derive span, by_span, o, groups, source
   if groups.size==0 || groups.last.size>0
     groups << []
   end
@@ -152,7 +154,7 @@ def derive span, spans, by_span, o, groups, source
     nt = w.match /\[(\d+)\]/
     if nt
       idx = nt.captures.first.to_i-1
-      _ = derive by_span[span.subspans[idx]], spans, by_span, o, groups, source
+      _ = derive by_span[span.subspans[idx]], by_span, o, groups, source
       (k+1).upto(a.size-1) { |i|
         if !a[i].match(/\[(\d+)\]/) && groups.last.size>0
           groups << []
@@ -205,7 +207,7 @@ def proc_deriv s
   source_groups = []
   spans.each { |span|
     next if by_span[span].done
-    derive by_span[span], spans, by_span, so, source_groups, true
+    derive by_span[span], by_span, so, source_groups, true
   }
 
   spans.each { |s| by_span[s].done = false }
@@ -214,7 +216,7 @@ def proc_deriv s
   groups = []
   spans.each { |span|
     next if by_span[span].done
-    derive by_span[span], spans, by_span, o, groups, false
+    derive by_span[span], by_span, o, groups, false
   }
 
   source_rgroups = []
@@ -226,6 +228,7 @@ def proc_deriv s
     rules_by_span_id[i.first[1]] = i.first[2]
   }
 
+  # make/fake phrase alignment
   phrase_align = []
   count_source = {}
   count_target = {}
@@ -256,12 +259,9 @@ def proc_deriv s
           end
         }
       }
-      puts add_to.to_s
-      puts phrase_align.to_s
       add_to.each { |k|
         phrase_align[k] << j
       }
-      puts phrase_align.to_s
     end
   }
 
@@ -281,6 +281,15 @@ def proc_deriv s
     }
   }
 
+  # span info
+  span_info = {}
+  span2id = {}
+  by_span.each { |k,v|
+    span_info[v.id] = [k, v.subspans]
+    span2id[k] = v.id
+  }
+
+  # final object
   h = {}
   h[:phrase_alignment] =  phrase_align
   h[:source_rgroups] = source_rgroups
@@ -288,6 +297,8 @@ def proc_deriv s
   h[:rules_by_span_id] = rules_by_span_id
   h[:source_groups] = source_groups.map { |a| a.map { |i| i.first }.join " " }
   h[:target_groups] = groups.map { |a| a.map { |i| i.first }.join " " }
+  h[:span_info] = span_info
+  h[:span2id] = span2id
 
   return h.to_json
 end
@@ -300,6 +311,7 @@ if __FILE__ == $0
   json = proc_deriv(s)
   obj = JSON.parse(json)
   STDERR.write "#{json}\n"
+  puts obj["source_groups"].join " "
   puts obj["target_groups"].join " "
 end
 

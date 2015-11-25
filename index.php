@@ -35,6 +35,7 @@
   <option value="product_de-en_beta_test_D" onclick="document.getElementById('key').value=this.value;">D</option>
   <option value="product_de-en_beta_test_D_sparse" onclick="document.getElementById('key').value=this.value;">D [sparse]</option>
   <option value="toy_example" onclick="document.getElementById('key').value=this.value;">toy example</option>
+  <option value="product_de-en_toy_example" onclick="document.getElementById('key').value=this.value;">toy example [new]</option>
 </select>
 </p>
 </div>

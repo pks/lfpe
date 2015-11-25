@@ -53,6 +53,7 @@ function CreateCORSRequest(method, url)
   var xhr = new XMLHttpRequest();
   if ("withCredentials" in xhr) {
     xhr.open(method, url, true);
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded; charset=UTF-8');
   } else {
     xhr = null;
   }

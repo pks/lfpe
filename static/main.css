@@ -20,8 +20,8 @@ textarea, input {
   -webkit-transition: all .5s
 }
 
-button {
-  margin:      1em;
+.button {
+  margin:      .25em;
   padding:     .25em;
   background:  #fff;
   font-weight: bold

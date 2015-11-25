@@ -102,11 +102,13 @@ function working()
            button.setAttribute("disabled", "disabled");
      pause_button.setAttribute("disabled", "disabled");
   target_textarea.setAttribute("disabled", "disabled");
+  document.getElementById("reset_button").setAttribute("disabled", "disabled");
 
   DE_locked = true;
 }
 function not_working(fadein=true)
 {
+    document.getElementById("reset_button").removeAttribute("disabled");
   // elements
   var button              = document.getElementById("next");
   var pause_button        = document.getElementById("pause_button");
@@ -133,6 +135,7 @@ function not_working(fadein=true)
   // enable buttons
           document.getElementById("next").removeAttribute("disabled");
   document.getElementById("pause_button").removeAttribute("disabled");
+    document.getElementById("reset_button").removeAttribute("disabled");
 
   DE_locked = false;
 }
@@ -162,7 +165,7 @@ function Next()
   var key      = document.getElementById("key").value;
 
   // url
-  next_url = base_url+":"+port+"/next?key="+key;
+  next_url = base_url+":"+port+"/next";
 
   // post edit
   var post_edit = '';
@@ -174,17 +177,22 @@ function Next()
     post_edit = trim(send_data["target"].join(" "));
     if (DE_target_done.length != DE_target_shapes.length)
       post_edit = "";
-    send_data["post_edit"] = post_edit;
+    send_data["post_edit"] = encodeURIComponent(post_edit);
+    send_data['type'] = 'g';
   } else {
     post_edit = trim(target_textarea.value);
     send_data["post_edit"] = post_edit;
+    send_data['type'] = 't';
   }
+
+  send_data["key"] = key;
 
   // send data
   // ???
   if (oov_correct.value=="false" && post_edit != "") {
+      send_data["EDIT"] = true;
       send_data["duration"] = Timer.get();
-      send_data["source_value"] = source.value;
+      send_data["source_value"] = encodeURIComponent(source.value);
       // compose request
       //next_url += "&example="+encodeURIComponent(source.value)+"%20%7C%7C%7C%20"+encodeURIComponent(post_edit)+"&duration="+Timer.get();
       // no change?
@@ -192,11 +200,12 @@ function Next()
         //next_url += "&nochange=1";
         send_data["nochange"] = true;
       }
-      next_url += "&example="+encodeURIComponent(JSON.stringify(send_data));
+      //next_url += "&example="+encodeURIComponent(JSON.stringify(send_data));
       // update document overview
       document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=post_edit;
   // OOV correction mode
   } else if (oov_correct.value=="true") {
+     send_data["OOV"] = true;
      var l = document.getElementById("oov_num_items").value;
      var src = [];
      var tgt = [];
@@ -216,8 +225,9 @@ function Next()
      //$("#oov_form").css("display", "none");
     $("#oov_form").toggle("blind");
     $("#next").val("Next");
-     next_url += "&correct="+encodeURIComponent(src.join("\t"))
-                 +"%20%7C%7C%7C%20"+encodeURIComponent(tgt.join("\t"))
+     send_data["correct"] = src.join("\t") + " ||| " + tgt.join("\t"); 
+     //next_url += "&correct="+encodeURIComponent(src.join("\t"))
+                 //+"%20%7C%7C%7C%20"+encodeURIComponent(tgt.join("\t"))
   // ???
   } else {
     if (source.value != "") {
@@ -225,6 +235,7 @@ function Next()
       target_textarea.removeAttribute("disabled", "disabled");
          pause_button.removeAttribute("disabled", "disabled");
                button.removeAttribute("disabled", "disabled");
+         //document.getElementById("reset_button").removeAttribute("disabled", "disabled");
       not_working();
       return;
     }
@@ -237,7 +248,7 @@ function Next()
   }
 
   // build request
-  var xhr = CreateCORSRequest('get', next_url);
+  var xhr = CreateCORSRequest('post', next_url);
   if (!xhr) {
     alert("Error: 2"); // FIXME: do something reasonable
   }
@@ -268,6 +279,7 @@ function Next()
       $("#target_textarea").attr("rows", 1);
             button.setAttribute("disabled", "disabled");
       pause_button.setAttribute("disabled", "disabled");
+      //document.getElementById("reset_button").setAttribute("disabled", "disabled");
       if (current_seg_id.value)
         removeClass(document.getElementById("seg_"+current_seg_id.value), "bold");
 
@@ -336,6 +348,7 @@ function Next()
                button.removeAttribute("disabled");
       target_textarea.removeAttribute("disabled", "disabled");
          pause_button.removeAttribute("disabled", "disabled");
+         document.getElementById("reset_button").removeAttribute("disabled");
       document.getElementById("seg_"+id).className += " bold";
       if (id > 0) {
         removeClass(document.getElementById("seg_"+(id-1)), "bold");
@@ -359,6 +372,8 @@ function Next()
       // load data into graphical UI
       if (ui_type == "g") {
         DE_init();
+        var x = trim(JSON.parse(DE_extract_data())["target"].join(" "));
+        last_post_edit.value = x;
       }
 
       // start timer
@@ -368,7 +383,7 @@ function Next()
 
   xhr.onerror = function() {}; // FIXME: do something reasonable
 
-  xhr.send(); // send 'next' request
+  xhr.send(JSON.stringify(send_data)); // send 'next' request
 
   return;
 }
@@ -399,6 +414,7 @@ window.onload = function ()
   document.getElementById("oov_correct").value         = false;
   document.getElementById("displayed_oov_hint").value  = false;
   document.getElementById("init").value                = "";
+  document.getElementById("reset_button").setAttribute("disabled", "disabled");
 
   not_working();
 

@@ -20,8 +20,6 @@
 <!-- Derivation editor -->
 <div id="derivation_editor">
   <div id="holder"><img style="margin:.4em" src="static/placeholder.png" /></div>
-  <input type="button" value="+" onclick="DE_add_object()" />
-  <input type="button" value="Reset" onclick="DE_init();" />
 </div>
 <!-- /Derivation editor-->
 
@@ -52,8 +50,9 @@ Note that the source word may be distorted.</span>
 
 <!-- Buttons -->
 <div>
-  <button id="pause_button" type="button" onclick="pause()">Pause</button>
-  <button id="next" type="button" onclick="Next();">Start/Continue</button>
+  <button id="pause_button" class='button' type="button" onclick="pause()">Pause</button>
+  <button id="reset_button" class='button' type="button" onclick="DE_init()">Reset</button>
+  <button id="next" type="button" class='button' onclick="Next();">Start/Continue</button>
   <span id="status"><strong>Working, please wait for next translation</strong> <img src="static/ajax-loader-large.gif" width="20px" /></span>
 </div>
 <!-- /Buttons -->
@@ -81,7 +80,7 @@ foreach($db->raw_source_segments as $s) {
   }
   $translation = "";
   if ($i < $db->progress) {
-    $translation = $db->post_edits_raw[$i];
+    $translation = $db->post_edits_display[$i];
   }
   echo "<tr class='".$class."' id='seg_".$i."'><td class='num'>".($i+1).".</td><td>".$s."</td><td class='seg_text' id='seg_".$i."_t'>".$translation."</td></tr>";
   $i += 1;

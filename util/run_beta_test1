@@ -1,6 +1,10 @@
 #!/bin/zsh -x
 
-./kill; ./kill; ./kill; for i in ../../sessions/product_de-en_beta_test_*; do
-  ./run_server $(basename $i) &; sleep 300;
+cd /fast_scratch/simianer/lfpe/lfpe/util
+./kill; ./kill; ./kill;
+for i in ../../sessions/product_de-en_beta_test_*; do
+  echo $i
+  echo $(basename $i)
+  ./run_server $(basename $i) &; sleep 600;
 done
 

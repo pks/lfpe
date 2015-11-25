@@ -140,16 +140,19 @@ get '/' do
   return ""                                                            # return
 end
 
-get '/next' do      # (receive post-edit, update models), send next translation
+post '/next' do      # (receive post-edit, update models), send next translation
   cross_origin
+  data = JSON.parse(request.body.read)
+  logmsg :server, "answer: #{data.to_s}"
   # already processing request?
   return "locked" if $lock                                             # return
   $lock = true
-  key = params[:key]            # TODO: do something with it, e.g. simple auth?
-  if params[:correct]
-    logmsg :server, "correct: #{params[:correct]}"
+  key = data['key']            # TODO: do something with it, e.g. simple auth?
+  if data["OOV"]
+    #logmsg :server, "correct: #{params[:correct]}"
+    logmsg :server, "correct: #{data.to_s}"
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
-    src, tgt = splitpipe(params[:correct])
+    src, tgt = splitpipe(data["correct"])
     tgt = cleanstr(tgt)
     src = src.split("\t").map { |i| i.strip }
     tgt = tgt.split("\t").map { |i| i.strip }
@@ -177,17 +180,23 @@ get '/next' do      # (receive post-edit, update models), send next translation
   # 5c. symmetrize alignment
   # 5d. actual update
   # 6. update database
-  if params[:example]
-    logmsg :server, params[:example]
-    rcv_obj = JSON.parse params[:example]
+  if data["EDIT"]
+    #logmsg :server, params[:example]
+    rcv_obj = data #JSON.parse params[:example]
     # 0. save raw post-edit
     #source, reference = params[:example].strip.split(" ||| ")
     source = rcv_obj["source_value"]
-    reference = rcv_obj["target"].join " "
+    reference = ''
+    if rcv_obj["type"] == 'g'
+      reference = rcv_obj["target"].join " "
+    else
+      reference = rcv_obj["post_edit"]
+    end
+    $db['post_edits_raw'] << reference
     reference = cleanstr(reference)
-    $db['feedback'] << params[:example]
-    $db['post_edits_raw'] << reference.strip
+    $db['feedback'] << data.to_s #params[:example]
     $db['durations'] << rcv_obj['duration'].to_i
+    $db['post_edits_display'] << send_recv(:detokenizer, reference)
     # 1. tokenize
       reference = send_recv :tokenizer, reference
     # 2. truecase
@@ -196,7 +205,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
       logmsg :db, "saving processed post-edit"
       $db['post_edits'] << reference.strip
     nochange = false
-    if rcv_obj[:nochange]
+    if rcv_obj['nochange']
       logmsg :server, "no change -> no updates!"
       nochange = true
     end
@@ -233,7 +242,7 @@ get '/next' do      # (receive post-edit, update models), send next translation
     return {'fin'=>true}.to_json                                       # return
   elsif !$confirmed \
     || ($confirmed && $last_reply && $last_reply!="" \
-        && !params[:example] && !$last_reply.to_json["oovs"]) # send last reply
+        && !data["EDIT"] && !$last_reply.to_json["oovs"]) # send last reply
     logmsg :server, "locked, re-sending last reply"
     logmsg :server, "last_reply: '#{$last_reply}'"
     $lock = false
@@ -382,6 +391,7 @@ get '/reset_progress' do                                # reset current session
   $db = JSON.parse ReadFile.read DB_FILE
   $db['post_edits'].clear
   $db['post_edits_raw'].clear
+  $db['post_edits_display'].clear
   $db['mt'].clear
   $db['mt_raw'].clear
   $db['updated'].clear
