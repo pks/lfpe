@@ -1,0 +1,20 @@
+{
+  "source": [
+    "Diese komponente ist ein",
+    "unmittelbares",
+    "mass für das lastmoment."
+  ],
+  "target": [
+    "measure for the load moment.",
+    "This component is a",
+    "immediate"
+  ],
+  "align": [
+    "0-1",
+    "1-2",
+    "2-0"
+  ],
+  "post_edit": "measure for the load moment. This component is a immediate",
+  "duration": 18198,
+  "source_value": "diese komponente ist ein unmittelbares mass für das lastmoment ."
+}

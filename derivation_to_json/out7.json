@@ -1,0 +1,44 @@
+{
+  "source": [
+    "In einer",
+    "favorisierten",
+    "ausführung",
+    "dient einer der",
+    "schwenkbolzen (8)",
+    "zugleich",
+    "als messbolzen, indem",
+    "an ihm",
+    "dehnungsmess-streifen",
+    "(",
+    "12) angebracht sind."
+  ],
+  "target": [
+    "12) attached to it.",
+    "of the",
+    "is used",
+    "strips (",
+    "by having strain gauge",
+    "time as a measuring bolt,",
+    "at the",
+    "hinge bolts (8)",
+    "favorited",
+    "In a"
+  ],
+  "align": [
+    "0-9",
+    "1-8",
+    "2-6",
+    "3-1",
+    "3-2",
+    "4-7",
+    "5-6",
+    "6-5",
+    "7-3",
+    "8-4",
+    "9-3",
+    "10-0"
+  ],
+  "post_edit": "12) attached to it. of the is used strips ( by having strain gauge time as a measuring bolt, at the hinge bolts (8) favorited In a",
+  "duration": 41261,
+  "source_value": "in einer favorisierten ausführung dient einer der schwenkbolzen ( 8 ) zugleich als messbolzen , indem an ihm dehnungsmess @-@ streifen ( 12 ) angebracht sind ."
+}
