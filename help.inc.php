@@ -1,4 +1,4 @@
-<p style="margin-top:-1em">Press the 'Next' button to <strong>submit</strong> your post-edit and to request the next segment for post-edition.
+<p>Press the 'Next' button to <strong>submit</strong> your post-edit and to request the next segment for post-edition.
 Alternatively, in the textual interface, you may just press return when you finished the post-edit ('Target' text area is in focus).</p>
 
 <p>The session can be paused at any time and continued later; However, if you have to pause your session, wait until the activity notification disappears and then press 'Pause', as we are collecting timing information. You may also just reload this site and re-request the segment to reset the timer.</p>

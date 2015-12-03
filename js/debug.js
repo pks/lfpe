@@ -7,5 +7,9 @@ $().ready(function()
       }});   
     })
   })
+  
+  var d = atob(document.getElementById("svg_b64").innerHTML); 
+  $('#svg').append($('<svg width="10000px">'+d+'</svg>'));
+
 })
 

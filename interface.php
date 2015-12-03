@@ -91,8 +91,8 @@ foreach($db->raw_source_segments as $s) {
 <!-- /Session overview -->
 
 <!-- Help -->
-<button id="help_button" onclick="$('#help').toggle('blind')">Help</button>
-<div id="help" style="display:none">
+<button id="help_button" class="button" onclick="$('#help').toggle('blind')">Help</button>
+<div id="help" style="display:none;margin-left:1em">
 <?php include("help.inc.php"); ?>
 <p class="xtrasmall">Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a></p>
 <p class="xtrasmall">Session: #<?php echo $_GET["key"]; ?> | <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a></p>

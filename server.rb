@@ -7,7 +7,9 @@ require 'nanomsg'
 require 'zipf'
 require 'json'
 require 'haml'
+require 'uri'
 require_relative './derivation_to_json/derivation_to_json'
+require_relative './phrase_alignment/phrase_alignment'
 
 # #############################################################################
 # Load configuration file and setup global variables
@@ -28,6 +30,7 @@ end
 DIR="/fast_scratch/simianer/lfpe"
 $daemons = {
   :tokenizer        => "#{DIR}/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
+  :tokenizer_src    => "#{DIR}/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
   :detokenizer      => "#{DIR}/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
   :detokenizer_src  => "#{DIR}/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
   :truecaser        => "#{DIR}/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
@@ -142,7 +145,9 @@ end
 
 post '/next' do      # (receive post-edit, update models), send next translation
   cross_origin
-  data = JSON.parse(request.body.read)
+  s = request.body.read
+  logmsg :server, "RAW: #{s}"
+  data = JSON.parse(URI.decode(s))
   logmsg :server, "answer: #{data.to_s}"
   # already processing request?
   return "locked" if $lock                                             # return
@@ -181,6 +186,7 @@ post '/next' do      # (receive post-edit, update models), send next translation
   # 5d. actual update
   # 6. update database
   if data["EDIT"]
+    logmsg :server, "#{data.to_s}"
     #logmsg :server, params[:example]
     rcv_obj = data #JSON.parse params[:example]
     # 0. save raw post-edit
@@ -189,12 +195,35 @@ post '/next' do      # (receive post-edit, update models), send next translation
     reference = ''
     if rcv_obj["type"] == 'g'
       reference = rcv_obj["target"].join " "
+      e = []
+      rcv_obj["target"].each_with_index { |i,j|
+        logmsg :server, "before #{i}"
+        x = send_recv(:tokenizer, URI.decode(i))
+        prev = x[0]
+        x = send_recv(:truecaser, x)
+        x[0] = prev if j>0
+        e << x
+        logmsg :server, "after #{x}"
+      }
+      f = []
+      rcv_obj["source_raw"].each { |i|
+        f << URI.decode(i)
+      }
+      logmsg :server, "XXX #{e.to_s}"
+      logmsg :server, "XXX #{f.to_s}"
+      new_rules = PhrasePhraseExtraction.extract_rules f, e, rcv_obj["align"], true
+      f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.rules"
+      new_rules = new_rules.map{|r| r.as_trule_string }
+      $additional_rules += new_rules
+      f.write new_rules.join "\n"
+      f.close
     else
       reference = rcv_obj["post_edit"]
     end
     $db['post_edits_raw'] << reference
     reference = cleanstr(reference)
-    $db['feedback'] << data.to_s #params[:example]
+    $db['feedback'] << data.to_json #params[:example]
+    $db['svg'] << rcv_obj['svg']
     $db['durations'] << rcv_obj['duration'].to_i
     $db['post_edits_display'] << send_recv(:detokenizer, reference)
     # 1. tokenize
@@ -320,12 +349,18 @@ post '/next' do      # (receive post-edit, update models), send next translation
     obj["progress"]= $db['progress']
     obj["raw_source"] = raw_source
     w_idx = 0
+    obj["source_groups_raw"] = []
+    obj["source_groups"].each { |i|
+      obj["source_groups_raw"] << String.new(i)
+    }
+    obj["source_groups_raw"][0][0] = source[0]
     obj["source_groups"][0][0] = obj["source_groups"][0][0].upcase
     obj["source_groups"].each_with_index { |i,j|
       prev = obj["source_groups"][j][0]
       obj["source_groups"][j] = send_recv(:detokenizer_src, obj["source_groups"][j]).strip
       obj["source_groups"][j][0]=prev if j > 0
     }
+    
     # save
     $db["derivations"] << deriv_s
     $db["derivations_proc"] << obj_str
@@ -399,6 +434,7 @@ get '/reset_progress' do                                # reset current session
   $db['derivations'].clear
   $db['derivations_proc'].clear
   $db['feedback'].clear
+  $db['svg'].clear
   $db['progress'] = -1
   update_database true
   $confirmed = true

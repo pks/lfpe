@@ -320,6 +320,7 @@ function Next()
       $("#next").html("Next");
       $("#oov_tgt0").focus();
       not_working(false);
+      DE_locked = true;
 
     // translation mode
     } else {

@@ -33,6 +33,8 @@
       %select
         - [1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001,0.000001,0.0000001,0.00000001,0.000000001,0.0000000001].each do |i|
           %option{:value => i, :onclick => "window.open(\"http://\"+window.location.host+\"/set_sparse_learning_rate/#{i}\");"} #{i}
+    %p#svg_b64 #{data2["svg"][data2["progress"]-1]}
+    %div#svg
     %table
       %tr
         %td.noborder
