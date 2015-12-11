@@ -1,1 +1,283 @@
-{"phrase_alignment":[[0],[1],[2],[3],[4],[5],[6],[7]],"source_groups":["die","neuerung","bezieht sich auf gassensoren","auf basis von","metalloxid @-@ halbleitern ,","die sehr","empfindlich und wenig temperaturabhängig","sind ."],"target_groups":["the","invention","relates to gas sensors","which are based on metal","@-@ oxide semiconductors and which","are very","sensitive and not appreciably temperature @-@ dependent","."]}
+{
+   "source_groups" : [
+      "weiterhin gehört",
+      "zur Erfindung",
+      "die Verwendung dieser Zusammensetzungen zur",
+      "Therapie und Prophylaxe von",
+      "Herz-Kreislauf-Erkrankungen",
+      ", Erkrankungen",
+      "im Zusammenhang",
+      "mit einer erhöhten",
+      "Thrombozytenaggregation ,",
+      "Stoffwechsel-Erkrankungen",
+      ", Knochenerkrankungen",
+      "oder",
+      "Krebserkrankungen",
+      "."
+   ],
+   "span_info" : {
+      "6" : [
+         [
+            4,
+            13
+         ],
+         [
+            [
+               4,
+               9
+            ]
+         ]
+      ],
+      "11" : [
+         [
+            18,
+            24
+         ],
+         [
+            [
+               21,
+               24
+            ]
+         ]
+      ],
+      "3" : [
+         [
+            0,
+            14
+         ],
+         [
+            [
+               0,
+               2
+            ],
+            [
+               4,
+               14
+            ]
+         ]
+      ],
+      "7" : [
+         [
+            4,
+            9
+         ],
+         []
+      ],
+      "9" : [
+         [
+            16,
+            27
+         ],
+         [
+            [
+               18,
+               26
+            ]
+         ]
+      ],
+      "12" : [
+         [
+            21,
+            24
+         ],
+         [
+            [
+               23,
+               24
+            ]
+         ]
+      ],
+      "14" : [
+         [
+            28,
+            29
+         ],
+         []
+      ],
+      "8" : [
+         [
+            14,
+            29
+         ],
+         [
+            [
+               16,
+               27
+            ],
+            [
+               28,
+               29
+            ]
+         ]
+      ],
+      "1" : [
+         [
+            0,
+            29
+         ],
+         []
+      ],
+      "4" : [
+         [
+            0,
+            2
+         ],
+         []
+      ],
+      "13" : [
+         [
+            23,
+            24
+         ],
+         []
+      ],
+      "10" : [
+         [
+            18,
+            26
+         ],
+         [
+            [
+               18,
+               24
+            ]
+         ]
+      ],
+      "5" : [
+         [
+            4,
+            14
+         ],
+         [
+            [
+               4,
+               13
+            ]
+         ]
+      ]
+   },
+   "source_rgroups" : [
+      4,
+      3,
+      7,
+      6,
+      5,
+      8,
+      9,
+      11,
+      12,
+      13,
+      10,
+      9,
+      8,
+      14
+   ],
+   "phrase_alignment" : [
+      [
+         1
+      ],
+      [
+         2,
+         0
+      ],
+      [
+         3
+      ],
+      [
+         4
+      ],
+      [
+         5
+      ],
+      [
+         6
+      ],
+      [
+         7
+      ],
+      [
+         8
+      ],
+      [
+         9
+      ],
+      [
+         10
+      ],
+      [
+         11
+      ],
+      [
+         12
+      ],
+      [
+         13
+      ],
+      [
+         14
+      ]
+   ],
+   "target_rgroups" : [
+      3,
+      4,
+      3,
+      7,
+      6,
+      5,
+      8,
+      9,
+      11,
+      12,
+      13,
+      10,
+      9,
+      8,
+      14
+   ],
+   "target_groups" : [
+      "the invention",
+      "also",
+      "relates to",
+      "the use of said compositions for the",
+      "therapy and prophylaxis of",
+      "cardiovascular diseases",
+      ", diseases",
+      "in conjunction",
+      "with an increased",
+      "the platelet aggregation ,",
+      "metabolism illnesses",
+      ", osteopathy",
+      "or",
+      "cancerous diseases",
+      "."
+   ],
+   "rules_by_span_id" : {
+      "6" : "[X] ||| [X] Therapie und Prophylaxe von ||| [1] therapy and prophylaxis of ||| IsSupportedOnline=0 IsSingletonFE=0 IsSingletonF=0 MaxLexEgivenF=0.926982 MaxLexFgivenE=1.42237 CountEF=0.90309 SampleCountF=1.47712 EgivenFCoherent=0.6173 ||| 1-1 2-2 3-3 4-4",
+      "11" : "[X] ||| mit einer erhöhten [X] ||| with an increased [1] ||| IsSupportedOnline=0 IsSingletonFE=0 IsSingletonF=0 MaxLexEgivenF=1.72017 MaxLexFgivenE=2.04771 CountEF=0.954243 SampleCountF=1.6902 EgivenFCoherent=0.778151 ||| 0-0 1-1 2-2",
+      "3" : "[X] ||| [X] zur Erfindung [X] ||| the invention [1] relates to [2] ||| IsSupportedOnline=0 IsSingletonFE=1 IsSingletonF=0 MaxLexEgivenF=3.63316 MaxLexFgivenE=1.80404 CountEF=0.30103 SampleCountF=1.27875 EgivenFCoherent=1.25527 ||| 1-4 2-3",
+      "7" : "[X] ||| die Verwendung dieser Zusammensetzungen zur ||| the use of said compositions for the ||| IsSupportedOnline=0 IsSingletonFE=1 IsSingletonF=1 MaxLexEgivenF=2.93053 MaxLexFgivenE=3.26928 CountEF=0.30103 SampleCountF=0.69897 EgivenFCoherent=0.60206 ||| 0-0 1-1 2-3 3-4 4-5",
+      "9" : "[X] ||| im Zusammenhang [X] oder ||| in conjunction [1] or ||| IsSupportedOnline=0 IsSingletonFE=0 IsSingletonF=0 MaxLexEgivenF=1.43987 MaxLexFgivenE=2.45332 CountEF=0.778151 SampleCountF=1.44716 EgivenFCoherent=0.732394 ||| 0-0 1-1 3-3",
+      "12" : "[X] ||| Thrombozytenaggregation , [X] ||| the platelet aggregation , [1] ||| IsSupportedOnline=0 IsSingletonFE=0 IsSingletonF=0 MaxLexEgivenF=2.11327 MaxLexFgivenE=1.16228 CountEF=0.477121 SampleCountF=0.69897 EgivenFCoherent=0.30103 ||| 0-1 0-2",
+      "14" : "[X] ||| . ||| . ||| IsSupportedOnline=1 IsSingletonFE=0 IsSingletonF=0 MaxLexEgivenF=0.0201086 MaxLexFgivenE=0.135104 CountEF=2.39967 SampleCountF=2.48287 EgivenFCoherent=0.0835026 ||| 0-0",
+      "8" : "[X] ||| , Erkrankungen [X] Krebserkrankungen [X] ||| , diseases [1] cancerous diseases [2] ||| IsSupportedOnline=0 IsSingletonFE=0 IsSingletonF=0 MaxLexEgivenF=1.3856 MaxLexFgivenE=0.862494 CountEF=0.477121 SampleCountF=0.778151 EgivenFCoherent=0.39794 ||| 0-0 1-1 3-3 3-4",
+      "4" : "[X] ||| weiterhin gehört ||| also ||| IsSupportedOnline=0 IsSingletonFE=1 IsSingletonF=1 MaxLexEgivenF=0.458975 MaxLexFgivenE=4.79441 CountEF=0.30103 SampleCountF=0.477121 EgivenFCoherent=0.30103 ||| 0-0 1-0",
+      "10" : "[X] ||| [X] , Knochenerkrankungen ||| [1] , osteopathy ||| IsSupportedOnline=0 IsSingletonFE=1 IsSingletonF=1 MaxLexEgivenF=1.11792 MaxLexFgivenE=0.186321 CountEF=0.30103 SampleCountF=0.30103 EgivenFCoherent=-0 ||| 1-1 2-2",
+      "13" : "[X] ||| Stoffwechsel-Erkrankungen ||| metabolism illnesses ||| ForceRule=1 ||| 0-0 0-1",
+      "5" : "[X] ||| [X] Herz-Kreislauf-Erkrankungen ||| [1] cardiovascular diseases ||| IsSupportedOnline=0 IsSingletonFE=0 IsSingletonF=0 MaxLexEgivenF=0.739399 MaxLexFgivenE=0.797149 CountEF=1.38021 SampleCountF=1.69897 EgivenFCoherent=0.328468 ||| 1-1 1-2"
+   },
+   "span2id" : {
+      "[18, 26]" : 10,
+      "[4, 13]" : 6,
+      "[23, 24]" : 13,
+      "[4, 14]" : 5,
+      "[0, 29]" : 1,
+      "[28, 29]" : 14,
+      "[0, 2]" : 4,
+      "[18, 24]" : 11,
+      "[0, 14]" : 3,
+      "[21, 24]" : 12,
+      "[14, 29]" : 8,
+      "[4, 9]" : 7,
+      "[16, 27]" : 9
+   }
+}
