@@ -125,7 +125,7 @@ class Rule
 
   def base_alignment2 correct_src, correct_tgt, start_source, start_target
     @alignment.each_with_index { |p,j|
-      if p[0] > start_source 
+      if p[0] > start_source
         @alignment[j][0] = [0,p.first-correct_src].max
       end
       if p[1] > start_target
@@ -328,7 +328,7 @@ class Rule
       end
       j += 1
     }
-    
+
     el = []
     new_rule.target.each { |i|
       if i.is_a? Range
