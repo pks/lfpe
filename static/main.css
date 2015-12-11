@@ -42,9 +42,7 @@ div#wrapper {
   padding: 1em
 }
 
-span#status {
-  float:   right
-}
+span#status { float:right }
 
 /* Edit */
 #textboxes, #derivation_editor {
@@ -60,7 +58,7 @@ span#status {
 /* /Edit */
 
 /* OOV */
-#oov_form { display: none }
+#oov_form { display:none }
 #oov_fields {
   padding: 1em;
   margin: .25em
@@ -68,7 +66,7 @@ span#status {
 }
 #oov_fields input {
   text-align: center;
-  padding: .4em
+  padding:    .4em
 }
 /* /OOV */
 
@@ -111,6 +109,8 @@ img#cl {
 
 /* Help */
 div#help {
+  display:     none;
+  margin-left: 1em
   margin-top: .5em;
   font-size:  .8em;
   width:      70%;
