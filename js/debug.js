@@ -1,15 +1,16 @@
 $().ready(function()
 {
+  // use ajax to send commands to the server
   $(".ajax").each(function(x){
     $(this).click(function(){
        $.ajax({url: $(this).attr("tgt"), success: function(result){
-          $("#ajax_result").html(result);
+          $("#control_reply").html(result);
       }});   
     })
   })
   
+  // display svg
   var d = atob(document.getElementById("svg_b64").innerHTML); 
   $('#svg').append($('<svg width="10000px">'+d+'</svg>'));
-
-})
+});
 
