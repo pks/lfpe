@@ -1,7 +1,7 @@
 *.out
 *.err
 out.*
-derivation_editor/
+js/derivation_editor
 util/run_beta_test
 logs/
 
