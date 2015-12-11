@@ -1,6 +1,3 @@
-*.out
-*.err
-out.*
 js/derivation_editor
 util/run_beta_test
 logs/
