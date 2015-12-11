@@ -125,5 +125,6 @@ foreach($db->raw_source_segments as $s) {
 <textarea style="display:none" id="init">0</textarea>
 <textarea style="display:none" id="ui_type"><?php echo $_GET["ui_type"]; ?></textarea>
 <textarea style="display:none" id="data"></textarea>
+<textarea style="display:none" id="original_svg"></textarea>
 <!-- /Data -->
 

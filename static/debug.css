@@ -7,5 +7,5 @@ td.noborder { border:0 }
 td.left { text-align:left }
 a { color:blue }
 h1,h2 { background:#fff; padding:.25em }
-#svg_b64 { display:none }
+#svg_b64,#original_svg_b64 { display:none }
 

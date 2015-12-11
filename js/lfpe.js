@@ -177,6 +177,7 @@ function Next()
       post_edit = "";
     send_data["post_edit"] = encodeURIComponent(post_edit);
     send_data['type'] = 'g';
+    send_data["original_svg"] = document.getElementById("original_svg").value;
   } else {
     post_edit = trim(target_textarea.value);
     send_data["post_edit"] = post_edit;
@@ -186,7 +187,6 @@ function Next()
   send_data["key"] = key;
 
   // send data
-  // ???
   if (oov_correct.value=="false" && post_edit != "") {
       send_data["EDIT"] = true;
       send_data["duration"] = Timer.get();
@@ -362,6 +362,7 @@ function Next()
         DE_init();
         var x = trim(JSON.parse(DE_extract_data())["target"].join(" "));
         last_post_edit.value = x;
+        document.getElementById("original_svg").value = DE_get_raw_svg_data();
       }
 
       // start timer

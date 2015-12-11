@@ -56,7 +56,9 @@
     %hr
     /=#########################################################################
     %h2#post_edit Post-edit &amp; machine translation
+    %p#original_svg_b64 #{data["original_svg"][progress]}
     %p#svg_b64 #{data["svg"][progress]}
+    %div#original_svg
     %div#svg
     %table
       %tr
@@ -93,9 +95,9 @@
         %td.left #{pairwise_ranking_data["best_match"]}
     %h2 Derivation
     %pre #{data["derivations"][progress]}
-    %h3 Processed
-    - if data["derivations_proc"][progress]
-      %pre #{JSON.pretty_generate(JSON.parse(data["derivations_proc"][progress]))}
+    /= %h3 Processed
+    /= - if data["derivations_proc"][progress]
+    /=  %pre #{JSON.pretty_generate(JSON.parse(data["derivations_proc"][progress]))}
     %h2 Client reply
     - if data["feedback"][progress]
       %pre #{JSON.pretty_generate(JSON.parse(data["feedback"][progress]))}

@@ -241,6 +241,7 @@ post '/next' do      # (receive post-edit, update models), send next translation
     $db['feedback']           << reply
     $db['post_edits_raw']     << post_edit
     $db['svg']                << data['svg']
+    $db['original_svg']       << data['original_svg']
     $db['durations']          << data['duration'].to_f
     $db['post_edits_display'] << send_recv(:detokenizer, post_edit)
     # 1. tokenize
@@ -480,6 +481,7 @@ get '/reset_progress' do                                # reset current session
   $db['derivations'].clear
   $db['derivations_proc'].clear
   $db['svg'].clear
+  $db['original_svg'].clear
   $db['feedback'].clear
   $db['progress'] = -1
   update_database true

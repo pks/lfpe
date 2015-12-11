@@ -300,7 +300,7 @@ class Rule
     j = 0
     fl.each { |i|
       if i.match(/\[NEWX,\d+\]/)
-        STDERR.write "j = #{j}\n"
+        STDERR.write "j = #{j}\n" if DEBUG
         start_correct_source = j
         break
       end
@@ -322,7 +322,7 @@ class Rule
     j = 0
     el.each { |i|
       if i.match(/\[NEWX,\d+\]/)
-        STDERR.write "j = #{j}\n"
+        STDERR.write "j = #{j}\n" if DEBUG
         start_correct_target = j
         break
       end
