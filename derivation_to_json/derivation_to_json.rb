@@ -3,6 +3,8 @@
 require 'zipf'
 require 'stringio'
 
+module DerivationToJson
+
 class RuleAndSpan
   attr_accessor :span, :symbol, :source, :target, :subspans, :done, :id, :trule
 
@@ -121,7 +123,7 @@ class Rule
   end
 end
 
-def conv_cdec_show_deriv s
+def DerivationToJson.conv_cdec_show_deriv s
   rules = []
   xx = StringIO.new s
   d_s = xx.gets
@@ -140,7 +142,7 @@ def conv_cdec_show_deriv s
   return a, rules
 end
 
-def derive span, by_span, o, groups, source
+def DerivationToJson.derive span, by_span, o, groups, source
   if groups.size==0 || groups.last.size>0
     groups << []
   end
@@ -168,7 +170,7 @@ def derive span, by_span, o, groups, source
   span.done = true
 end
 
-def proc_deriv s
+def DerivationToJson.proc_deriv s
   a, rules = conv_cdec_show_deriv s
 
   by_span = {}
@@ -303,12 +305,14 @@ def proc_deriv s
   return h.to_json
 end
 
+end # module
+
 if __FILE__ == $0
   s = ""
   while line = STDIN.gets
     s += line
   end
-  json = proc_deriv(s)
+  json = DerivationToJson.proc_deriv(s)
   obj = JSON.parse(json)
   STDERR.write "#{json}\n"
   puts obj["source_groups"].join " "

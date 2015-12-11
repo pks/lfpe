@@ -375,7 +375,7 @@ post '/next' do      # (receive post-edit, update models), send next translation
     # 3. translation
     msg = "act:translate ||| <seg grammar=\"#{grammar}\"> #{source} </seg>"
     derivation_str = send_recv :dtrain, msg
-    obj_str = proc_deriv derivation_str
+    obj_str = DerivationToJson.proc_deriv derivation_str
     obj = JSON.parse obj_str
     obj["transl"] = obj["target_groups"].join " "
     # 4. detokenizer
