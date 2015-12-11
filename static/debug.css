@@ -1,7 +1,11 @@
+body { margin:2em; background:#eee }
 .red { color:red }
 .green { color:green }
 th { border:1px solid #000 }
 td { border:1px solid #000; text-align:right }
 td.noborder { border:0 }
 td.left { text-align:left }
+a { color:blue }
+h1,h2 { background:#fff; padding:.25em }
+#svg_b64 { display:none }
 
