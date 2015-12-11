@@ -4,6 +4,6 @@ of rules in a smart, presentable way. The result resembles a phrase-based
 system, given that the word alignment gives enough hints.
 
 To run:
-  ./derivation_to_json.rb < <one of the .raw files>
+    ./derivation_to_json.rb < {one of the .raw files}
 (first line of stdout is json data, source and target strings follow after that)
 
