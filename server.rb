@@ -2,7 +2,7 @@
 
 require 'sinatra'
 require 'sinatra/cross_origin'
-require "sinatra/reloader"
+require 'sinatra/reloader'
 require 'nanomsg'
 require 'zipf'
 require 'json'
@@ -18,7 +18,8 @@ require_relative "#{ARGV[0]}" # load configuration for this session
 $lock             = false     # lock if currently learning/translating
 $last_reply       = nil       # cache last reply
 $confirmed        = true      # client received translation?
-$additional_rules = []        # corrected OOVs
+$additional_rules = []        # corrected OOVs and newly extracted rules
+$rejected_rules   = []        # known rules
 if !FileTest.exist? LOCK_FILE # locked?
   $db  = {}                   # data file (JSON format)
   $env = {}                   # environment variables (socket connections to daemons)
@@ -29,12 +30,12 @@ end
 # #############################################################################
 DIR="/fast_scratch/simianer/lfpe"
 $daemons = {
-  :tokenizer        => "#{DIR}/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
-  :tokenizer_src    => "#{DIR}/lfpe/util/wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
-  :detokenizer      => "#{DIR}/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
-  :detokenizer_src  => "#{DIR}/lfpe/util/wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
-  :truecaser        => "#{DIR}/lfpe/util/wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
-  #:lowercaser   => "#{DIR}/lfpe/util/wrapper.rb -a lowercase  -S '__ADDR__' -e #{EXTERNAL}",
+  :tokenizer        => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
+  :tokenizer_src    => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
+  :detokenizer      => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
+  :detokenizer_src  => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
+  :truecaser        => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
+  #:lowercaser   => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a lowercase  -S '__ADDR__' -e #{EXTERNAL}",
   :dtrain           => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights -a '__ADDR__' -E -R",
   :extractor        => "python -m cdec.sa.extract -c #{SESSION_DIR}/sa.ini --online -u -S '__ADDR__'",
   :aligner_fwd      => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
@@ -77,7 +78,8 @@ end
 def stop_all_daemons
   logmsg :server, "shutting down all daemons"
   $env.each { |name,p|
-    p[:socket].send "shutdown" # every daemon shuts down after receiving this keyword
+    p[:socket].send "shutdown"                   # every daemon shuts down
+                                                 # after receiving this keyword
     logmsg :server, "< #{name} is #{p[:socket].recv}"
   }
 end
@@ -95,18 +97,19 @@ def update_database reset=false
 end
 
 def init
-  # database connection
+                                                          # data from JSON file
   $db = JSON.parse ReadFile.read DB_FILE
-  # working directory
-  `mkdir -p #{WORK_DIR}/g`
-  # setup environment, start daemons
+                                                            # working directory
+  `mkdir -p #{WORK_DIR}/`
+  `mkdir #{WORK_DIR}/g`
+                                             # setup environment, start daemons
   port = BEGIN_PORT_RANGE
   $daemons.each { |name,cmd|
     sock, pid = start_daemon cmd, name, "tcp://127.0.0.1:#{port}"
     $env[name] = { :socket => sock, :pid => pid }
     port += 1
   }
-  # lock
+                                                                   #  lock file
   `touch #{LOCK_FILE}`
 end
 
@@ -121,7 +124,7 @@ def send_recv daemon, msg                            # simple pair communcation
   return ans
 end
 
-def cleanstr s
+def clean_str s                   # FIXME replace chars w/ something reasonable
   s.gsub! "[", " "
   s.gsub! "]", " "
   s.gsub! "|", " "
@@ -144,118 +147,135 @@ get '/' do
 end
 
 post '/next' do      # (receive post-edit, update models), send next translation
-  cross_origin
-  s = request.body.read
-  logmsg :server, "RAW: #{s}"
-  data = JSON.parse(URI.decode(s))
-  logmsg :server, "answer: #{data.to_s}"
-  # already processing request?
-  return "locked" if $lock                                             # return
-  $lock = true
-  key = data['key']            # TODO: do something with it, e.g. simple auth?
-  if data["OOV"]
-    #logmsg :server, "correct: #{params[:correct]}"
-    logmsg :server, "correct: #{data.to_s}"
+  cross_origin                           # enable Cross-Origin Resource Sharing
+  reply = request.body.read
+  logmsg :server, "raw JSON client reply: #{reply}"
+  data = JSON.parse(URI.decode(reply))
+  logmsg :server, "parsed reply: #{data.to_s}"
+                                                  # already processing request?
+  return "locked" if $lock                                    # return (locked)
+  $lock = true                                                           # lock
+  key = data['key']              # TODO do something with it, e.g. simple auth?
+  if data["OOV"]                                              # OOV corrections
+    logmsg :server, "received OOV corrections"
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
-    src, tgt = splitpipe(data["correct"])
-    tgt = cleanstr(tgt)
+    src, tgt = splitpipe(data["correct"]) # format:src1\tsrc2\tsrc..|||tgt1\t..
+    tgt = clean_str tgt
     src = src.split("\t").map { |i| i.strip }
     tgt = tgt.split("\t").map { |i| i.strip }
     src.each_with_index { |s,i|
       next if s==''||tgt[i]==''
-      a = ""
-      tgt[i].split.each_index { |k|
-        a += " 0-#{k}"
-      }
-      a.strip!
-      rule = "[X] ||| #{s} ||| #{tgt[i]} ||| ForceRule=1 ||| #{a}"
-      $additional_rules << rule
+      as = ""
+      tgt[i].split.each_index { |k| as += " 0-#{k}" }
+      r = "[X] ||| #{s} ||| #{tgt[i]} ||| NewRule=1 OOVFix=1 ||| #{as}"
+      $additional_rules << r
     }
     $confirmed = true
   end
-  # received post-edit -> update models
-  # 0. save raw post-edit
-  # 1. tokenize
-  # 2. truecase
-  # 3. save processed post-edit
-  # 4. update weights
-  # 5. update grammar extractor
-  # 5a. forward alignment
-  # 5b. backward alignment
-  # 5c. symmetrize alignment
-  # 5d. actual update
-  # 6. update database
+# received post-edit -> update models
+# 0. save raw post-edit
+# 1. tokenize [for each phrase]
+# 2. truecase [for each phrase]
+# 2.5 extract new rules
+# 3. save processed post-edit
+# 4. update weights
+# 5. update grammar extractor
+# 5a. forward alignment
+# 5b. backward alignment
+# 5c. symmetrize alignment
+# 5d. actual update
+# 6. update database
   if data["EDIT"]
-    logmsg :server, "#{data.to_s}"
-    #logmsg :server, params[:example]
-    rcv_obj = data #JSON.parse params[:example]
-    # 0. save raw post-edit
-    #source, reference = params[:example].strip.split(" ||| ")
-    source = rcv_obj["source_value"]
-    reference = ''
-    if rcv_obj["type"] == 'g'
-      reference = rcv_obj["target"].join " "
+    logmsg :server, "received post-edit"
+                                                        # 0. save raw post-edit
+    source = data["source_value"]
+    post_edit = ''
+    if data["type"] == 'g'                                # graphical interface
+      post_edit = data["target"].join(" ")
       e = []
-      rcv_obj["target"].each_with_index { |i,j|
-        logmsg :server, "before #{i}"
-        x = send_recv(:tokenizer, URI.decode(i))
-        prev = x[0]
-        x = send_recv(:truecaser, x)
-        x[0] = prev if j>0
-        e << x
-        logmsg :server, "after #{x}"
+      logmsg :server, "post-edit before processing: '#{post_edit}'"
+      data["target"].each_with_index { |i,j|
+                                                                # [1.] tokenize
+        _ = clean_str send_recv(:tokenizer, URI.decode(i))
+        prev = _[0]                                       # use received casing
+                                                                 #[2.] truecase
+        _ = send_recv :truecaser, _
+        _[0] = prev if j>0
+        e << _
       }
+      logmsg :server, "post-edit after processing: '#{e.join " "}'"
       f = []
-      rcv_obj["source_raw"].each { |i|
-        f << URI.decode(i)
+      data["source_raw"].each { |i| f << URI.decode(i) }
+                                                      # 2.5 new rule extraction
+      new_rules = PhrasePhraseExtraction.extract_rules f, e, data["align"], true
+      grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+      sts = {}
+      ReadFile.readlines_strip(grammar).each { |r|
+        s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+        sts[s] = true
       }
-      logmsg :server, "XXX #{e.to_s}"
-      logmsg :server, "XXX #{f.to_s}"
-      new_rules = PhrasePhraseExtraction.extract_rules f, e, rcv_obj["align"], true
-      f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.rules"
-      new_rules = new_rules.map{|r| r.as_trule_string }
+
+      f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.new_rules"
+      new_rules = new_rules.map { |r| r.as_trule_string }
+      logmsg :server, "# rules before filtering #{new_rules.size}"
+      _ = new_rules.dup
+      new_rules.reject! { |rs|
+        s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+        sts.has_key? s
+      }
+      logmsg :server, "# rules after filtering #{new_rules.size}"
+      (_-new_rules).each { |r|
+        logmsg :server, "rejected rule [already known]: '#{r}'"
+      }
       $additional_rules += new_rules
+      $rejected_rules   += _-new_rules
       f.write new_rules.join "\n"
       f.close
-    else
-      reference = rcv_obj["post_edit"]
+    else                                                       # text interface
+      post_edit = data["post_edit"]
     end
-    $db['post_edits_raw'] << reference
-    reference = cleanstr(reference)
-    $db['feedback'] << data.to_json #params[:example]
-    $db['svg'] << rcv_obj['svg']
-    $db['durations'] << rcv_obj['duration'].to_i
-    $db['post_edits_display'] << send_recv(:detokenizer, reference)
+    post_edit.strip!
+    post_edit.lstrip!
+    post_edit = clean_str post_edit                      # FIXME escape [ and ]
+                                                                      # fill db
+    $db['feedback']           << reply
+    $db['post_edits_raw']     << post_edit
+    $db['svg']                << data['svg']
+    $db['durations']          << data['duration'].to_f
+    $db['post_edits_display'] << send_recv(:detokenizer, post_edit)
     # 1. tokenize
-      reference = send_recv :tokenizer, reference
+      logmsg :server, "tokenizing post-edit"
+      post_edit = send_recv :tokenizer, post_edit
     # 2. truecase
-      reference = send_recv :truecaser, reference
+      logmsg :server, "truecasing post-edit"
+      post_edit = send_recv :truecaser, post_edit
     # 3. save processed post-edits
       logmsg :db, "saving processed post-edit"
-      $db['post_edits'] << reference.strip
+      $db['post_edits'] << post_edit.strip
     nochange = false
-    if rcv_obj['nochange']
-      logmsg :server, "no change -> no updates!"
+    if data['nochange']
+      logmsg :server, "no change -> no update!"
       nochange = true
     end
     if !NOLEARN && !NOMT && !nochange
       logmsg :server, "updating ..."
-    # 4. update weights
+                               # 4. update weights
+                               # nb: this uses unaltered grammar [no new rules]
       grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
       annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
-      send_recv :dtrain, "#{annotated_source} ||| #{reference}"
-    # 5. update grammar extractor
-    # 5a. get forward alignment
+      send_recv :dtrain, "#{annotated_source} ||| #{post_edit}"
+                                                  # 5. update grammar extractor
+                                                  # 5a. get forward alignment
       source_lc = source.downcase
-      reference_lc = reference.downcase
-      a_fwd = send_recv :aligner_fwd, "#{source_lc} ||| #{reference_lc}"
-    # 5b. get backward alignment
-      a_back = send_recv :aligner_back, "#{source_lc} ||| #{reference_lc}"
-    # 5c. symmetrize alignment
+      post_edit_lc = post_edit.downcase
+      a_fwd = send_recv :aligner_fwd, "#{source_lc} ||| #{post_edit_lc}"
+                                                   # 5b. get backward alignment
+      a_back = send_recv :aligner_back, "#{source_lc} ||| #{post_edit_lc}"
+                                                     # 5c. symmetrize alignment
       a = send_recv :atools, "#{a_fwd} ||| #{a_back}"
-    # 5d actual extractor
-      send_recv :extractor, "default_context ||| #{source} ||| #{reference} ||| #{a}"
-    # 6. update database
+                                                          # 5d actual extractor
+      send_recv :extractor, "default_context ||| #{source} ||| #{post_edit} ||| #{a}"
+                                                           # 6. update database
       logmsg :db, "updating database"
       $db['updated'] << true
     else
@@ -264,45 +284,65 @@ post '/next' do      # (receive post-edit, update models), send next translation
     update_database
   end
   source     = $db['source_segments'][$db['progress']]
+  source = source.strip.lstrip
   raw_source = $db['raw_source_segments'][$db['progress']]
-  if !source # input is done -> displays thank you
+  raw_source = raw_source.strip.lstrip
+  if !source                                                    # input is done
     logmsg :server, "end of input, sending 'fin'"
     $lock = false
     return {'fin'=>true}.to_json                                       # return
   elsif !$confirmed \
     || ($confirmed && $last_reply && $last_reply!="" \
-        && !data["EDIT"] && !$last_reply.to_json["oovs"]) # send last reply
+        && !data["EDIT"] && !$last_reply.to_json["oovs"])     # send last reply
     logmsg :server, "locked, re-sending last reply"
     logmsg :server, "last_reply: '#{$last_reply}'"
     $lock = false
     return $last_reply                                                 # return
   else
-    # translate next sentence
-    # 0. no mt?
-    # 1. generate grammar
-    # - additional rules
-    # 2. check for OOV
-    # 3. translate
-    # 4. detokenize
-    # 5. reply
-    source.strip!
-    # 0. no mt?
+# translate next sentence
+# 0. no mt?
+# 1. generate grammar
+# - known rules
+# - additional rules
+# 2. check for OOV
+# 3. translate
+# 4. detokenize
+# 5. reply
+                                                                    # 0. no mt?
     if NOMT
       $lock = false
       logmsg :server, "no mt"
       obj = Hash.new
-      obj["progress"] = $db["progress"]
-      obj["source"] = source
+      obj["progress"]   = $db["progress"]
+      obj["source"]     = source
       obj["raw_source"] = raw_source
       return obj.to_json                                               # return
     end
-    # 1. generate grammar for current sentence
+                                     # 1. generate grammar for current sentence
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
     send_recv :extractor, "default_context ||| #{source} ||| #{grammar}"
-    # - additional rules
+                                                                # - known rules
+    logmsg :server, "annotating known rules"
+    match = {}
+    $rejected_rules.each { |r|
+      _,src,tgt,_,_ = splitpipe r
+      match["#{src.strip.lstrip} ||| #{tgt.strip.lstrip}".hash] = true
+    }
+    all_rules = ReadFile.readlines_strip grammar
+    all_rules.each_with_index { |r,j|
+      nt,src,tgt,f,a = splitpipe(r).map { |i| i.strip.lstrip }
+      if match["#{src} ||| #{tgt}".hash]
+        ar = "#{nt} ||| #{src} ||| #{tgt} ||| #{f} KnownRule=1 ||| #{a}"
+        logmsg :server, "replacing rule '#{r}' with '#{ar}'"
+        all_rules[j] = ar
+      end
+    }
+    WriteFile.new(grammar).write all_rules.join("\n")+"\n"
+                                                           # - additional rules
     $additional_rules.each { |rule|
      logmsg :server, "adding rule '#{rule}' to grammar '#{grammar}'"
-     `echo "#{rule}" >> #{grammar}`
+      s = splitpipe(rule)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+      `echo "#{rule}" >> #{grammar}`
     }
     # 2. check for OOVs
     src_r = ReadFile.readlines(grammar).map {
@@ -316,11 +356,11 @@ post '/next' do      # (receive post-edit, update models), send next translation
       end
     }
     oovs.uniq!
-    logmsg :server, "OOVs: #{oovs.to_s}"
+    logmsg :server, "have OOVs: '#{oovs.to_s}'"
     if oovs.size > 0                                                     # OOVs
       obj = Hash.new
-      obj["oovs"] = oovs
-      obj["progress"] = $db['progress']
+      obj["oovs"]      = oovs
+      obj["progress"]  = $db['progress']
       raw_source_annot = "#{raw_source}"
       oovs.each { |o|
         raw_source_annot.gsub! "#{o}", "***#{o}###"
@@ -334,8 +374,8 @@ post '/next' do      # (receive post-edit, update models), send next translation
     end
     # 3. translation
     msg = "act:translate ||| <seg grammar=\"#{grammar}\"> #{source} </seg>"
-    deriv_s = send_recv(:dtrain, msg)
-    obj_str = proc_deriv(deriv_s)
+    derivation_str = send_recv :dtrain, msg
+    obj_str = proc_deriv derivation_str
     obj = JSON.parse obj_str
     obj["transl"] = obj["target_groups"].join " "
     # 4. detokenizer
@@ -345,8 +385,8 @@ post '/next' do      # (receive post-edit, update models), send next translation
       obj["target_groups"][j] = send_recv(:detokenizer, obj["target_groups"][j]).strip
       obj["target_groups"][j][0]=prev if j > 0
     }
-    obj["source"] = source
-    obj["progress"]= $db['progress']
+    obj["source"]     = source
+    obj["progress"]   = $db['progress']
     obj["raw_source"] = raw_source
     w_idx = 0
     obj["source_groups_raw"] = []
@@ -360,13 +400,12 @@ post '/next' do      # (receive post-edit, update models), send next translation
       obj["source_groups"][j] = send_recv(:detokenizer_src, obj["source_groups"][j]).strip
       obj["source_groups"][j][0]=prev if j > 0
     }
-    
-    # save
-    $db["derivations"] << deriv_s
+                                                                         # save
+    $db["derivations"]      << derivation_str
     $db["derivations_proc"] << obj_str
-    $db["mt_raw"] << obj["transl"]
-    $db["mt"] << obj["transl_detok"]
-    # 5. reply
+    $db["mt_raw"]           << obj["transl"]
+    $db["mt"]               << obj["transl_detok"]
+                                                                     # 5. reply
     $last_reply = obj.to_json
     $lock = false
     $confirmed = false
@@ -378,23 +417,28 @@ post '/next' do      # (receive post-edit, update models), send next translation
 end
 
 get '/debug' do                                                    # debug view
-  fn = "#{WORK_DIR}/dtrain.debug.json"                      # TODO: other tools
   data = {}
-  # make debug.haml work
-  data["kbest"] = []
-  data["weights_before"] = {}
-  data["weights_after"] = {}
+  data = JSON.parse ReadFile.read(DB_FILE).force_encoding("UTF-8")
+  if data["durations"].size == 0
+    data["durations"] << -1
+  end
+
+  fn = "#{WORK_DIR}/dtrain.debug.json"
+  pairwise_ranking_data                     = {}
+  pairwise_ranking_data["kbest"]            = []
+  pairwise_ranking_data["weights_before"]   = {}
+  pairwise_ranking_data["weights_after"]    = {}
+  pairwise_ranking_data["best_match_score"] = 0
   if File.exist? fn
-    data = JSON.parse ReadFile.read(fn).force_encoding("UTF-8")
-  end
-  data2 = {}
-  data2 = JSON.parse ReadFile.read(DB_FILE).force_encoding("UTF-8")
-  if data2["durations"].size == 0
-    data2["durations"] << -1
+    pairwise_ranking_data = JSON.parse ReadFile.read(fn).force_encoding("UTF-8")
   end
 
-
-  haml :debug, :locals => { :data => data, :data2 => data2, :additional_rules => $additional_rules, :session_key => SESSION_KEY }
+  haml :debug, :locals => { :data => data,
+                            :pairwise_ranking_data => pairwise_ranking_data, \
+                            :progress => $db["progress"]-1,
+                            :additional_rules => $additional_rules, \
+                            :rejected_rules => $rejected_rules, \
+                            :session_key => SESSION_KEY }
 end
 
 get '/confirm' do                        # client confirms received translation
@@ -406,19 +450,21 @@ get '/confirm' do                        # client confirms received translation
 end
 
 get '/set_learning_rate/:rate' do
-  logmsg :server, "set learning rate, #{params[:rate]}"
+  rate = params[:rate].to_f
+  logmsg :server, "set learning rate: #{rate}"
   return "locked" if $lock
-  send_recv :dtrain, "set_learning_rate #{params[:rate].to_f}"
+  send_recv :dtrain, "set_learning_rate #{rate}"
 
-  return "done"
+  return "set learning rate to: #{rate}"
 end
 
-get '/set_sparse_learning_rate/:rate' do
-  logmsg :server, "set sparse learning rate, #{params[:rate]}"
+get '/set_learning_rate/sparse/:rate' do
+  rate = params[:rate]
+  logmsg :server, "set sparse learning rate: #{rate}"
   return "locked" if $lock
-  send_recv :dtrain, "set_sparse_learning_rate #{params[:rate].to_f}"
+  send_recv :dtrain, "set_sparse_learning_rate #{rate}"
 
-  return "done"
+  return "set sparse learning rate to: #{rate}"
 end
 
 get '/reset_progress' do                                # reset current session
@@ -433,36 +479,37 @@ get '/reset_progress' do                                # reset current session
   $db['durations'].clear
   $db['derivations'].clear
   $db['derivations_proc'].clear
-  $db['feedback'].clear
   $db['svg'].clear
+  $db['feedback'].clear
   $db['progress'] = -1
   update_database true
   $confirmed = true
   $last_reply = nil
 
-  return "reset done"
+  return "progress reset: done"
 end
 
-get '/reset_weights' do
+get '/reset_weights' do                                         # reset weights
   logmsg :server, "reset weights"
   return "locked" if $lock
   send_recv :dtrain, "reset_weights"
 
-  return "reset weights done"
+  return "reset weights: done"
 end
 
-get '/reset_extractor' do
+get '/reset_extractor' do                             # reset grammar extractor
   logmsg :server, "reset extractor"
   return "locked" if $lock
   send_recv :extractor, "default_context ||| drop"
 
-  return "reset extractor done"
+  return "reset extractor: done"
 end
 
-get '/reset_add_rules' do
+get '/reset_new_rules' do                               # removed learned rules
   $additional_rules.clear
+  $rejected_rules.clear
 
-  return "reset add. rules done"
+  return "reset new rules: done"
 end
 
 get '/shutdown' do                          # stop daemons and shut down server
