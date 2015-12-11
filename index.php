@@ -6,7 +6,7 @@
   <link rel="stylesheet" type="text/css" href="static/main.css" />
 </head>
 
-<body onload="">
+<body>
 
 <?php include("header.inc.php"); ?>
 
