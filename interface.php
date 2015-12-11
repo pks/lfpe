@@ -7,7 +7,9 @@
   <script src="js/common.js" charset="utf-8"></script>
   <script src="js/lfpe.js" charset="utf-8"></script>
   <script src="https://raw.githubusercontent.com/DmitryBaranovskiy/raphael/v2.1.2/raphael-min.js" type="text/javascript" charset="utf-8"></script>
-  <!--<script src="https://raw.githubusercontent.com/marmelab/Raphael.InlineTextEditing/fd578f0eddd4172e6d9b3fde4cb67576cf546dc1/raphael.inline_text_editing.js" charset="utf-8"></script>-->
+<!--
+  <script src="https://raw.githubusercontent.com/marmelab/Raphael.InlineTextEditing/fd578f0eddd4172e6d9b3fde4cb67576cf546dc1/raphael.inline_text_editing.js" charset="utf-8"></script>
+-->
   <script src="js/derivation_editor/raphael.inline_text_editing.js" charset="utf-8"></script>
   <script src="js/derivation_editor/derivation-editor.js" charset="utf-8"></script>
 
@@ -46,7 +48,6 @@ Note that the source word may be distorted.</span>
   <div id="oov_fields"></div>
 </div>
 <!-- /Source and target textboxes -->
-
 
 <!-- Buttons -->
 <div>
@@ -91,15 +92,20 @@ foreach($db->raw_source_segments as $s) {
 <!-- /Session overview -->
 
 <!-- Help -->
-<button id="help_button" class="button" onclick="$('#help').toggle('blind')">Help</button>
-<div id="help" style="display:none;margin-left:1em">
-<?php include("help.inc.php"); ?>
-<p class="xtrasmall">Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a></p>
-<p class="xtrasmall">Session: #<?php echo $_GET["key"]; ?> | <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a></p>
+<button id="help_button" class="button" onclick="$('#help').toggle('blind')">
+  Help
+</button>
+<div id="help">
+  <?php include("help.inc.php"); ?>
+  <p class="xtrasmall">
+    Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a>
+  </p>
+  <p class="xtrasmall">Session: #<?php echo $_GET["key"]; ?> |
+    <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a>
+  </p>
 </div>
-<!-- /Help -->
-
 <p class="small" style="text-align:right"><a href="#">^</a></p>
+<!-- /Help -->
 
 <?php include("footer.inc.php"); ?>
 
