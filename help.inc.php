@@ -3,9 +3,7 @@ Alternatively, in the textual interface, you may just press return when you fini
 
 <p>The session can be paused at any time and continued later; However, if you have to pause your session, wait until the activity notification disappears and then press 'Pause', as we are collecting timing information. You may also just reload this site and re-request the segment to reset the timer.</p>
 
-
 <p>Please use only a <strong>single browser window</strong> at the same time. Going back to earlier examples is not possible, please take great care when interacting with the system.</p>
-
 
 <p><span style="border-bottom:1px solid #ccc">Instructions for the graphical interface:</span></p>
 <p>To submit a post-edition in the graphical interface all phrases have to be marked as finished.</p>
@@ -28,9 +26,9 @@ Alternatively, in the textual interface, you may just press return when you fini
 <!--  <li>Collision detection is not perfect, fast dragging may lead to strange behavior.</li>-->
 <!--  <li>Graphical editor can still be used while faded.</li>-->
   <li>The width of the canvas of graphical editor may be to small when adding a lot of phrases.</li>
-  <li>The in-line editor may change height.</li>
+  <li>The in-line editor may change height and span several lines.</li>
   <li>When editing phrases that have no contents, the input box is lower than normal.</li>
-  <li>Post-edits in the session overview may be partially tokenized.</li>
+  <li>Post-edits in the session overview may be partially tokenized due to phrase segmentation.</li>
   <li>Horizontal scrollbar doesn't follow highlighted phrase.</li>
   <li>Mouseover is not detected for undoing.</li>
 </ul>
