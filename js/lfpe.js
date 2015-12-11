@@ -225,7 +225,7 @@ function Next()
      //$("#oov_form").css("display", "none");
     $("#oov_form").toggle("blind");
     $("#next").val("Next");
-     send_data["correct"] = src.join("\t") + " ||| " + tgt.join("\t"); 
+     send_data["correct"] = src.join("\t") + " ||| " + tgt.join("\t");
      //next_url += "&correct="+encodeURIComponent(src.join("\t"))
                  //+"%20%7C%7C%7C%20"+encodeURIComponent(tgt.join("\t"))
   // ???
