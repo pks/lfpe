@@ -95,7 +95,6 @@ function working()
   }
 
   // show 'working' message
-  //status.style.display = "block";
   $("#status").fadeToggle();
 
   // disable button and textarea
@@ -108,7 +107,7 @@ function working()
 }
 function not_working(fadein=true)
 {
-    document.getElementById("reset_button").removeAttribute("disabled");
+  document.getElementById("reset_button").removeAttribute("disabled");
   // elements
   var button              = document.getElementById("next");
   var pause_button        = document.getElementById("pause_button");
@@ -129,13 +128,12 @@ function not_working(fadein=true)
   }
 
   // hide 'working' message
-  //status.style.display = "none";
   $("#status").fadeToggle();
 
   // enable buttons
           document.getElementById("next").removeAttribute("disabled");
   document.getElementById("pause_button").removeAttribute("disabled");
-    document.getElementById("reset_button").removeAttribute("disabled");
+  document.getElementById("reset_button").removeAttribute("disabled");
 
   DE_locked = false;
 }
@@ -194,15 +192,12 @@ function Next()
       send_data["duration"] = Timer.get();
       send_data["source_value"] = encodeURIComponent(source.value);
       // compose request
-      //next_url += "&example="+encodeURIComponent(source.value)+"%20%7C%7C%7C%20"+encodeURIComponent(post_edit)+"&duration="+Timer.get();
       // no change?
       if (post_edit == last_post_edit.value) {
-        //next_url += "&nochange=1";
         send_data["nochange"] = true;
       }
-      //next_url += "&example="+encodeURIComponent(JSON.stringify(send_data));
       // update document overview
-      document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=post_edit;
+      document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=decodeURIComponent(post_edit);
   // OOV correction mode
   } else if (oov_correct.value=="true") {
      send_data["OOV"] = true;
@@ -222,20 +217,15 @@ function Next()
      var l = document.getElementById("oov_fields").children.length;
      for (var i=0; i<l; i++)
        { document.getElementById("oov_fields").children[0].remove(); }
-     //$("#oov_form").css("display", "none");
     $("#oov_form").toggle("blind");
     $("#next").val("Next");
      send_data["correct"] = src.join("\t") + " ||| " + tgt.join("\t");
-     //next_url += "&correct="+encodeURIComponent(src.join("\t"))
-                 //+"%20%7C%7C%7C%20"+encodeURIComponent(tgt.join("\t"))
-  // ???
   } else {
     if (source.value != "") {
       alert("Please provide a post-edit and mark all phrases as finished.");
       target_textarea.removeAttribute("disabled", "disabled");
          pause_button.removeAttribute("disabled", "disabled");
                button.removeAttribute("disabled", "disabled");
-         //document.getElementById("reset_button").removeAttribute("disabled", "disabled");
       not_working();
       return;
     }
@@ -244,20 +234,20 @@ function Next()
   // confirm to server
   if (document.getElementById("init").value != "") {
     var xhr_confirm = CreateCORSRequest('get', base_url+":"+port+"/confirm");
-    xhr_confirm.send(); // FIXME: handle errors
+    xhr_confirm.send(); // FIXME handle errors
   }
 
   // build request
   var xhr = CreateCORSRequest('post', next_url);
   if (!xhr) {
-    alert("Error: 2"); // FIXME: do something reasonable
+    alert("Error: 2"); // FIXME do something reasonable
   }
 
   // 'next' request's callbacks
   xhr.onload = function() {
     document.getElementById("init").value = 1; // for pause()
      // translation system is currently handling a request
-     // FIXME: maybe poll server for result?
+     // FIXME maybe poll server for result?
      if (xhr.responseText == "locked") {
        alert("Translation system is locked, try again in a moment (reload the page and click 'Start/Continue').");
        not_working();
@@ -270,8 +260,7 @@ function Next()
 
     // done, disable interface
     if (data["fin"]) {
-      //raw_source_textarea.setAttribute("disabled", "disabled");
-          target_textarea.setAttribute("disabled", "disabled");
+      target_textarea.setAttribute("disabled", "disabled");
       status.style.display              = "none";
       button.innerHTML                  = "Session finished, thank you!";
       $("#raw_source_textarea").html("");
@@ -279,7 +268,6 @@ function Next()
       $("#target_textarea").attr("rows", 1);
             button.setAttribute("disabled", "disabled");
       pause_button.setAttribute("disabled", "disabled");
-      //document.getElementById("reset_button").setAttribute("disabled", "disabled");
       if (current_seg_id.value)
         removeClass(document.getElementById("seg_"+current_seg_id.value), "bold");
 
@@ -315,7 +303,6 @@ function Next()
       }
       oov_correct.value = true;
 
-      //$("#oov_form").css("display", "block");
       $("#oov_form").toggle("blind");
       $("#next").html("Next");
       $("#oov_tgt0").focus();
@@ -368,7 +355,7 @@ function Next()
 
       // confirm to server
       var xhr_confirm = CreateCORSRequest('get', base_url+":"+port+"/confirm");
-      xhr_confirm.send(); // FIXME: handle errors
+      xhr_confirm.send(); // FIXME handle errors
 
       // load data into graphical UI
       if (ui_type == "g") {
@@ -382,7 +369,7 @@ function Next()
     }
   };
 
-  xhr.onerror = function() {}; // FIXME: do something reasonable
+  xhr.onerror = function() {}; // FIXME do something reasonable
 
   xhr.send(JSON.stringify(send_data)); // send 'next' request
 
@@ -396,7 +383,6 @@ function Next()
 function init_text_editor()
 {
   document.getElementById("target_textarea").value     = "";
-  //document.getElementById("raw_source_textarea").value = "";
   document.getElementById("target_textarea").setAttribute("disabled", "disabled");
 
   return false;

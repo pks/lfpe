@@ -274,8 +274,10 @@ class Rule
 
     correct_src = r.len_src-new_rule.len_src
     correct_tgt = r.len_tgt-new_rule.len_tgt
-    STDERR.write "correct_src #{correct_src}\n"
-    STDERR.write "correct_tgt #{correct_tgt}\n"
+    if DEBUG
+      STDERR.write "correct_src #{correct_src}\n"
+      STDERR.write "correct_tgt #{correct_tgt}\n"
+    end
 
     start_correct_source = nil
     j = 0
@@ -285,7 +287,7 @@ class Rule
         fl << new_rule.source_context[i]
       else
         if i.match(/\[NEWX,\d+\]/)
-          STDERR.write "j = #{j}\n"
+          STDERR.write "j = #{j}\n" if DEBUG
           start_correct_source = j
         end
         fl << i
