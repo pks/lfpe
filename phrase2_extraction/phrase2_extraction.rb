@@ -707,7 +707,7 @@ def main
     puts r.as_trule_string
   }
 end
-main
+#main
 
 def test
   PhrasePhraseExtraction.test
