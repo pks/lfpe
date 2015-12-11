@@ -2,14 +2,13 @@
 
 require 'zipf'
 
-
 module PhrasePhraseExtraction
 
-DEBUG=true
-MAX_NT=2 # chiang:2
-MAX_SEED_NUM_WORDS=3 # chiang:10 words phrases!
-MAX_SRC_SZ=3 # chiang:5 words phrases!
-FORBID_SRC_ADJACENT_SRC_NT=true # chiang:true
+DEBUG                      = false
+MAX_NT                     = 2    # Chiang: 2
+MAX_SEED_NUM_WORDS         = 3    # Chiang: 10 words
+MAX_SRC_SZ                 = 3    # Chiang: 5 words
+FORBID_SRC_ADJACENT_SRC_NT = true # Chiang:true
 
 class Rule
   attr_accessor :source, :target, :arity, :source_context, :target_context, :alignment
@@ -29,9 +28,6 @@ class Rule
       @alignment = []
     end
     @arity = 0
-  end
-
-  def <=> other_rule
   end
 
   def hash
@@ -68,26 +64,6 @@ class Rule
     return tgt_len
   end
 
-  def len
-    src_len = 0
-    @source.each { |i|
-      if i.is_a? String
-        src_len += 1
-      else
-        src_len += i.last-i.first+1
-      end
-    }
-    tgt_len = 0
-    @target.each { |i|
-      if i.is_a? String
-        tgt_len += 1
-      else
-        tgt_len += i.last-i.first+1
-      end
-    }
-    return [src_len, tgt_len]
-  end
-
   def to_s
     source_string = ""
     @source.each { |i|
@@ -115,7 +91,7 @@ class Rule
     return "#{source_string.gsub(/\s+/, " ").strip} -> #{target_string.gsub(/\s+/, " ").strip} | #{astr}"
   end
 
-  def base_alignment
+  def rebase_alignment
     min_src = @alignment.map{|p| p.first }.min
     min_tgt = @alignment.map{|p| p.last }.min
     @alignment.each_with_index { |p,j|
@@ -123,7 +99,7 @@ class Rule
     }
   end
 
-  def base_alignment2 correct_src, correct_tgt, start_source, start_target
+  def rebase_alignment1 correct_src, correct_tgt, start_source, start_target
     @alignment.each_with_index { |p,j|
       if p[0] > start_source
         @alignment[j][0] = [0,p.first-correct_src].max
@@ -261,7 +237,7 @@ class Rule
         new_rule.source << i
       end
     }
-    # relabel Xs (linear)
+    # relabel Xs (linear on source side)
     switch = false
     k = 1
     new_rule.source.each_with_index { |i,j|
@@ -276,7 +252,7 @@ class Rule
         k += 1
       end
     }
-    puts "switch #{switch}" if DEBUG
+    STDERR.write "switch #{switch}\n" if DEBUG
     done = false
     correct_tgt = 0
     r.target.each_with_index { |i,j|
@@ -298,8 +274,8 @@ class Rule
 
     correct_src = r.len_src-new_rule.len_src
     correct_tgt = r.len_tgt-new_rule.len_tgt
-    puts "correct_src #{correct_src}"
-    puts "correct_tgt #{correct_tgt}"
+    STDERR.write "correct_src #{correct_src}\n"
+    STDERR.write "correct_tgt #{correct_tgt}\n"
 
     start_correct_source = nil
     j = 0
@@ -309,7 +285,7 @@ class Rule
         fl << new_rule.source_context[i]
       else
         if i.match(/\[NEWX,\d+\]/)
-          puts "j = #{j}"
+          STDERR.write "j = #{j}\n"
           start_correct_source = j
         end
         fl << i
@@ -322,7 +298,7 @@ class Rule
     j = 0
     fl.each { |i|
       if i.match(/\[NEWX,\d+\]/)
-        puts "j = #{j}"
+        STDERR.write "j = #{j}\n"
         start_correct_source = j
         break
       end
@@ -344,30 +320,36 @@ class Rule
     j = 0
     el.each { |i|
       if i.match(/\[NEWX,\d+\]/)
-        puts "j = #{j}"
+        STDERR.write "j = #{j}\n"
         start_correct_target = j
         break
       end
       j += 1
     }
 
-    puts "start_correct_source = #{start_correct_source}"
-    puts "start_correct_target = #{start_correct_target}"
+    if DEBUG
+      STDERR.write "start_correct_source = #{start_correct_source}\n"
+      STDERR.write "start_correct_target = #{start_correct_target}\n"
+    end
 
-    new_rule.base_alignment2 correct_src, correct_tgt, start_correct_source, start_correct_target
-    puts "not uniq #{new_rule.alignment.to_s}"
+    new_rule.rebase_alignment1 correct_src, correct_tgt, start_correct_source, start_correct_target
+    STDERR.write "not uniq'ed #{new_rule.alignment.to_s}\n" if DEBUG
     new_rule.alignment.uniq!
 
-    puts "a before: #{new_rule.alignment.to_s}"
-    puts fl.to_s
+    if DEBUG
+      STDERR.write "a before: #{new_rule.alignment.to_s}\n"
+      STDERR.write "#{fl.to_s}\n"
+    end
     new_rule.alignment.reject! { |p|
       !fl[p.first] || !el[p.last] || fl[p.first].match(/\[(NEWX|X),\d+\]/) || el[p.last].match(/\[(NEWX|X),\d+\]/)
     }
-    puts "a after: #{new_rule.alignment.to_s}"
-    puts "old len_src #{r.len_src}"
-    puts "new len_src #{new_rule.len_src}"
-    puts "old len_tgt #{r.len_tgt}"
-    puts "new len_tgt #{new_rule.len_tgt}"
+    if DEBUG
+      STDERR.write "a after: #{new_rule.alignment.to_s}\n"
+      STDERR.write "old len_src #{r.len_src}\n"
+      STDERR.write "new len_src #{new_rule.len_src}\n"
+      STDERR.write "old len_tgt #{r.len_tgt}\n"
+      STDERR.write "new len_tgt #{new_rule.len_tgt}\n"
+    end
 
     if switch
       new_rule.target.each_with_index { |i,j|
@@ -403,9 +385,9 @@ class Rule
   def expand_fake_alignment
     new_alignment = []
     if DEBUG
-      puts @alignment.to_s
-      puts @source.to_s
-      puts @target.to_s
+      STDERR.write "#{@alignment.to_s}\n"
+      STDERR.write "#{@source.to_s}\n"
+      STDERR.write "#{@target.to_s}\n"
     end
     fl = @source.map { |i|
       if i.is_a? Range
@@ -422,9 +404,9 @@ class Rule
       end
     }.flatten 1
     if DEBUG
-      puts fl.to_s
-      puts el.to_s
-      puts "->"
+      STDERR.write "#{fl.to_s}\n"
+      STDERR.write "#{el.to_s}\n"
+      STDERR.write "->\n"
     end
 
     offsets_src = {}
@@ -437,7 +419,6 @@ class Rule
       offsets_src[j] = o
     }
     offsets_tgt = {}
-    #offsets_tgt.default = 0
     o = 0
     el.each_with_index { |i,j|
       if i.is_a? Array
@@ -448,14 +429,14 @@ class Rule
 
     @alignment.each { |p|
       if DEBUG
-        puts p.to_s
-        puts "#{offsets_src[p.first]} -- #{offsets_tgt[p.last]}"
+        STDERR.write "#{p.to_s}\n"
+        STDERR.write "#{offsets_src[p.first]} -- #{offsets_tgt[p.last]}\n"
       end
       new_alignment << [ p.first+offsets_src[p.first], p.last+offsets_tgt[p.last] ]
       if DEBUG
-        puts new_alignment.last.to_s
-        puts "---"
-        puts
+        STDERR.write "#{new_alignment.last.to_s}\n"
+        STDERR.write "---\n"
+        STDERR.write "\n"
       end
     }
     @alignment = new_alignment
@@ -498,7 +479,7 @@ def PhrasePhraseExtraction.extract fstart, fend, estart, eend, f, e, a, flen, el
           rules.last.alignment << p
         end
       }
-      rules.last.base_alignment
+      rules.last.rebase_alignment
       fe += 1
       break if has_alignment(a, fe, "tgt")||fe>=elen
     end
@@ -517,8 +498,8 @@ def PhrasePhraseExtraction.make_gappy_rules rules, seed_rules
         if r.mergeable_with? s
           new = Rule.merge r, s
           new_rules << new
-          puts "#{r.to_s} <<< #{s.to_s}" if DEBUG
-          puts " = #{new.to_s}\n\n" if DEBUG
+          STDERR.write "#{r.to_s} <<< #{s.to_s}\n" if DEBUG
+          STDERR.write " = #{new.to_s}\n\n" if DEBUG
         end
       }
     }
@@ -543,16 +524,74 @@ def PhrasePhraseExtraction.make_seed_rules a, e, f
       end
     }
     next if fstart>fend
-    puts "fstart #{fstart}, fend #{fend}, estart #{estart}, eend #{eend}" if DEBUG
+    STDERR.write "fstart #{fstart}, fend #{fend}, estart #{estart}, eend #{eend}\n" if DEBUG
     new_rules = extract fstart, fend, estart, eend, f, e, a, f.size, e.size
     new_rules.each { |r|
-      puts r.to_s if DEBUG
+      STDERR.write "#{r.to_s}\n" if DEBUG
     }
     rules += new_rules
   }
   }
 
   return rules
+end
+
+def PhrasePhraseExtraction.extract_rules f, e, as, expand=false
+  a = []
+  as.each { |p|
+    x,y = p.split "-"
+    x = x.to_i; y = y.to_i
+    a << [x,y]
+  }
+  rules = PhrasePhraseExtraction.make_seed_rules a, e,f
+  seed_rules = PhrasePhraseExtraction.remove_too_large_seed_phrases rules
+  rules = PhrasePhraseExtraction.make_gappy_rules rules, seed_rules
+
+  if PhrasePhraseExtraction::FORBID_SRC_ADJACENT_SRC_NT
+    rules = PhrasePhraseExtraction.remove_adjacent_nt rules
+  end
+
+  rules = PhrasePhraseExtraction.remove_too_long_src_sides rules
+
+  if expand
+    rules.each { |r| r.expand_fake_alignment }
+  end
+
+  return rules.uniq
+end
+
+def PhrasePhraseExtraction.remove_too_large_seed_phrases rules
+  return rules.reject { |r|
+    STDERR.write "#{r}\n"
+    src_len = r.len_src
+    tgt_len = r.len_tgt
+    src_len>PhrasePhraseExtraction::MAX_SEED_NUM_WORDS \
+    || tgt_len>PhrasePhraseExtraction::MAX_SEED_NUM_WORDS }
+end
+
+def PhrasePhraseExtraction.remove_adjacent_nt rules
+  return rules.reject { |r|
+    b = false
+    prev = false
+    r.source.each { |i|
+      if i.is_a? String
+        if prev
+          b = true
+          break
+        end
+        prev = true
+      else
+        prev = false
+      end
+    }
+    b
+  }
+end
+
+def PhrasePhraseExtraction.remove_too_long_src_sides rules
+  return rules.reject { |r|
+    r.len_src > PhrasePhraseExtraction::MAX_SRC_SZ
+  }
 end
 
 def PhrasePhraseExtraction.test
@@ -611,7 +650,7 @@ def PhrasePhraseExtraction.test_phrase
   puts nr.to_s
 end
 
-def PhrasePhraseExtraction.test_phrase2
+def PhrasePhraseExtraction.test_phrase1
   source_context = ["a", "b", "c", "Blechbänder", ", besteht", "der Spreizdorn im wesentlichen", "aus", "x"]
   target_context = ["w", "x", "y", "the expansion", "mandrel consists", "essentially of expansion mandrel", "z"]
 
@@ -639,62 +678,6 @@ def PhrasePhraseExtraction.test_phrase2
   puts nr.to_s
 end
 
-def PhrasePhraseExtraction.extract_rules f, e, as, expand=false
-  a = []
-  as.each { |p|
-    x,y = p.split "-"
-    x = x.to_i; y = y.to_i
-    a << [x,y]
-  }
-  rules = PhrasePhraseExtraction.make_seed_rules a, e,f
-  seed_rules = PhrasePhraseExtraction.remove_too_large_seed_phrases rules
-  rules = PhrasePhraseExtraction.make_gappy_rules rules, seed_rules
-
-  if PhrasePhraseExtraction::FORBID_SRC_ADJACENT_SRC_NT
-    rules = PhrasePhraseExtraction.remove_adj_nt rules
-  end
-
-  rules = PhrasePhraseExtraction.remove_too_long_src_sides rules
-
-  if expand
-    rules.each { |r| r.expand_fake_alignment }
-  end
-
-  return rules.uniq
-end
-
-def PhrasePhraseExtraction.remove_too_large_seed_phrases rules
-  return rules.reject { |r|
-    src_len, tgt_len = r.len
-    src_len>PhrasePhraseExtraction::MAX_SEED_NUM_WORDS \
-    || tgt_len>PhrasePhraseExtraction::MAX_SEED_NUM_WORDS }
-end
-
-def PhrasePhraseExtraction.remove_adj_nt rules
-  return rules.reject { |r|
-    b = false
-    prev = false
-    r.source.each { |i|
-      if i.is_a? String
-        if prev
-          b = true
-          break
-        end
-        prev = true
-      else
-        prev = false
-      end
-    }
-    b
-  }
-end
-
-def PhrasePhraseExtraction.remove_too_long_src_sides rules
-  return rules.reject { |r|
-    r.len.first > PhrasePhraseExtraction::MAX_SRC_SZ
-  }
-end
-
 end # module
 
 def main
@@ -713,7 +696,7 @@ def main
   rules = PhrasePhraseExtraction.make_gappy_rules rules, seed_rules
 
   if PhrasePhraseExtraction::FORBID_SRC_ADJACENT_SRC_NT
-    rules = PhrasePhraseExtraction.remove_adj_nt rules
+    rules = PhrasePhraseExtraction.remove_adjacent_nt rules
   end
 
   rules = PhrasePhraseExtraction.remove_too_long_src_sides rules
@@ -724,12 +707,12 @@ def main
     puts r.as_trule_string
   }
 end
-#main
+main
 
 def test
-  #PhrasePhraseExtraction.test
-  #PhrasePhraseExtraction.test_phrase
-  PhrasePhraseExtraction.test_phrase2
+  PhrasePhraseExtraction.test
+  PhrasePhraseExtraction.test_phrase
+  PhrasePhraseExtraction.test_phrase1
 end
-test
+#test
 

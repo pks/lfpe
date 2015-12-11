@@ -9,7 +9,7 @@ require 'json'
 require 'haml'
 require 'uri'
 require_relative './derivation_to_json/derivation_to_json'
-require_relative './phrase_alignment/phrase_alignment'
+require_relative './phrase2_extraction/phrase2_extraction'
 
 # #############################################################################
 # Load configuration file and setup global variables
