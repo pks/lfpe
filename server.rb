@@ -6,7 +6,7 @@ require 'sinatra/reloader'
 require 'nanomsg'
 require 'zipf'
 require 'json'
-require 'haml'
+require 'tilt/haml'
 require 'uri'
 require_relative './derivation_to_json/derivation_to_json'
 require_relative './phrase2_extraction/phrase2_extraction'
@@ -46,6 +46,7 @@ $daemons = {
 # #############################################################################
 # Set-up Sinatra
 # #############################################################################
+set :server,            'thin'
 set :bind,              SERVER_IP
 set :port,              WEB_PORT
 set :allow_origin,      :any
