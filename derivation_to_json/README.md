@@ -7,3 +7,6 @@ To run:
     ./derivation_to_json.rb < {one of the .raw files}
 (first line of stdout is json data, source and target strings follow after that)
 
+The first line of the input is the derivation as string, the following lines
+are the rules used in the derivation.
+
