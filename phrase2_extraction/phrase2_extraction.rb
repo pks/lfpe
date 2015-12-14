@@ -564,7 +564,7 @@ end
 
 def PhrasePhraseExtraction.remove_too_large_seed_phrases rules
   return rules.reject { |r|
-    STDERR.write "#{r}\n"
+    STDERR.write "#{r}\n" if DEBUG
     src_len = r.len_src
     tgt_len = r.len_tgt
     src_len>PhrasePhraseExtraction::MAX_SEED_NUM_WORDS \
