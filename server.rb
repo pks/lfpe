@@ -168,7 +168,7 @@ post '/next' do      # (receive post-edit, update models), send next translation
       next if s==''||tgt[i]==''
       as = ""
       tgt[i].split.each_index { |k| as += " 0-#{k}" }
-      r = "[X] ||| #{s} ||| #{tgt[i]} ||| NewRule=1 ||| #{as}"
+      r = "[X] ||| #{s} ||| #{tgt[i]} ||| OOVFix=1 ||| #{as}"
       $additional_rules << r
     }
     $confirmed = true
