@@ -162,13 +162,13 @@ post '/next' do      # (receive post-edit, update models), send next translation
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
     src, tgt = splitpipe(data["correct"]) # format:src1\tsrc2\tsrc..|||tgt1\t..
     tgt = clean_str tgt
-    src = src.split("\t").map { |i| i.strip }
-    tgt = tgt.split("\t").map { |i| i.strip }
+    src = src.split("\t").map { |i| URI.decode(i).strip }
+    tgt = tgt.split("\t").map { |i| URI.decode(i).strip }
     src.each_with_index { |s,i|
       next if s==''||tgt[i]==''
       as = ""
       tgt[i].split.each_index { |k| as += " 0-#{k}" }
-      r = "[X] ||| #{s} ||| #{tgt[i]} ||| NewRule=1 OOVFix=1 ||| #{as}"
+      r = "[X] ||| #{s} ||| #{tgt[i]} ||| NewRule=1 ||| #{as}"
       $additional_rules << r
     }
     $confirmed = true
@@ -215,21 +215,31 @@ post '/next' do      # (receive post-edit, update models), send next translation
         s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
         sts[s] = true
       }
-
+      ats = {}
+      $additional_rules.each { |r|
+        s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+        ats[s] = true
+      }
       f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.new_rules"
       new_rules = new_rules.map { |r| r.as_trule_string }
       logmsg :server, "# rules before filtering #{new_rules.size}"
       _ = new_rules.dup
       new_rules.reject! { |rs|
         s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-        sts.has_key? s
+        sts.has_key?(s)
       }
       logmsg :server, "# rules after filtering #{new_rules.size}"
       (_-new_rules).each { |r|
         logmsg :server, "rejected rule [already known]: '#{r}'"
       }
-      $additional_rules += new_rules
       $rejected_rules   += _-new_rules
+      logmsg :server, "removing known new rules, before: #{new_rules.size}"
+      new_rules.reject! { |rs|
+        s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+        ats.has_key?(s)
+      }
+      logmsg :server, "after: #{new_rules.size}"
+      $additional_rules += new_rules
       f.write new_rules.join "\n"
       f.close
     else                                                       # text interface
@@ -278,11 +288,12 @@ post '/next' do      # (receive post-edit, update models), send next translation
                                                           # 5d actual extractor
       send_recv :extractor, "default_context ||| #{source} ||| #{post_edit} ||| #{a}"
                                                            # 6. update database
-      logmsg :db, "updating database"
       $db['updated'] << true
+      `cp #{WORK_DIR}/dtrain.debug.json #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json`
     else
       $db['updated'] << false
     end
+    logmsg :db, "updating database"
     update_database
   end
   source     = $db['source_segments'][$db['progress']]

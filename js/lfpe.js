@@ -205,8 +205,8 @@ function Next()
      var src = [];
      var tgt = [];
      for (var i=0; i<l; i++) {
-       src.push(trim(document.getElementById("oov_src"+i).value));
-       tgt.push(trim(document.getElementById("oov_tgt"+i).value));
+       src.push(encodeURIComponent(trim(document.getElementById("oov_src"+i).value)));
+       tgt.push(encodeURIComponent(trim(document.getElementById("oov_tgt"+i).value)));
        if (tgt[tgt.length-1] == "") { // empty correction
          alert("Please provide translations for all words.");
          //not_working();
