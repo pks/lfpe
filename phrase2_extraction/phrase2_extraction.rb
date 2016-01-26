@@ -91,12 +91,12 @@ class Rule
     return "#{source_string.gsub(/\s+/, " ").strip} -> #{target_string.gsub(/\s+/, " ").strip} | #{astr}"
   end
 
-  def rebase_alignment
-    min_src = @alignment.map{|p| p.first }.min
-    min_tgt = @alignment.map{|p| p.last }.min
+  def rebase_alignment offset_src, offset_tgt
+    STDERR.write "a before rebasing #{@alignment.to_s}\n" if DEBUG
     @alignment.each_with_index { |p,j|
-      @alignment[j] = [p.first-min_src, p.last-min_tgt]
+      @alignment[j] = [p.first-offset_src, p.last-offset_tgt]
     }
+    STDERR.write "a after rebasing #{@alignment.to_s}\n" if DEBUG
   end
 
   def rebase_alignment1 correct_src, correct_tgt, start_source, start_target
@@ -166,17 +166,18 @@ class Rule
       end
     }
     return false if !b
+    bb = false
     @target.each { |i|
       next if !i.is_a? Range
       if (   other_target_begin >= i.first \
           && other_target_end   <= i.last  \
           && (!(other_target_begin==i.first && other_target_end==i.last)))
-        b = true
+        bb = true
         break
       end
     }
 
-    return b
+    return b&&bb
   end
 
   def self.split a, b, index=0, p="target"
@@ -204,6 +205,10 @@ class Rule
   end
 
   def self.merge r, s
+    if DEBUG
+      STDERR.write "#{r.to_s}"
+      STDERR.write "#{s.to_s}"
+    end
     return nil if !r.mergeable_with? s
     return nil if !s.is_terminal?
 
@@ -412,7 +417,6 @@ class Rule
     end
 
     offsets_src = {}
-    #offsets_src.default = 0
     o = 0
     fl.each_with_index { |i,j|
       if i.is_a? Array
@@ -444,6 +448,25 @@ class Rule
     @alignment = new_alignment
   end
 
+end
+
+def PhrasePhraseExtraction.make_gappy_rules rules, seed_rules
+  MAX_NT.times {
+    new_rules = []
+    rules.each { |r|
+      seed_rules.each { |s|
+        if r.mergeable_with? s
+          new = Rule.merge r, s
+          new_rules << new
+          STDERR.write "#{r.to_s} <<< #{s.to_s}\n" if DEBUG
+          STDERR.write " = #{new.to_s}\n\n" if DEBUG
+        end
+      }
+    }
+    rules += new_rules
+  }
+
+  return rules
 end
 
 def PhrasePhraseExtraction.has_alignment a, i, dir="src"
@@ -481,32 +504,13 @@ def PhrasePhraseExtraction.extract fstart, fend, estart, eend, f, e, a, flen, el
           rules.last.alignment << p
         end
       }
-      rules.last.rebase_alignment
+      rules.last.rebase_alignment fs, estart
       fe += 1
-      break if has_alignment(a, fe, "tgt")||fe>=elen
+      break if has_alignment(a, fe, "src")||fe>=elen
     end
     fs -= 1
     break has_alignment(a, fs, "src")||fs<0
   end
-
-  return rules
-end
-
-def PhrasePhraseExtraction.make_gappy_rules rules, seed_rules
-  MAX_NT.times {
-    new_rules = []
-    rules.each { |r|
-      seed_rules.each { |s|
-        if r.mergeable_with? s
-          new = Rule.merge r, s
-          new_rules << new
-          STDERR.write "#{r.to_s} <<< #{s.to_s}\n" if DEBUG
-          STDERR.write " = #{new.to_s}\n\n" if DEBUG
-        end
-      }
-    }
-    rules += new_rules
-  }
 
   return rules
 end
@@ -526,7 +530,7 @@ def PhrasePhraseExtraction.make_seed_rules a, e, f
       end
     }
     next if fstart>fend
-    STDERR.write "fstart #{fstart}, fend #{fend}, estart #{estart}, eend #{eend}\n" if DEBUG
+    STDERR.write "fstart #{fstart}, fend #{fend}, estart #{estart}, eend #{eend}, fsize #{f.size}, esize #{e.size}\n" if DEBUG
     new_rules = extract fstart, fend, estart, eend, f, e, a, f.size, e.size
     new_rules.each { |r|
       STDERR.write "#{r.to_s}\n" if DEBUG
@@ -539,6 +543,14 @@ def PhrasePhraseExtraction.make_seed_rules a, e, f
 end
 
 def PhrasePhraseExtraction.extract_rules f, e, as, expand=false
+  if DEBUG
+    STDERR.write "----------\n"
+    STDERR.write "#{f.to_s}\n"
+    STDERR.write "#{e.to_s}\n"
+    STDERR.write "#{as.to_s}\n"
+    STDERR.write "----------\n"
+  end
+
   a = []
   as.each { |p|
     x,y = p.split "-"
@@ -547,6 +559,15 @@ def PhrasePhraseExtraction.extract_rules f, e, as, expand=false
   }
   rules = PhrasePhraseExtraction.make_seed_rules a, e,f
   seed_rules = PhrasePhraseExtraction.remove_too_large_seed_phrases rules
+  seed_rules.uniq!
+
+  if DEBUG
+    STDERR.write "seed rules:\n"
+    seed_rules.each { |r|
+      STDERR.write "#{r.to_s}"
+    }
+  end
+
   rules = PhrasePhraseExtraction.make_gappy_rules rules, seed_rules
 
   if PhrasePhraseExtraction::FORBID_SRC_ADJACENT_SRC_NT
@@ -559,7 +580,13 @@ def PhrasePhraseExtraction.extract_rules f, e, as, expand=false
     rules.each { |r| r.expand_fake_alignment }
   end
 
-  return rules.uniq
+  rules.reject! { |r|
+    r.alignment.size == 0
+  }
+
+  rules.uniq!
+
+  return rules
 end
 
 def PhrasePhraseExtraction.remove_too_large_seed_phrases rules
@@ -634,14 +661,14 @@ def PhrasePhraseExtraction.test_phrase
   ra.source_context = ["a a", "b b", "c c", "d d"]
   ra.target_context = ["w w", "x x", "y y", "z z"]
   ra.alignment = [[0,0],[1,3],[2,2]]
-  #ra.expand_fake_alignment
+  ra.expand_fake_alignment
   ra.arity = 1
   rb.source = [(1..1)]
   rb.target = [(3..3)]
   rb.source_context = ra.source_context
   rb.target_context = rb.source_context
   rb.alignment = [[0,0]]
-  #rb.expand_fake_alignment
+  rb.expand_fake_alignment
   rb.arity = 0
 
   puts ra.mergeable_with? rb
@@ -654,7 +681,7 @@ end
 
 def PhrasePhraseExtraction.test_phrase1
   source_context = ["a", "b", "c", "Blechbänder", ", besteht", "der Spreizdorn im wesentlichen", "aus", "x"]
-  target_context = ["w", "x", "y", "the expansion", "mandrel consists", "essentially of expansion mandrel", "z"]
+  target_context = ["w", "x", "y", "the expansion", "mandrel consists", "essentially of expansion mandrel", "z", "xxx", "XXX"]
 
   ra = Rule.new
   ra.source = ["[X,1]", (3..6)]
@@ -678,6 +705,17 @@ def PhrasePhraseExtraction.test_phrase1
   puts rb.to_s
   nr.expand_fake_alignment
   puts nr.to_s
+end
+
+def PhrasePhraseExtraction.test_phrase2
+  f = ["synergistische", "pharmazeutische"]
+  e = ["synergistic", "XXX", "pharmaceutical"]
+  a = ["0-0", "1-2"]
+  new_rules = extract_rules f, e, a, false
+
+  new_rules.each { |r|
+    puts r.to_s
+  }
 end
 
 end # module
@@ -715,6 +753,7 @@ def test
   PhrasePhraseExtraction.test
   PhrasePhraseExtraction.test_phrase
   PhrasePhraseExtraction.test_phrase1
+  PhrasePhraseExtraction.test_phrase2
 end
 #test
 
