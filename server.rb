@@ -8,6 +8,7 @@ require 'zipf'
 require 'json'
 require 'tilt/haml'
 require 'uri'
+require 'rack'
 require_relative './derivation_to_json/derivation_to_json'
 require_relative './phrase2_extraction/phrase2_extraction'
 
@@ -46,7 +47,8 @@ $daemons = {
 # #############################################################################
 # Set-up Sinatra
 # #############################################################################
-set :server,            'thin'
+#set :server,            'rack'
+Rack::Utils.key_space_limit = 68719476736
 set :bind,              SERVER_IP
 set :port,              WEB_PORT
 set :allow_origin,      :any
@@ -150,9 +152,9 @@ end
 post '/next' do      # (receive post-edit, update models), send next translation
   cross_origin                           # enable Cross-Origin Resource Sharing
   reply = request.body.read
-  logmsg :server, "raw JSON client reply: #{reply}"
+  #logmsg :server, "raw JSON client reply: #{reply}"
   data = JSON.parse(URI.decode(reply))
-  logmsg :server, "parsed reply: #{data.to_s}"
+  #logmsg :server, "parsed reply: #{data.to_s}"
                                                   # already processing request?
   return "locked" if $lock                                    # return (locked)
   $lock = true                                                           # lock
@@ -462,22 +464,40 @@ get '/confirm' do                        # client confirms received translation
   return "#{$confirmed}"
 end
 
-get '/set_learning_rate/:rate' do
+get '/set_weights/:name/:rate' do                                 # set weights
+  name = params[:name].gsub " ", "_"
   rate = params[:rate].to_f
-  logmsg :server, "set learning rate: #{rate}"
+  logmsg :server, "set weight for '#{name}' to: #{rate}"
   return "locked" if $lock
-  send_recv :dtrain, "set_learning_rate #{rate}"
+  msg = send_recv :dtrain, "set_weights #{name} #{rate}"
 
-  return "set learning rate to: #{rate}"
+  return msg
 end
 
-get '/set_learning_rate/sparse/:rate' do
-  rate = params[:rate]
-  logmsg :server, "set sparse learning rate: #{rate}"
+get '/set_learning_rates/:name/:rate' do                   # set learning rates
+  name = params[:name].gsub " ", "_"
+  rate = params[:rate].to_f
+  logmsg :server, "set learning rate for '#{name}' to: #{rate}"
   return "locked" if $lock
-  send_recv :dtrain, "set_sparse_learning_rate #{rate}"
+  msg = send_recv :dtrain, "set_learning_rates #{name} #{rate}"
 
-  return "set sparse learning rate to: #{rate}"
+  return msg
+end
+
+get '/reset_weights' do                                         # reset weights
+  logmsg :server, "reset weights"
+  return "locked" if $lock
+  send_recv :dtrain, "reset_weights"
+
+  return "reset weights: done"
+end
+
+get '/reset_learning_rates' do                           # reset learning rates
+  logmsg :server, "reset learning rates"
+  return "locked" if $lock
+  send_recv :dtrain, "reset_learning_rates"
+
+  return "reset learning rates: done"
 end
 
 get '/reset_progress' do                                # reset current session
@@ -501,14 +521,6 @@ get '/reset_progress' do                                # reset current session
   $last_reply = nil
 
   return "progress reset: done"
-end
-
-get '/reset_weights' do                                         # reset weights
-  logmsg :server, "reset weights"
-  return "locked" if $lock
-  send_recv :dtrain, "reset_weights"
-
-  return "reset weights: done"
 end
 
 get '/reset_extractor' do                             # reset grammar extractor
