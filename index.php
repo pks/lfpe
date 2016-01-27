@@ -2,7 +2,7 @@
 <head>
   <meta charset="utf-8" />
   <title>Post-Editing Interface</title>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" charset="utf-8"></script>
+  <script src="js/jquery.min.js" charset="utf-8"></script>
   <link rel="stylesheet" type="text/css" href="static/main.css" />
 </head>
 
