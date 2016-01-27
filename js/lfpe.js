@@ -171,7 +171,12 @@ function Next()
 
   // extract data from interfaces
   if (ui_type == 'g') {
-    send_data = JSON.parse(DE_extract_data());
+    data_s = DE_extract_data();
+    if (!data_s) {
+      not_working();
+      return;
+    }
+    send_data = JSON.parse(data_s);
     post_edit = trim(send_data["target"].join(" "));
     if (DE_target_done.length != DE_target_shapes.length)
       post_edit = "";
@@ -209,7 +214,7 @@ function Next()
        tgt.push(encodeURIComponent(trim(document.getElementById("oov_tgt"+i).value)));
        if (tgt[tgt.length-1] == "") { // empty correction
          alert("Please provide translations for all words.");
-         //not_working();
+         not_working();
 
          return;
        }
@@ -245,6 +250,8 @@ function Next()
 
   // 'next' request's callbacks
   xhr.onload = function() {
+    if (xhr.readyState != 4 || xhr.status!=200) { alert("XHR ERROR 2"); return; }
+
     document.getElementById("init").value = 1; // for pause()
      // translation system is currently handling a request
      // FIXME maybe poll server for result?
@@ -369,8 +376,6 @@ function Next()
       Timer.start();
     }
   };
-
-  xhr.onerror = function() {}; // FIXME do something reasonable
 
   xhr.send(JSON.stringify(send_data)); // send 'next' request
 
