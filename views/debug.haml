@@ -4,26 +4,29 @@
   %head
     %title Debug view (Session ##{session_key})
   %link(rel="stylesheet" type="text/css" href="debug.css")
-  %script{:src =>"http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js", :charset=>"utf-8"}
+  %script{:src => "http://postedit.cl.uni-heidelberg.de/js/jquery.min.js"}
+  %script{:src => "http://postedit.cl.uni-heidelberg.de/js/jquery.tablesorter.min.js"}
   %script{:src => "http://postedit.cl.uni-heidelberg.de/js/debug.js"}
   %body
     %h1 Debug view
-    %h2 Session [##{session_key}]
-    - if pairwise_ranking_data["kbest"].empty?
-      %p.red
-        %strong No data to show!
-    %ul
-      %li
-        %a{ :href => "#controls" } Controls
-      %li
-        %a{ :href => "#post_edit" } Post-edit &amp; machine translation
-      %li
-        %a{ :href => "#meta" } Meta
-      %li
-        %a{ :href => "#rules" } Learned rules
-      %li
-        %a{ :href => "#pairwise_ranking" } Pairwise ranking
-    %hr
+    %div#floater
+      - if pairwise_ranking_data["kbest"].empty?
+        %p.red
+          %strong No data to show!
+      %ul
+        %li
+          %a{ :href => "#controls" } Controls
+        %li
+          %a{ :href => "#post_edit" } Post-edit
+        %li
+          %a{ :href => "#grammar" } Grammar
+        %li
+          %a{ :href => "#weights" } Weights
+        %li
+          %a{ :href => "#kbest" } K-best
+
+      %p.tiny Session: ##{session_key}
+
     /=#########################################################################
     %h2#controls Controls
     %h3 Reset
@@ -32,205 +35,290 @@
       %span#control_reply
     %ul
       %li
-        %a.ajax{:tgt => "/reset_progress",  :href => "#controls"} Reset progress
+        %a.ajax{:tgt => "/reset_progress",       :href => "#controls"} Reset progress
       %li
-        %a.ajax{:tgt => "/reset_weights",   :href => "#controls"} Reset weights
+        %a.ajax{:tgt => "/reset_weights",        :href => "#controls"} Reset weights
       %li
-        %a.ajax{:tgt => "/reset_extractor", :href => "#controls"} Reset extractor
+        %a.ajax{:tgt => "/reset_learning_rates", :href => "#controls"} Reset learning rates
       %li
-        %a.ajax{:tgt => "/reset_new_rules", :href => "#controls"} Reset new rules
+        %a.ajax{:tgt => "/reset_extractor",       :href => "#controls"} Reset extractor
       %li
-        %a.ajax{:tgt => "/shutdown",        :href => "#controls"} Initiate shutdown
-    %h3 Learning rate
-    %p Default for dense features: <strong>1.0e-05</strong>, for sparse features: <strong>1.0e-05</strong>
-    %select
-      - [1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001,0.000001,0.0000001,0.00000001,0.000000001,0.0000000001].each do |i|
-        %option.ajax{:value => i, :tgt => "/set_learning_rate/#{i}"} #{i}
-    %em dense features <br />
-    %select
-      - [1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001,0.000001,0.0000001,0.00000001,0.000000001,0.0000000001].each do |i|
-        %option.ajax{:value => i, :tgt => "/set_learning_rate/sparse/#{i}"} #{i}
-    %em sparse features
-    %p
-      %a{ :href => "#" } ^ up
-    %hr
+        %a.ajax{:tgt => "/reset_new_rules",       :href => "#controls"} Reset new rules
+      %li
+        %a.ajax{:tgt => "/shutdown",              :href => "#controls"} Initiate shutdown
+    %h3 Learning rates &amp; weights
+    %p Set default weight or rate for specific features:
+    %select#features_type
+      %option{ :value => "/set_weights" } Weight
+      %option{ :value => "/set_learning_rates" } Rate
+    %input#features{ :value => "Feature", :style => "text-align:center; width:20em" }
+    %input#features_value{ :value => "1e-05", :style => "text-align:right; width:5em" }
+    %button#set_features
+      Set
+    %p Set rate for feature groups:
+    %select#feature_groups
+      %option{ :value => "R" } rule ids
+      %option{ :value => "RB" } rule bigrams 
+      %option{ :value => "Shape" } rule shapes
+    %input#feature_groups_value{ :value => "1e-05", :style => "text-align:right; width:5em" }
+    %button#set_feature_groups
+      Set rate
+
+
     /=#########################################################################
-    %h2#post_edit Post-edit &amp; machine translation
+    %h2#post_edit Post-edit
+
+
     %p#original_svg_b64 #{data["original_svg"][progress]}
-    %p#svg_b64 #{data["svg"][progress]}
+    %p Before:
     %div#original_svg
+
+    %p#svg_b64 #{data["svg"][progress]}
+    %p After:
     %div#svg
+
     %table
       %tr
         %td.noborder
-          %strong progress:
-        %td.left #{[0,progress].max}
+          %strong Progress:
+        %td.left.noborder #{[0,progress].max}
       %tr
         %td.noborder
-          %strong MT Input
-        %td.left #{data["source_segments"][[0,progress].max]}
+          %strong MT Input:
+        %td.left.noborder #{data["source_segments"][[0,progress].max]}
       %tr
         %td.noborder
-          %strong Raw source
-        %td.left #{data["raw_source_segments"][[0,progress].max]}
+          %strong Raw source:
+        %td.left.noborder #{data["raw_source_segments"][[0,progress].max]}
       %tr
         %td.noborder
-          %strong Post-edit
-        %td.left #{data["post_edits_raw"][progress]}
+          %strong Post-edit:
+        %td.left.noborder #{data["post_edits_raw"][progress]}
       %tr
         %td.noborder
-          %strong Post-edit (processed)
-        %td.left #{data["post_edits"][progress]}
+          %strong Post-edit (processed):
+        %td.left.noborder #{data["post_edits"][progress]}
       %tr
         %td.noborder
-          %strong Original MT
-        %td.left #{data["mt_raw"][progress]}
+          %strong Original MT:
+        %td.left.noborder #{data["mt_raw"][progress]}
       %tr
         %td.noborder
-          %strong Displayed MT
-        %td.left #{data["mt"][progress]}
+          %strong Displayed MT:
+        %td.left.noborder #{data["mt"][progress]}
       %tr
         %td.noborder
-          %strong Best match (BLEU=#{(pairwise_ranking_data["best_match_score"]*100).round(2)}%)
-        %td.left #{pairwise_ranking_data["best_match"]}
-    %h2 Derivation
-    %pre #{data["derivations"][progress]}
-    /= %h3 Processed
-    /= - if data["derivations_proc"][progress]
-    /=  %pre #{JSON.pretty_generate(JSON.parse(data["derivations_proc"][progress]))}
-    %h2 Client reply
+          %strong Best match (BLEU=#{(pairwise_ranking_data["best_match_score"]*100).round(2)}%):
+        %td.left.noborder #{pairwise_ranking_data["best_match"]}
+
+    %h3 Metadata
+    %p <strong>K:</strong>                      #{pairwise_ranking_data["samples_size"]}
+    %p <strong>Number of updates:</strong>      #{pairwise_ranking_data["num_up"]}
+    %p <strong>Updated features:</strong>       #{pairwise_ranking_data["updated_features"]}
+    %p <strong>Duration:</strong>               #{data["durations"][progress]}ms
+    %p <strong>Updated:</strong>                #{data["updated"][progress]}
+
+    %h3 Derivation
+    %p
+      %a{:onclick => "$('#derivation').toggle()"} Show/hide original raw derivation.
+    %pre#derivation{:style => "display:none"} #{data["derivations"][progress]}
+
+    %h3 Client reply
+    %p
+      %a{:onclick => "$('#client_reply').toggle()"} Show/hide raw JSON client reply.
     - if data["feedback"][progress]
-      %pre #{JSON.pretty_generate(JSON.parse(data["feedback"][progress]))}
-    %p
+      - client_reply = JSON.parse(data["feedback"][progress])
+      - client_reply["svg"] = "omitted"
+      - client_reply["original_svg"] = "omitted"
+      %pre#client_reply{ :style => "display:none" } #{JSON.pretty_generate(client_reply)}
+
+    %p.up
       %a{ :href => "#" } ^ up
-    %hr
+
     /=#########################################################################
-    %h2#meta Meta
-    %p <strong>k:</strong> #{pairwise_ranking_data["samples_size"]}
-    %p <strong>number of updates:</strong> #{pairwise_ranking_data["num_up"]}
-    %p <strong>updated features:</strong> #{pairwise_ranking_data["updated_features"]}
-    %p <strong>learning rate:</strong> #{pairwise_ranking_data["learning_rate"]}
-    %p <strong>learning rate (sparse):</strong> #{pairwise_ranking_data["learning_rate_sparse"]}
-    %p <strong>duration:</strong> #{data["durations"][progress]}ms
-    %p <strong>updated:</strong> #{data["updated"][progress]}
-    %p
-      %a{ :href => "#" } ^ up
-    %hr
-    /=#########################################################################
-    %h2#rules New &amp; known rules
-    %pre #{additional_rules.join("\n")}
+    %h2#grammar Grammar
+
+    %h3
+      New Rules
+    %p Including OOV fixes.
+    %table.sortable
+      %thead
+        %th Source
+        %th
+        %th Target
+      %tbody
+        - additional_rules.each do |rule_string|
+          - nt, src, tgt, f, a = splitpipe(rule_string)
+          %tr
+            %td #{src}
+            %td.big &#8611;
+            %td #{tgt}
+
     %h3
       Known rules
-    %pre #{rejected_rules.join("\n")}
-    %p
+    %table.sortable
+      %thead
+        %th Source
+        %th
+        %th Target
+      %tbody
+        - rejected_rules.each do |rule_string|
+          - nt, src, tgt, f, a = splitpipe(rule_string)
+          %tr
+            %td #{src}
+            %td.big &#8611;
+            %td #{tgt}
+
+    %p.up
       %a{ :href => "#" } ^ up
-    %hr
+
     /=#########################################################################
-    %h2#pairwise_ranking Pairwise ranking updates
-    %h3 K-best list
-    %p (Empty or list from previous updates displayed if there was no change in the current post-edit.)
-    %pre [BLEU score | Model score | Original rank | \|e\| | Translation \n Features]
-    %p.red In red: Update needed, i.e. "any of the above hypotheses has a lower model score"
-    %ol
-      - kbest = []
-      - pairwise_ranking_data["kbest"].each { |i| x=splitpipe(i); kbest << [ x[0].to_f, x[1].to_f, x[2].to_i, x[3], x[4] ] }
-      - kbest.sort! { |i,j| j[0] <=> i[0] }
-      - kbest.each_with_index do |k,j|
-        - b = kbest[0,j].map { |l| l[0]>k[0] && l[1]<k[1] }.include? true
-        -if b
-          %li.red
-            %strong #{"%.2f"%(k[0].to_f*100)} | #{k[1]} | #{k[2]} | #{k[4].split.size} |#{k[4]} <br/>
-            %p{:style=>"font-size:80%"} #{k[3]}
-        - else
-          %li
-            %strong #{"%.2f"%(k[0].to_f*100)} | #{k[1]} | #{k[2]} | #{k[4].split.size} | #{k[4]} <br/>
-            %p{:style=>"font-size:80%"} #{k[3]}
-        - if [9,89].include? j
-          %hr
+    %h2#weights Weights
+
+    %p N.B. that updates are only done if the post-edit is different from the original 1-best output of the decoder.
+
     %h3 Weight updates
-    %p Raw update: #{pairwise_ranking_data["update_raw"]}
-    /=%p Update (learning rates applied): <pre>#{pairwise_ranking_data["update"]}</pre>
-    /=- "#{pairwise_ranking_data["update"]}"
-    %table
-      %tr
-        %th Feature
-        %th Before
-        %th After
-        %th Diff.
-        %th Raw diff.
-      - pairwise_ranking_data["weights_before"].default = 0
-      - pairwise_ranking_data["weights_after"].keys.each.sort { |a,b| a[0] <=> b[0] }.each do |k|
+    %table.sortable
+      %thead
         %tr
-          %td.noborder <strong> #{k} </strong>
-          %td #{"%+.3f"%pairwise_ranking_data["weights_before"][k].round(4)}
-          %td #{"%+.3f"%pairwise_ranking_data["weights_after"][k].round(4)}
-          - diff = pairwise_ranking_data["weights_after"][k]-pairwise_ranking_data["weights_before"][k]
-          - if diff < 0
-            %td.red #{"%+.3f"%(diff).round(4)}
-          - elsif diff > 0
-            %td.green #{"%+.3f"%(diff).round(4)}
-          - else
-            %td #{"%+.3f"%(diff).round(4)}
-          - if !k.start_with? "R:"
-            %td #{"%+.1f"%((pairwise_ranking_data["weights_after"][k]-pairwise_ranking_data["weights_before"][k])/pairwise_ranking_data["learning_rate"]).round(2)}
-          - else
-            %td #{"%+.1f"%((pairwise_ranking_data["weights_after"][k]-pairwise_ranking_data["weights_before"][k])/pairwise_ranking_data["learning_rate_sparse"]).round(2)}
-    %h3 Features explained
-    %table
+          %th Feature
+          %th Before
+          %th After
+          %th Diff.
+          %th Raw diff.
+          %th Rate
+      %tbody
+        - if pairwise_ranking_data["update_raw"]
+          - raw_update = SparseVector.from_kv(pairwise_ranking_data["update_raw"])
+          - pairwise_ranking_data["weights_before"].default = 0
+          - pairwise_ranking_data["weights_after"].keys.each.sort { |a,b| a <=> b }.each do |k|
+            - diff = pairwise_ranking_data["weights_after"][k] - pairwise_ranking_data["weights_before"][k]
+            - if diff != 0.0
+              %tr
+                %td.left <strong> #{k} </strong>
+                %td.right #{"%+.3f" % pairwise_ranking_data["weights_before"][k]}
+                %td.right #{"%+.3f" % pairwise_ranking_data["weights_after"][k]}
+                - rdiff = diff.round 3
+                - if diff < 0
+                  %td.right.red #{rdiff}
+                - elsif diff > 0
+                  %td.right.green #{rdiff}
+                %td.right #{"%+.1f"%(raw_update[k])}
+                %td.right
+                  - if pairwise_ranking_data["learning_rates"].has_key? k
+                    #{pairwise_ranking_data["learning_rates"][k].round 10}
+                  - elsif k.start_with? "R:"
+                    #{pairwise_ranking_data["learning_rate_R"].round 10}
+                  - elsif k.start_with? "RBS:" or k.start_with? "RBT:"
+                    #{pairwise_ranking_data["learning_rate_RB"].round 10}
+                  - elsif k.start_with? "Shape_"
+                    #{pairwise_ranking_data["learning_rate_Shape"].round 10}
+                  - else
+                    ERROR: unknown key #{k}
+
+    %p
+      %a{ :onclick => "$('#features').toggle()" } Explanations
+    %table#features{ :style => "display:none" }
       %tr
-        %td.noborder EgivenFCoherent (rule)
+        %td EgivenFCoherent
         %td.left -log10[ c(e, f) / sample c(f) ]
       %tr
-        %td.noborder NewRule (rule)
-        %td.left Only feature of additional rules, weight fixed at 1
+        %td NewRule
+        %td.left New rules extracted from post-edits (this is the only feature of those rules)
       %tr
-        %td.noborder KnownRule (rule)
-        %td.left Added to existing rules if they could be extracted from previous post-edits
+        %td KnownRule
+        %td.left Added to already existing rules if they could be also be extracted from post-edits
       %tr
-        %td.noborder OOVFix (rule)
-        %td.left Manually added rules to fix OOV words
+        %td OOVFix
+        %td.left Manually added rules for OOV items
       %tr
-        %td.noborder Glue
+        %td Glue
         %td.left Absolute number of rules used from glue grammar
       %tr
-        %td.noborder IsSingletonF/E (rule)
+        %td IsSingletonF/E
         %td.left true|false (1|0) (sum)
       %tr
-        %td.noborder IsSingletonFE (rule)
+        %td IsSingletonFE
         %td.left true|false (1|0) (sum)
       %tr
-        %td.noborder LanguageModel
+        %td LanguageModel
         %td.left -log10[ score ]
       %tr
-        %td.noborder LanguageModel_OOV
-        %td.left Abs. count of OOV unigrams
+        %td LanguageModel_OOV
+        %td.left Absolute count of OOV unigrams
       %tr
-        %td.noborder MaxLexFgivenE (rule)
+        %td MaxLexFgivenE
         %td.left Sum_f -log10(maxScore) (maxScore = max_e(ttable(f))
       %tr
-        %td.noborder MaxLexEgivenF (rule)
+        %td MaxLexEgivenF
         %td.left Sum_e -log10(maxScore) (maxScore = max_f(ttable(e))
       %tr
-        %td.noborder PassThrough
-        %td.left Absolute count of used PassThrough rules (1 per word)
+        %td PassThrough
+        %td.left Absolute count of applied PassThrough rules
       %tr
-        %td.noborder SampleCountF (rule)
+        %td SampleCountF
         %td.left log10 [ sample c(f) ]
       %tr
-        %td.noborder WordPenalty
+        %td WordPenalty
         %td.left log_10(e)*|e| = 1/log(10) * |e| (*-1) = -0.43429448190325176*|e|
       %tr
-        %td.noborder SourceWordPenalty (per edge/rule)
-        %td.left ^^^ (|e| <=> |f|)
+        %td SourceWordPenalty
+        %td.left As WordPenalty (|e| <=> |f|)
       %tr
-        %td.noborder R:*
-        %td.left Rule indicator features, sum over full derivation per rule
+        %td R:*
+        %td.left Rule indicator features (sum of rule applications)
       %tr
-        %td.noborder Shape_*
-        %td.left Indicator features for rule shapes
+        %td Shape_*
+        %td.left Indicator features for rule shapes (39 in total)
       %tr
-        %td.noborder IsSupportedOnline
-        %td.left Counts how many rules have support from local context (Denkowski)
-  %p
-    %a{ :href => "#" } ^ up
+        %td IsSupportedOnline
+        %td.left Rules with support from local context (Denkowski)
+
+    %p.up
+      %a{ :href => "#" } ^ up
+
+    /=#########################################################################
+    %h2#kbest K-best list
+    %p
+      %span.red In red:
+      %span Update needed, i.e. "any of the above hypotheses has a lower model score" (in default order).
+    %table.sortable
+      %thead
+        %tr
+          %th.center{:style => "width:5%"}  Rank
+          %th.center{:style => "width:5%"}  BLEU score
+          %th.center{:style => "width:5%"}  Model score
+          %th.center{:style => "width:5%"}  Original rank
+          %th.center{:style => "width:5%"}  Token count
+          %th.center{:style => "width:75%"} Translation
+      %tbody
+        - kbest = []
+        - pairwise_ranking_data["kbest"].each { |i| x=splitpipe(i); kbest << [ x[0].to_f, x[1].to_f, x[2].to_i, x[3], x[4] ] }
+        - kbest.sort! { |i,j| j[0] <=> i[0] }
+        - kbest.each_with_index do |k,j|
+          - add_class = ""
+          - if kbest[0,j].map { |l| l[0]>k[0] && l[1]<k[1] }.include? true
+            - add_class = "red"
+          %tr{:class => "#{add_class}"}
+            %td.center #{j+1}
+            %td.center #{"%.2f"%(k[0].to_f*100)}
+            %td.center #{k[1]}
+            %td.center #{k[2]+1}
+            %td.center #{k[4].split.size}
+            %td
+              %p #{k[4]}
+              %p.toggle
+                %a.tiny Features
+              %table.kbest_features.small.mono.black{:style => "display:none"}
+                %tr
+                  %th Feature
+                  %th Value
+                - k[3].split.sort.each do |i|
+                  - k,_,v = i.rpartition "="
+                  %tr
+                    %td #{k}
+                    %td #{v}
+
+    %p.up
+      %a{ :href => "#" } ^ up
 
