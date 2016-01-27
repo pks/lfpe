@@ -44,6 +44,10 @@ function trim(s)
   return s.replace(/(\||\n|\t)/g, " ").replace(/^\s+|\s+$/g, '').replace(/\s+/g, " ");
 }
 
+function updateProgress (oEvent) {
+  //alert(oEvent);
+}
+
 /*
  * cross-site request
  *
@@ -52,7 +56,11 @@ function CreateCORSRequest(method, url)
 {
   var xhr = new XMLHttpRequest();
   if ("withCredentials" in xhr) {
+    xhr.addEventListener("progress", updateProgress);
     xhr.open(method, url, true);
+    xhr.timeout = 999999999999;
+    xhr.ontimeout = function () { alert("XHR TIMEOUT"); }
+    xhr.onerror = function () { alert("XHR ERRROR 1"); }
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded; charset=UTF-8');
   } else {
     xhr = null;
