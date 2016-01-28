@@ -58,7 +58,7 @@
     %p Set rate for feature groups:
     %select#feature_groups
       %option{ :value => "R" } rule ids
-      %option{ :value => "RB" } rule bigrams 
+      %option{ :value => "RB" } rule bigrams
       %option{ :value => "Shape" } rule shapes
     %input#feature_groups_value{ :value => "1e-05", :style => "text-align:right; width:5em" }
     %button#set_feature_groups
@@ -176,6 +176,7 @@
     %h2#weights Weights
 
     %p N.B. that updates are only done if the post-edit is different from the original 1-best output of the decoder.
+    %p Update of a single row is: After = Before - (Rate * -Raw Diff.) = Before + (Rate * Raw. Diff.). The 'Raw Diff.' column is the sum of the difference vectors of the misranked pairs.
 
     %h3 Weight updates
     %table.sortable
