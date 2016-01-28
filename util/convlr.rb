@@ -19,7 +19,7 @@ ks = updates.keys + grads.keys
 
 rates = SparseVector.new
 ks.each { |k|
-  rates[k] = -1*(Math.sqrt(updates[k]+smooth)/Math.sqrt(grads[k]+smooth))
+  rates[k] = Math.sqrt(updates[k]+smooth)/Math.sqrt(grads[k]+smooth)
 }
 
 rates.each { |k,v|
