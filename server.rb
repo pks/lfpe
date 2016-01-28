@@ -299,9 +299,7 @@ post '/next' do      # (receive post-edit, update models), send next translation
     update_database
   end
   source     = $db['source_segments'][$db['progress']]
-  source = source.strip.lstrip
   raw_source = $db['raw_source_segments'][$db['progress']]
-  raw_source = raw_source.strip.lstrip
   if !source                                                    # input is done
     logmsg :server, "end of input, sending 'fin'"
     $lock = false
@@ -323,8 +321,11 @@ post '/next' do      # (receive post-edit, update models), send next translation
 # 3. translate
 # 4. detokenize
 # 5. reply
-                                                                    # 0. no mt?
-    if NOMT
+
+    source = source.strip.lstrip
+    raw_source = raw_source.strip.lstrip
+
+    if NOMT                                                         # 0. no mt?
       $lock = false
       logmsg :server, "no mt"
       obj = Hash.new
