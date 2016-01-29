@@ -29,7 +29,8 @@ textarea, input {
 
 .bold { font-weight:bold }
 .small { font-size:.8em }
-.xtrasmall { font-size:.6em }
+.right { text-align:right }
+.tiny { font-size:.6em }
 
 a {
   color:           #ccc;
@@ -55,6 +56,7 @@ span#status { float:right }
   font-size: 2em;
   padding: 0.1em
 }
+#placeholder { margin:.4em }
 /* /Edit */
 
 /* OOV */
@@ -79,6 +81,7 @@ span#status { float:right }
 /* /Derivation edtior */
 
 /* Session overview */
+p#overview_header { margin:.5em;margin-bottom:.25em;font-weight:bold }
 div#overview_wrapper { margin-top:1em }
 table#overview { font-size:.8em }
 table#overview td.seg_text { width: 45% }
