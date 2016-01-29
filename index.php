@@ -58,7 +58,7 @@
   <option value="product_de-en_beta_test_1_D" onclick="document.getElementById('key').value=this.value;">D* de-en</option>
   <option value="product_en-de_beta_test_1_D" onclick="document.getElementById('key').value=this.value;">D* en-de</option>
 </optgroup>
- 
+
 </select>
 </p>
 </div>
