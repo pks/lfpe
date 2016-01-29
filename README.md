@@ -1,6 +1,7 @@
-# learning from post-edits
+# Learning from post-edits
+Post-editing interface for learning from post-edited machine translations.
 
-# setup
+# Setup
 ## nanomsg lib
     export LD_LIBRARY_PATH=/fast_scratch/simianer/lfpe/lib/nanomsg-0.5-beta/lib
 
