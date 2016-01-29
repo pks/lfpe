@@ -2,6 +2,12 @@ body { margin:2em; background:#fff }
 a { color:blue; text-decoration:underline }
 a:hover { color:#000 }
 h2 { padding:.25em; border-bottom:1px solid #000; border-top:1px solid #000 }
+tr:hover { background:#ccc }
+td { border-top:1px solid #000 }
+td.noborder { border:0 }
+td.left { text-align:left }
+td.center { text-align:center }
+td.right { text-align:right }
 .black { color:#000 }
 .red { color:red }
 .green { color:green }
@@ -12,12 +18,6 @@ h2 { padding:.25em; border-bottom:1px solid #000; border-top:1px solid #000 }
 .even { background:#fff }
 .odd { background:#eee }
 .up { text-align:right;margin-right:1em }
-tr:hover { background:#ccc }
-td { border-top:1px solid #000 }
-td.noborder { border:0 }
-td.left { text-align:left }
-td.center { text-align:center }
-td.right { text-align:right }
 #svg_b64,#original_svg_b64 { display:none }
 #floater {
   float:right;
@@ -27,7 +27,7 @@ td.right { text-align:right }
   margin-top:5em
 }
 table {
-  margin-left:auto; 
-  margin-right:auto;
+  margin-left:auto;
+  margin-right:auto
 }
 
