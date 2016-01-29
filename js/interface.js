@@ -1,4 +1,28 @@
 /*
+ * (common) global vars
+ *
+ */
+var data,    // global data object
+    ui_type; // 't' (text) or 'g' (graphical)
+
+/*
+ * cross-site request
+ *
+ */
+var create_cors_req = function (method, url)
+{
+  var xhr = new XMLHttpRequest();
+  if ("withCredentials" in xhr) {
+    xhr.open(method, url, true);
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded; charset=UTF-8');
+  } else {
+    xhr = null;
+  }
+
+  return xhr;
+}
+
+/*
  * Timer
  *
  */
@@ -8,22 +32,22 @@ var Timer = {
   pause_acc_t: 0,
   paused: false,
 
-  start: function() {
+  start: function () {
     this.start_t = Date.now();
     this.pause_start_t = 0;
     this.pause_acc_t = 0;
     this.paused = false;
   },
-  pause: function() {
+  pause: function () {
     this.paused = true;
     this.pause_start_t = Date.now();
   },
-  unpause: function() {
+  unpause: function () {
     this.paused = false;
     this.pause_acc_t += Date.now()-this.pause_start_t;
     this.pause_start_t = 0;
   },
-  get: function() {
+  get: function () {
     return (Date.now()-this.start_t)-this.pause_acc_t;
   }
 }
@@ -32,7 +56,7 @@ var Timer = {
  * pause/unpause timer
  *
  */
-function pause()
+var pause = function ()
 {
   var paused          = document.getElementById("paused");
   var button          = document.getElementById("pause_button");
@@ -61,7 +85,7 @@ function pause()
  * no newline on return in textarea
  *
  */
-function catch_return(e)
+var catch_return = function (e)
 {
   if (e.keyCode == 13) {
     e.preventDefault();
@@ -75,7 +99,7 @@ function catch_return(e)
  * working/not working
  *
  */
-function working()
+var working = function ()
 {
   // elements
   var button              = document.getElementById("next");
@@ -139,10 +163,30 @@ function not_working(fadein=true)
 }
 
 /*
+ * polling the server
+ *
+ */
+var poll = function (url_prefix)
+{
+  setTimeout(function(){
+     $.get(url_prefix+"/status").done(function(response){
+       $("#status_detail").text(response);
+       if (response == "Ready") {
+         ready = true;
+         request_and_process_next();
+         return;
+       } else {
+         poll(url_prefix);
+       }
+     });
+  }, 1000);
+}
+
+/*
  * next button
  *
  */
-function Next()
+var next =  function ()
 {
   // elements
   var button              = document.getElementById("next");
@@ -177,14 +221,14 @@ function Next()
       return;
     }
     send_data = JSON.parse(data_s);
-    post_edit = trim(send_data["target"].join(" "));
+    post_edit = $.trim(send_data["target"].join(" "));
     if (DE_target_done.length != DE_target_shapes.length)
       post_edit = "";
     send_data["post_edit"] = encodeURIComponent(post_edit);
     send_data['type'] = 'g';
     send_data["original_svg"] = document.getElementById("original_svg").value;
   } else {
-    post_edit = trim(target_textarea.value);
+    post_edit = $.trim(target_textarea.value);
     send_data["post_edit"] = post_edit;
     send_data['type'] = 't';
   }
@@ -210,8 +254,8 @@ function Next()
      var src = [];
      var tgt = [];
      for (var i=0; i<l; i++) {
-       src.push(encodeURIComponent(trim(document.getElementById("oov_src"+i).value)));
-       tgt.push(encodeURIComponent(trim(document.getElementById("oov_tgt"+i).value)));
+       src.push(encodeURIComponent($.trim(document.getElementById("oov_src"+i).value)));
+       tgt.push(encodeURIComponent($.trim(document.getElementById("oov_tgt"+i).value)));
        if (tgt[tgt.length-1] == "") { // empty correction
          alert("Please provide translations for all words.");
          not_working();
@@ -238,15 +282,48 @@ function Next()
 
   // confirm to server
   if (document.getElementById("init").value != "") {
-    var xhr_confirm = CreateCORSRequest('get', base_url+":"+port+"/confirm");
+    var xhr_confirm = create_cors_req('get', base_url+":"+port+"/confirm");
     xhr_confirm.send(); // FIXME handle errors
   }
 
   // build request
-  var xhr = CreateCORSRequest('post', next_url);
+  var xhr = create_cors_req('post', next_url);
   if (!xhr) {
     alert("Error: 2"); // FIXME do something reasonable
   }
+  xhr.onerror = function (e) { alert("XHR ERRROR 1x " + e.target.status); }
+  xhr.send(JSON.stringify(send_data)); // send 'next' request
+
+  poll(base_url+":"+port);
+}
+
+var request_and_process_next = function ()
+{
+  // elements
+  var button              = document.getElementById("next");
+  var pause_button        = document.getElementById("pause_button");
+  var target_textarea     = document.getElementById("target_textarea")
+  var raw_source_textarea = document.getElementById("raw_source_textarea");
+  var current_seg_id      = document.getElementById("current_seg_id");
+  var source              = document.getElementById("source");
+  var status              = document.getElementById("status");
+  var oov_correct         = document.getElementById("oov_correct");
+  var last_post_edit      = document.getElementById("last_post_edit");
+
+  // get metadata stored in DOM
+  var base_url = "http://coltrane.cl.uni-heidelberg.de";
+  var port     = document.getElementById("port").value;
+  var key      = document.getElementById("key").value;
+
+  // url
+  next_url = base_url+":"+port+"/next";
+
+  var xhr = create_cors_req('get', base_url+":"+port+"/fetch");
+  if (!xhr) {
+    alert("Error: 2"); // FIXME do something reasonable
+  }
+  xhr.onerror = function (e) { alert("XHR ERRROR 1 " + e.target.status); }
+  xhr.send(); // send 'next' request
 
   // 'next' request's callbacks
   xhr.onload = function() {
@@ -276,7 +353,7 @@ function Next()
             button.setAttribute("disabled", "disabled");
       pause_button.setAttribute("disabled", "disabled");
       if (current_seg_id.value)
-        removeClass(document.getElementById("seg_"+current_seg_id.value), "bold");
+        $("#seg_"+current_seg_id.value).removeClass("bold");
 
       return;
 
@@ -289,7 +366,7 @@ function Next()
       } else {
         $("#derivation_editor").fadeTo(200,0.1);
       }
-      $("#oov_context").html(data["raw_source"].replace(/\*\*\*/g,"<strong>").replace(/###/g,"</strong>"));
+      $("#oov_context").html(data["raw_source"].replace(/\*\*\*/g,"<u>").replace(/###/g,"</u>"));
       for (var i=0; i<data["oovs"].length; i++) {
         var node_src = document.createElement("input");
         var node_tgt = document.createElement("input");
@@ -346,7 +423,7 @@ function Next()
          document.getElementById("reset_button").removeAttribute("disabled");
       document.getElementById("seg_"+id).className += " bold";
       if (id > 0) {
-        removeClass(document.getElementById("seg_"+(id-1)), "bold");
+        $("#seg_"+(id-1)).removeClass("bold");
       }
       if (translation)
         target_textarea.rows     = Math.round(translation.length/80+0.5);
@@ -361,13 +438,13 @@ function Next()
       last_post_edit.value = translation;
 
       // confirm to server
-      var xhr_confirm = CreateCORSRequest('get', base_url+":"+port+"/confirm");
+      var xhr_confirm = create_cors_req('get', base_url+":"+port+"/confirm");
       xhr_confirm.send(); // FIXME handle errors
 
       // load data into graphical UI
       if (ui_type == "g") {
         DE_init();
-        var x = trim(JSON.parse(DE_extract_data())["target"].join(" "));
+        var x = $.trim(JSON.parse(DE_extract_data())["target"].join(" "));
         last_post_edit.value = x;
         document.getElementById("original_svg").value = DE_get_raw_svg_data();
       }
@@ -377,8 +454,6 @@ function Next()
     }
   };
 
-  xhr.send(JSON.stringify(send_data)); // send 'next' request
-
   return;
 }
 
@@ -386,7 +461,7 @@ function Next()
  * init text interface
  *
  */
-function init_text_editor()
+var init_text_editor = function ()
 {
   document.getElementById("target_textarea").value     = "";
   document.getElementById("target_textarea").setAttribute("disabled", "disabled");
@@ -416,10 +491,12 @@ window.onload = function ()
   // graphical derivation editor
   if (ui_type == "g") {
     document.getElementById("derivation_editor").style.display = "block";
+
   // text based editor
   } else {
     init_text_editor();
     document.getElementById("textboxes").style.display = "block";
   }
+
 };
 
