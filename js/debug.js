@@ -15,6 +15,7 @@ $().ready(function()
   $("#features_value").focusout(function() { if (this.value == "") this.value = "1e-05"; });
   $("#feature_groups_value").click(function() { this.value = ""; });
   $("#feature_groups_value").focusout(function() { if (this.value == "") this.value = "1e-05"; });
+  // set all sorts of learning rates
   $("#set_features").click(function() {
     k = $("#features").val();
     v = $("#features_value").val();
