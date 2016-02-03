@@ -23,14 +23,13 @@ Alternatively, in the textual interface, you may just press return when you fini
 
 <p><span style="border-bottom:1px solid #ccc">Known issues:</span></p>
 <ul>
-<!--  <li>Collision detection is not perfect, fast dragging may lead to strange behavior.</li>-->
-<!--  <li>Graphical editor can still be used while faded.</li>-->
   <li>The width of the canvas of graphical editor may be to small when adding a lot of phrases.</li>
   <li>The in-line editor may change height and span several lines.</li>
   <li>When editing phrases that have no contents, the input box is lower than normal.</li>
   <li>Post-edits in the session overview may be partially tokenized due to phrase segmentation.</li>
   <li>Horizontal scrollbar doesn't follow highlighted phrase.</li>
   <li>Mouseover is not detected for undoing.</li>
+  <li>The interface only works with Firefox.</li>
 </ul>
 
 <p class="tiny">
