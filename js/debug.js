@@ -1,6 +1,5 @@
 $().ready(function()
 {
-
   // send commands using ajax
   $(".ajax").each(function(x) {
     $(this).click(function() {
@@ -41,17 +40,26 @@ $().ready(function()
   });
 
   // sortable tables
+  // src: http://stackoverflow.com/questions/4126206/javascript-parsefloat-1-23e-7-gives-1-23e-7-when-need-0-000000123
+  $.tablesorter.addParser({
+  id: 'scinot',
+  is: function(s) {
+    return /[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?/.test(s);
+  },
+  format: function(s) {
+    return $.tablesorter.formatFloat(s);
+  },
+  type: 'numeric'
+  });
   $("table.sortable").each(function(x) {
     $(this).tablesorter({widgets: ['zebra']});
   });
-
-  // k-best list feature tables
   $(".toggle").each(function(x) {
     $(this).click(function() {
       $(this).next().toggle();
     })
   });
-  $("table.kbest_features tr:odd").css("background-color", "#eee");
+  $("table.kbest_features tr:odd").css("background-color", "#87cefa");
   $("table.kbest_features tr:even").css("background-color", "#fff");
 
   // display svg
@@ -65,6 +73,5 @@ $().ready(function()
     $('<svg width="100%">'+d+'</svg>')
   );
   $("#original_svg").width($("#original_svg").children()[0].getBBox().width+"px");
-
 });
 

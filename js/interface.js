@@ -89,7 +89,7 @@ var catch_return = function (e)
 {
   if (e.keyCode == 13) {
     e.preventDefault();
-    Next();
+    next();
   }
 
   return false;
@@ -281,10 +281,10 @@ var next =  function ()
   }
 
   // confirm to server
-  if (document.getElementById("init").value != "") {
+  /*if (document.getElementById("init").value != "") {
     var xhr_confirm = create_cors_req('get', base_url+":"+port+"/confirm");
     xhr_confirm.send(); // FIXME handle errors
-  }
+  }*/
 
   // build request
   var xhr = create_cors_req('post', next_url);
@@ -293,8 +293,9 @@ var next =  function ()
   }
   xhr.onerror = function (e) { alert("XHR ERRROR 1x " + e.target.status); }
   xhr.send(JSON.stringify(send_data)); // send 'next' request
-
-  poll(base_url+":"+port);
+  xhr.onload = function() {
+    poll(base_url+":"+port);
+  }
 }
 
 var request_and_process_next = function ()
@@ -473,7 +474,7 @@ var init_text_editor = function ()
  * init site
  *
  */
-window.onload = function ()
+$().ready(function()
 {
   // reset vars
   document.getElementById("source").value              = "";
@@ -498,5 +499,5 @@ window.onload = function ()
     document.getElementById("textboxes").style.display = "block";
   }
 
-};
+});
 

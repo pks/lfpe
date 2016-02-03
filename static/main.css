@@ -33,7 +33,7 @@ textarea, input {
 .tiny { font-size:.6em }
 
 a {
-  color:           #ccc;
+  color:           #ddd;
   text-decoration: underline
 }
 a:hover { color: #000 }
@@ -74,7 +74,7 @@ span#status { float:right }
 
 /* Derivation editor */
 #derivation_editor input {
-  background: #eee;
+  background: #ddd;
   font-size: 60%;
   padding: .4em
 }
@@ -85,9 +85,9 @@ p#overview_header { margin:.5em;margin-bottom:.25em;font-weight:bold }
 div#overview_wrapper { margin-top:1em }
 table#overview { font-size:.8em }
 table#overview td.seg_text { width: 45% }
-table#overview td { border-bottom: 1px solid #ccc; border-left:1px solid #ccc; padding: .25em }
-table#overview tr:hover { background: #ccc }
-table#overview .doc_title { background-color: #eee }
+table#overview td { border-bottom: 1px solid #ddd; border-left:1px solid #ddd; padding: .25em }
+table#overview tr:hover { background: #ddd }
+table#overview .doc_title { background-color: #ddd }
 table#overview td.num { text-align:right; font-style:italic }
 /* /Session overview */
 
@@ -119,8 +119,6 @@ div#help {
   width:      70%;
   text-align: justify
 }
-div#help a { color:#ccc }
-div#help:hover { color: #000 }
-div#help:hover a { color: #000 }
+div#help a { color:#000;text-decoration:underline }
 /* /Help */
 
