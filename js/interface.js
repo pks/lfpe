@@ -182,6 +182,21 @@ var poll = function (url_prefix)
   }, 1000);
 }
 
+var wait_for_processed_postedit = function (url_prefix, seg_id)
+{
+  document.getElementById("seg_"+seg_id+"_t").innerHTML="<img height='20px' src='static/ajax-loader-large.gif'/>";
+  setTimeout(function(){
+     $.get(url_prefix+"/fetch_processed_postedit/"+seg_id).done(function(response){
+       if (response != "") {
+         document.getElementById("seg_"+seg_id+"_t").innerHTML = response;
+         return;
+       } else {
+         wait_for_processed_postedit(url_prefix,seg_id);
+       }
+     });
+  }, 3000);
+}
+
 /*
  * next button
  *
@@ -246,7 +261,7 @@ var next =  function ()
         send_data["nochange"] = true;
       }
       // update document overview
-      document.getElementById("seg_"+(current_seg_id.value)+"_t").innerHTML=decodeURIComponent(post_edit);
+      wait_for_processed_postedit(base_url+":"+port, current_seg_id.value);
   // OOV correction mode
   } else if (oov_correct.value=="true") {
      send_data["OOV"] = true;
@@ -279,12 +294,6 @@ var next =  function ()
       return;
     }
   }
-
-  // confirm to server
-  /*if (document.getElementById("init").value != "") {
-    var xhr_confirm = create_cors_req('get', base_url+":"+port+"/confirm");
-    xhr_confirm.send(); // FIXME handle errors
-  }*/
 
   // build request
   var xhr = create_cors_req('post', next_url);
@@ -332,7 +341,6 @@ var request_and_process_next = function ()
 
     document.getElementById("init").value = 1; // for pause()
      // translation system is currently handling a request
-     // FIXME maybe poll server for result?
      if (xhr.responseText == "locked") {
        alert("Translation system is locked, try again in a moment (reload the page and click 'Start/Continue').");
        not_working();
@@ -341,6 +349,12 @@ var request_and_process_next = function ()
      }
 
     data = JSON.parse(xhr.responseText)
+
+    var el = document.getElementById("seg_"+(data['progress']-1)+"_t");
+    if (el && data['processed_postedit']) {
+      el.innerHTML = data['processed_postedit'];
+    }
+
     document.getElementById("data").value = xhr.responseText;
 
     // done, disable interface
@@ -498,6 +512,5 @@ $().ready(function()
     init_text_editor();
     document.getElementById("textboxes").style.display = "block";
   }
-
 });
 

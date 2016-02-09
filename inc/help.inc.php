@@ -36,6 +36,6 @@ Alternatively, in the textual interface, you may just press return when you fini
   Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a>
 </p>
 <p class="tiny">Session: #<?php echo $_GET["key"]; ?> |
-  <a href="http://coltrane.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a>
+  <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a>
 </p>
 

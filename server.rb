@@ -16,16 +16,17 @@ require_relative './phrase2_extraction/phrase2_extraction'
 # Load configuration file and setup global variables
 # #############################################################################
 require_relative "#{ARGV[0]}" # load configuration for this session
-$lock             = false     # lock if currently learning/translating
-$last_reply       = nil       # cache last reply
-$confirmed        = true      # client received translation?
-$additional_rules = []        # corrected OOVs and newly extracted rules
-$rejected_rules   = []        # known rules
-if !FileTest.exist? LOCK_FILE # locked?
-  $db  = {}                   # data file (JSON format)
-  $env = {}                   # environment variables (socket connections to daemons)
+$lock                    = false     # lock if currently learning/translating
+$last_reply              = nil       # cache last reply
+$last_processed_postedit = ""        # to show to the user
+$confirmed               = true      # client received translation?
+$new_rules               = []        # corrected OOVs and newly extracted rules
+$known_rules             = []        # known rules
+if !FileTest.exist? LOCK_FILE        # locked?
+  $db  = {}                          # data file (JSON format)
+  $env = {}                          # environment variables (socket connections to daemons)
 end
-$status           = "Idle"    # current server status
+$status                  = "Idle"    # current server status
 
 # #############################################################################
 # Daemons
@@ -37,7 +38,6 @@ $daemons = {
   :detokenizer      => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
   :detokenizer_src  => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
   :truecaser        => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
-  #:lowercaser   => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a lowercase  -S '__ADDR__' -e #{EXTERNAL}",
   :dtrain           => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights -a '__ADDR__' -E -R",
   :extractor        => "python -m cdec.sa.extract -c #{SESSION_DIR}/extract.ini --online -u -S '__ADDR__'",
   :aligner_fwd      => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
@@ -48,16 +48,17 @@ $daemons = {
 # #############################################################################
 # Set-up Sinatra
 # #############################################################################
-#set :server,            'rack'
-Rack::Utils.key_space_limit = 68719476736
+set :server,            'thin'
 set :bind,              SERVER_IP
 set :port,              WEB_PORT
 set :allow_origin,      :any
-set :allow_methods,     [:get, :post, :options]
+set :allow_methods,     [:get, :post]
 set :allow_credentials, true
 set :max_age,           "1728000"
 set :expose_headers,    ['Content-Type']
 set :public_folder,     File.dirname(__FILE__) + '/static'
+
+Rack::Utils.key_space_limit = 68719476736
 
 # #############################################################################
 # Helper functions
@@ -80,18 +81,19 @@ def start_daemon cmd, name, addr
 end
 
 def stop_all_daemons
-  $status = "Shutting down"
+  $status = "Shutting down"                                            # status
   logmsg :server, "shutting down all daemons"
   $env.each { |name,p|
     p[:socket].send "shutdown"                   # every daemon shuts down
                                                  # after receiving this keyword
     logmsg :server, "< #{name} is #{p[:socket].recv}"
   }
-  $status = "Ready to shutdown"
+
+  $status = "Ready to shutdown"                                        # status
 end
 
 def update_database reset=false
-  $status = "Updating database"
+  $status = "Updating database"                                        # status
   if !reset
     $db['progress'] += 1
   else
@@ -101,13 +103,13 @@ def update_database reset=false
   f = WriteFile.new DB_FILE
   f.write j.to_s
   f.close
-  $status = "Updated database"
+
+  $status = "Updated database"                                         # status
 end
 
 def init
-  $status = "Initialization"
-                                                          # data from JSON file
-  $db = JSON.parse ReadFile.read DB_FILE
+  $status = "Initialization"                                           # status
+  $db = JSON.parse ReadFile.read DB_FILE                  # data from JSON file
                                                             # working directory
   `mkdir -p #{WORK_DIR}/`
   `mkdir #{WORK_DIR}/g`
@@ -120,7 +122,7 @@ def init
   }
                                                                    #  lock file
   `touch #{LOCK_FILE}`
-  $status = "Initialized"
+  $status = "Initialized"                                              # status
 end
 
 def send_recv daemon, msg                            # simple pair communcation
@@ -134,10 +136,10 @@ def send_recv daemon, msg                            # simple pair communcation
   return ans
 end
 
-def clean_str s                   # FIXME replace chars w/ something reasonable
-  s.gsub! "[", " "
-  s.gsub! "]", " "
-  s.gsub! "|", " "
+def clean_str s
+  s.gsub! "[", "SQUARED_BRACKET_OPEN"
+  s.gsub! "]", "SQUARED_BRACKET_CLOSE"
+  s.gsub! "|", "PIPE"
 
   return s
 end
@@ -151,43 +153,46 @@ init if !FileTest.exist?(LOCK_FILE)
 # Routes
 # #############################################################################
 get '/' do
-  cross_origin
+  cross_origin                           # enable Cross-Origin Resource Sharing
 
   return ""                                                            # return
 end
 
 post '/next' do
-  cross_origin                           # enable Cross-Origin Resource Sharing
-  $status = "Received request"
+  cross_origin
+
+  $status = "Received request"                                         # status
   reply = request.body.read
   Thread.new { process_next reply }
-  "Received request"
 end
 
 def process_next reply
+  $status = "Processing request"                                       # status
   data = JSON.parse(URI.decode(reply))
   if $lock
-    $status = "Locked"
+    $status = "Locked"                                                 # status
     return
   end
-  #return "locked" if $lock                                    # return (locked)
   $lock = true                                                           # lock
-  key = data['key']              # TODO do something with it, e.g. simple auth?
+  if data['key'] != SESSION_KEY
+    $status =  "Error: Key mismatch"
+    return
+  end
   if data["OOV"]                                              # OOV corrections
     $status = "Processing OOV corrections"
-    logmsg :server, "received OOV corrections"
+    logmsg :server, "received OOV corrections"                         # status
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
     src, tgt = splitpipe(data["correct"]) # format:src1\tsrc2\tsrc..|||tgt1\t..
     tgt = clean_str tgt
     src = src.split("\t").map { |i| URI.decode(i).strip }
     tgt = tgt.split("\t").map { |i| URI.decode(i).strip }
-    $status = "Adding rules to fix OOVs"
+    $status = "Adding rules to handle OOVs"                            # status
     src.each_with_index { |s,i|
       next if s==''||tgt[i]==''
       as = ""
       tgt[i].split.each_index { |k| as += " 0-#{k}" }
       r = "[X] ||| #{s} ||| #{tgt[i]} ||| OOVFix=1 ||| #{as}"
-      $additional_rules << r
+      $new_rules << r
     }
     $confirmed = true
   end
@@ -205,7 +210,7 @@ def process_next reply
 # 5d. actual update
 # 6. update database
   if data["EDIT"]
-    $status = "Processing post-edit"
+    $status = "Processing post-edit"                                   # status
     logmsg :server, "received post-edit"
                                                         # 0. save raw post-edit
     source = data["source_value"]
@@ -214,12 +219,12 @@ def process_next reply
       post_edit = data["target"].join(" ")
       e = []
       logmsg :server, "post-edit before processing: '#{post_edit}'"
-      $status = "Tokenizing and truecasing post-edited phrases"
+      $status = "Tokenizing and truecasing post-edited phrases"        # status
       data["target"].each_with_index { |i,j|
                                                                 # [1.] tokenize
         _ = clean_str send_recv(:tokenizer, URI.decode(i))
         prev = _[0]                                       # use received casing
-                                                                 #[2.] truecase
+                                                                # [2.] truecase
         _ = send_recv :truecaser, _
         _[0] = prev if j>0
         e << _
@@ -228,48 +233,51 @@ def process_next reply
       f = []
       data["source_raw"].each { |i| f << URI.decode(i) }
                                                       # 2.5 new rule extraction
-      $status = "Extracting rules from post edit"
-      new_rules = PhrasePhraseExtraction.extract_rules f, e, data["align"], true
+      $status = "Extracting rules from post edit"                      # status
       grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
-      sts = {}
+      current_grammar_ids = {}
       ReadFile.readlines_strip(grammar).each { |r|
         s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-        sts[s] = true
+        current_grammar_ids[s] = true
       }
-      ats = {}
-      $additional_rules.each { |r|
+      new_rules = PhrasePhraseExtraction.extract_rules f, e, data["align"], true
+      new_rules_ids = {}
+      $new_rules.each { |r|
         s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-        ats[s] = true
+        new_rules_ids[s] = true
+      }
+      new_rules = new_rules.map { |r| r.as_trule_string }
+      _ = new_rules.dup
+      logmsg :server, "# rules before filtering #{new_rules.size}"
+      new_rules.reject! { |rs|
+        s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+        current_grammar_ids.has_key?(s) || new_rules_ids.has_key?(s)
+      }
+      $new_rules += new_rules
+      $new_rules.uniq! { |rs|
+        splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
       }
       f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.new_rules"
-      new_rules = new_rules.map { |r| r.as_trule_string }
-      logmsg :server, "# rules before filtering #{new_rules.size}"
-      _ = new_rules.dup
-      new_rules.reject! { |rs|
-        s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-        sts.has_key?(s)
-      }
-      logmsg :server, "# rules after filtering #{new_rules.size}"
-      (_-new_rules).each { |r|
-        logmsg :server, "rejected rule [already known]: '#{r}'"
-      }
-      $rejected_rules   += _-new_rules
-      logmsg :server, "removing known new rules, before: #{new_rules.size}"
-      new_rules.reject! { |rs|
-        s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-        ats.has_key?(s)
-      }
-      logmsg :server, "after: #{new_rules.size}"
-      $additional_rules += new_rules
       f.write new_rules.join "\n"
       f.close
+      logmsg :server, "# rules after filtering #{new_rules.size}"
+      add_known_rules = _-new_rules
+      add_known_rules.reject! { |rs|
+        s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+        new_rules_ids.has_key?(s)
+      }
+      $known_rules += add_known_rules
+      $known_rules.uniq! { |rs|
+        splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+      }
+      add_known_rules.each { |r| logmsg :server, "known_rule: '#{r}'" }
     else                                                       # text interface
       post_edit = data["post_edit"]
     end
-    $status  = "processing post-edit ..."
+    $status  = "Processing post-edit ..."                              # status
     post_edit.strip!
     post_edit.lstrip!
-    post_edit = clean_str post_edit                      # FIXME escape [ and ]
+    post_edit = clean_str post_edit
                                                                       # fill db
     $db['feedback']           << reply
     $db['post_edits_raw']     << post_edit
@@ -277,16 +285,17 @@ def process_next reply
     $db['original_svg']       << data['original_svg']
     $db['durations']          << data['duration'].to_f
     $db['post_edits_display'] << send_recv(:detokenizer, post_edit)
+    $last_processed_postedit = $db['post_edits_display'].last
     # 1. tokenize
-      $status = "Tokenizing post-edit"
+      $status = "Tokenizing post-edit"                                 # status
       logmsg :server, "tokenizing post-edit"
       post_edit = send_recv :tokenizer, post_edit
     # 2. truecase
-      $status = "Truecasing post-edit"
+      $status = "Truecasing post-edit"                                 # status
       logmsg :server, "truecasing post-edit"
       post_edit = send_recv :truecaser, post_edit
     # 3. save processed post-edits
-      $status = "saving processed post-edit"
+      $status = "saving processed post-edit"                           # status
       logmsg :db, "saving processed post-edit"
       $db['post_edits'] << post_edit.strip
     nochange = false
@@ -295,55 +304,56 @@ def process_next reply
       nochange = true
     end
     if !NOLEARN && !NOMT && !nochange
-      $status = "Updating"
+      $status = "Updating models"                                      # status
       logmsg :server, "updating ..."
-                               # 4. update weights
-                               # nb: this uses unaltered grammar [no new rules]
+                             # 4. update weights
+                             # N.b.: this uses unaltered grammar [no new rules]
       grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
       annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
-      $status = "Learning from post-edit"
+      $status = "Learning from post-edit"                              # status
       send_recv :dtrain, "#{annotated_source} ||| #{post_edit}"
                                                   # 5. update grammar extractor
                                                   # 5a. get forward alignment
       source_lc = source.downcase
       post_edit_lc = post_edit.downcase
-      $status = "Aligning post-edit"
+      $status = "Aligning post-edit"                                   # status
       a_fwd = send_recv :aligner_fwd, "#{source_lc} ||| #{post_edit_lc}"
                                                    # 5b. get backward alignment
       a_back = send_recv :aligner_back, "#{source_lc} ||| #{post_edit_lc}"
                                                      # 5c. symmetrize alignment
       a = send_recv :atools, "#{a_fwd} ||| #{a_back}"
                                                           # 5d actual extractor
-      $status = "Updating grammar extractor"
+      $status = "Updating grammar extractor"                           # status
       send_recv :extractor, "default_context ||| #{source} ||| #{post_edit} ||| #{a}"
                                                            # 6. update database
       $db['updated'] << true
-      `cp #{WORK_DIR}/dtrain.debug.json #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json`
+      `cp #{WORK_DIR}/dtrain.debug.json \
+        #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json`
     else
       $db['updated'] << false
     end
     logmsg :db, "updating database"
     update_database
   end
-  $status = "Getting next data to translate"
+  $status = "Getting next data to translate"                           # status
   source     = $db['source_segments'][$db['progress']]
   raw_source = $db['raw_source_segments'][$db['progress']]
   if !source                                                    # input is done
     logmsg :server, "end of input, sending 'fin'"
     $lock = false
-    $status = "Ready"
-    $last_reply = {'fin'=>true}.to_json
-    return
-    #return $last_reply                                                 # return
+    $status = "Ready"                                                  # status
+    $last_reply = {'fin'=>true,
+      'processed_postedit'=>$last_processed_postedit
+    }.to_json
+    return                                                             # return
   elsif !$confirmed \
     || ($confirmed && $last_reply && $last_reply!="" \
         && !data["EDIT"] && !$last_reply.to_json["oovs"])     # send last reply
     logmsg :server, "locked, re-sending last reply"
     logmsg :server, "last_reply: '#{$last_reply}'"
     $lock = false
-    $status = "Ready"
+    $status = "Ready"                                                  # status
     return
-    #return $last_reply                                                 # return
   else
 # translate next sentence
 # 0. no mt?
@@ -365,20 +375,22 @@ def process_next reply
       obj["progress"]   = $db["progress"]
       obj["source"]     = source
       obj["raw_source"] = raw_source
+      obj["processed_postedit"] = $last_processed_postedit
       $last_reply = obj.to_json
-      $status = "Ready"
+      $status = "Ready"                                                # status
       return
-      #return obj.to_json                                               # return
     end
                                      # 1. generate grammar for current sentence
-    $status = "Generating grammar"
+    $status = "Generating grammar"                                     # status
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
-    send_recv :extractor, "default_context ||| #{source} ||| #{grammar}"
+    if !File.exist? grammar      # grammar already generated if there were OOVs
+      send_recv :extractor, "default_context ||| #{source} ||| #{grammar}"
+    end
                                                                 # - known rules
     logmsg :server, "annotating known rules"
-    $status = "Adding rules to grammar"
+    $status = "Adding rules to grammar"                                # status
     match = {}
-    $rejected_rules.each { |r|
+    $known_rules.each { |r|
       _,src,tgt,_,_ = splitpipe r
       match["#{src.strip.lstrip} ||| #{tgt.strip.lstrip}".hash] = true
     }
@@ -393,13 +405,13 @@ def process_next reply
     }
     WriteFile.new(grammar).write all_rules.join("\n")+"\n"
                                                            # - additional rules
-    $additional_rules.each { |rule|
+    $new_rules.each { |rule|
      logmsg :server, "adding rule '#{rule}' to grammar '#{grammar}'"
       s = splitpipe(rule)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
       `echo "#{rule}" >> #{grammar}`
     }
-    # 2. check for OOVs
-    $status = "Checking for OOVs"
+                                                            # 2. check for OOVs
+    $status = "Checking for OOVs"                                      # status
     src_r = ReadFile.readlines(grammar).map {
       |l| splitpipe(l)[1].strip.split
     }.flatten.uniq
@@ -413,7 +425,7 @@ def process_next reply
     oovs.uniq!
     logmsg :server, "have OOVs: '#{oovs.to_s}'"
     if oovs.size > 0                                                     # OOVs
-      $status = "Asking for feedback on OOVs"
+      $status = "Asking for feedback on OOVs"                          # status
       obj = Hash.new
       obj["oovs"]      = oovs
       obj["progress"]  = $db['progress']
@@ -422,23 +434,23 @@ def process_next reply
         raw_source_annot.gsub! "#{o}", "***#{o}###"
       }
       obj["raw_source"] = raw_source_annot
+      obj["processed_postedit"] = $last_processed_postedit
       $last_reply = obj.to_json
       logmsg :server, "OOV reply: '#{$last_reply}'"
       $lock = false
       $confirmed = false
-      $status = "Ready"
-      return
-      #return $last_reply                                               # return
+      $status = "Ready"                                                # status
+      return                                                           # return
     end
     # 3. translation
-    $status = "Translating"
+    $status = "Translating"                                            # status
     msg = "act:translate ||| <seg grammar=\"#{grammar}\"> #{source} </seg>"
     derivation_str = send_recv :dtrain, msg
     obj_str = DerivationToJson.proc_deriv derivation_str
     obj = JSON.parse obj_str
     obj["transl"] = obj["target_groups"].join " "
     # 4. detokenizer
-    $status = "Processing raw translation"
+    $status = "Processing raw translation"                             # status
     obj["transl_detok"] = send_recv(:detokenizer, obj["transl"]).strip
     obj["target_groups"].each_index { |j|
       prev = obj["target_groups"][j][0]
@@ -465,19 +477,15 @@ def process_next reply
     $db["derivations_proc"] << obj_str
     $db["mt_raw"]           << obj["transl"]
     $db["mt"]               << obj["transl_detok"]
+    obj["processed_postedit"] = $last_processed_postedit
                                                                      # 5. reply
     $last_reply = obj.to_json
     $lock = false
     $confirmed = false
     logmsg :server, "response: '#{$last_reply}'"
-    $status = "Ready"
-    return
-    #return $last_reply                                                 # return
+    $status = "Ready"                                                  # status
+    return                                                             # return
   end
-
-  #$status = "Error"
-  #$last_reply = "{}"
-  #return "{}"                                                  # return [ERROR]
 end
 
 get '/debug' do                                                    # debug view
@@ -500,9 +508,16 @@ get '/debug' do                                                    # debug view
   haml :debug, :locals => { :data => data,
                             :pairwise_ranking_data => pairwise_ranking_data, \
                             :progress => $db["progress"]-1,
-                            :additional_rules => $additional_rules, \
-                            :rejected_rules => $rejected_rules, \
+                            :new_rules => $new_rules, \
+                            :known_rules => $known_rules, \
                             :session_key => SESSION_KEY }
+end
+
+get '/new_rules'     do                                       # new/known rules
+  return $new_rules.join "<br />"
+end
+get '/known_rules' do
+  return $known_rules.join "<br />"
 end
 
 get '/fetch' do                                                    # fetch next
@@ -511,6 +526,16 @@ get '/fetch' do                                                    # fetch next
   return $last_reply
 end
 
+get '/fetch_processed_postedit/:i' do                     # processed post-edit
+  cross_origin
+  i = params[:i].to_i
+  return $db['post_edits_display'][i]
+end
+
+get '/progress' do                                        # processed post-edit
+  cross_origin
+  return $db['progress']
+end
 
 get '/status' do                                                 # check status
   cross_origin
@@ -595,8 +620,8 @@ get '/reset_extractor' do                             # reset grammar extractor
 end
 
 get '/reset_new_rules' do                               # removed learned rules
-  $additional_rules.clear
-  $rejected_rules.clear
+  $new_rules.clear
+  $known_rules.clear
 
   return "reset new rules: done"
 end

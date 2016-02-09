@@ -147,7 +147,7 @@
         %th
         %th Target
       %tbody
-        - additional_rules.each do |rule_string|
+        - new_rules.each do |rule_string|
           - nt, src, tgt, f, a = splitpipe(rule_string)
           %tr
             %td #{src}
@@ -162,7 +162,7 @@
         %th
         %th Target
       %tbody
-        - rejected_rules.each do |rule_string|
+        - known_rules.each do |rule_string|
           - nt, src, tgt, f, a = splitpipe(rule_string)
           %tr
             %td #{src}

@@ -110,7 +110,7 @@ class Rule
     }
   end
 
-  def as_trule_string
+  def get_source_string
     source_string = ""
     @source.each { |i|
       if i.is_a? Range
@@ -119,6 +119,12 @@ class Rule
         source_string += " #{i} "
       end
     }
+    source_string = source_string.lstrip.strip
+
+    return source_string
+  end
+
+  def get_target_string
     target_string = ""
     @target.each { |i|
       if i.is_a? Range
@@ -127,8 +133,14 @@ class Rule
         target_string += " #{i} "
       end
     }
-    source_string = source_string.lstrip.strip
     target_string = target_string.lstrip.strip
+
+    return target_string
+  end
+
+  def as_trule_string
+    source_string = get_source_string
+    target_string = get_target_string
 
     astr = ""
     @alignment.each { |p|
@@ -136,20 +148,16 @@ class Rule
     }
     astr.strip!
 
-    #source_string.gsub!(/\[X,\d+\]/, "[X]")
     return "[X] ||| #{source_string} ||| #{target_string} ||| NewRule=1 ||| #{astr}"
   end
 
   def is_terminal?
-    #return false if @source.size>1
-    #return false if @target.size>1
     @source.each { |i| return false if !i.is_a? Range }
     @target.each { |i| return false if !i.is_a? Range }
     return true
   end
 
-  # check if other_rule is a part of self
-  def mergeable_with? other_rule
+  def mergeable_with? other_rule # check if other_rule is a part of self
     return false if !other_rule.is_terminal?
     other_source_begin = other_rule.source.first.first
     other_source_end   = other_rule.source.first.last
@@ -559,7 +567,7 @@ def PhrasePhraseExtraction.extract_rules f, e, as, expand=false
   }
   rules = PhrasePhraseExtraction.make_seed_rules a, e,f
   seed_rules = PhrasePhraseExtraction.remove_too_large_seed_phrases rules
-  seed_rules.uniq!
+  seed_rules.uniq! { |r| "#{r.get_source_string} ||| #{r.get_target_string}" }
 
   if DEBUG
     STDERR.write "seed rules:\n"
@@ -583,8 +591,6 @@ def PhrasePhraseExtraction.extract_rules f, e, as, expand=false
   rules.reject! { |r|
     r.alignment.size == 0
   }
-
-  rules.uniq!
 
   return rules
 end
@@ -741,7 +747,7 @@ def main
 
   rules = PhrasePhraseExtraction.remove_too_long_src_sides rules
 
-  rules.uniq!
+  rules.uniq! { |r| "#{r.get_source_string} ||| #{r.get_target_string}" }
 
   rules.each { |r|
     puts r.as_trule_string

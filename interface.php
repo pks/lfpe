@@ -85,7 +85,7 @@ Note that the source word may be distorted.
 <textarea style="display:none" id="key"               ><?php echo $_GET['key']; ?></textarea>
 <textarea style="display:none" id="source"            ></textarea>
 <textarea style="display:none" id="last_post_edit"    ></textarea>
-<textarea style="display:none" id="current_seg_id"    >0</textarea>
+<textarea style="display:none" id="current_seg_id"    ><?php echo $db->progress; ?></textarea>
 <textarea style="display:none" id="paused"            >0</textarea>
 <textarea style="display:none" id="oov_correct"       >0</textarea>
 <textarea style="display:none" id="oov_num_items"     >0</textarea>
