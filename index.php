@@ -26,37 +26,36 @@
 <p>Beta test:
 <select class="small">
 
-<optgroup label="________________">
+<!--<optgroup label="________________">
   <option value="product_de-en_toy_example" onclick="document.getElementById('key').value=this.value;">toy example</option>
+</optgroup>-->
+
+<optgroup label="Session A">
+  <option value="product_de-en_beta_test_A" onclick="document.getElementById('key').value=this.value;">de-en</option>
+  <option value="product_en-de_beta_test_A" onclick="document.getElementById('key').value=this.value;">en-de</option>
+<!--  <option value="product_de-en_beta_test_1_A" onclick="document.getElementById('key').value=this.value;">A* de-en</option>
+  <option value="product_en-de_beta_test_1_A" onclick="document.getElementById('key').value=this.value;">A* en-de</option>-->
 </optgroup>
 
-<optgroup label="________________">
-  <option value="product_de-en_toy_example" onclick="document.getElementById('key').value=this.value;">toy example</option>
-  <option value="product_de-en_beta_test_A" onclick="document.getElementById('key').value=this.value;">A de-en</option>
-  <option value="product_en-de_beta_test_A" onclick="document.getElementById('key').value=this.value;">A en-de</option>
-  <option value="product_de-en_beta_test_1_A" onclick="document.getElementById('key').value=this.value;">A* de-en</option>
-  <option value="product_en-de_beta_test_1_A" onclick="document.getElementById('key').value=this.value;">A* en-de</option>
+<optgroup label="Session B">
+  <option value="product_de-en_beta_test_B" onclick="document.getElementById('key').value=this.value;">de-en</option>
+  <option value="product_en-de_beta_test_B" onclick="document.getElementById('key').value=this.value;">en-de</option>
+<!--  <option value="product_de-en_beta_test_1_B" onclick="document.getElementById('key').value=this.value;">B* de-en</option>
+  <option value="product_en-de_beta_test_1_B" onclick="document.getElementById('key').value=this.value;">B* en-de</option>-->
 </optgroup>
 
-<optgroup label="________________">
-  <option value="product_de-en_beta_test_B" onclick="document.getElementById('key').value=this.value;">B de-en</option>
-  <option value="product_en-de_beta_test_B" onclick="document.getElementById('key').value=this.value;">B en-de</option>
-  <option value="product_de-en_beta_test_1_B" onclick="document.getElementById('key').value=this.value;">B* de-en</option>
-  <option value="product_en-de_beta_test_1_B" onclick="document.getElementById('key').value=this.value;">B* en-de</option>
+<optgroup label="Session C">
+  <option value="product_en-de_beta_test_C" onclick="document.getElementById('key').value=this.value;">en-de</option>
+  <option value="product_de-en_beta_test_C" onclick="document.getElementById('key').value=this.value;">de-en</option>
+<!--  <option value="product_en-de_beta_test_1_C" onclick="document.getElementById('key').value=this.value;">C* en-de</option>
+  <option value="product_de-en_beta_test_1_C" onclick="document.getElementById('key').value=this.value;">C* de-en</option>-->
 </optgroup>
 
-<optgroup label="________________">
-  <option value="product_en-de_beta_test_C" onclick="document.getElementById('key').value=this.value;">C en-de</option>
-  <option value="product_de-en_beta_test_C" onclick="document.getElementById('key').value=this.value;">C de-en</option>
-  <option value="product_en-de_beta_test_1_C" onclick="document.getElementById('key').value=this.value;">C* en-de</option>
-  <option value="product_de-en_beta_test_1_C" onclick="document.getElementById('key').value=this.value;">C* de-en</option>
-</optgroup>
-
-<optgroup label="________________">
-  <option value="product_de-en_beta_test_D" onclick="document.getElementById('key').value=this.value;">D de-en</option>
-  <option value="product_en-de_beta_test_D" onclick="document.getElementById('key').value=this.value;">D en-de</option>
-  <option value="product_de-en_beta_test_1_D" onclick="document.getElementById('key').value=this.value;">D* de-en</option>
-  <option value="product_en-de_beta_test_1_D" onclick="document.getElementById('key').value=this.value;">D* en-de</option>
+<optgroup label="Session D">
+  <option value="product_de-en_beta_test_D" onclick="document.getElementById('key').value=this.value;">de-en</option>
+  <option value="product_en-de_beta_test_D" onclick="document.getElementById('key').value=this.value;">en-de</option>
+<!--  <option value="product_de-en_beta_test_1_D" onclick="document.getElementById('key').value=this.value;">D* de-en</option>
+  <option value="product_en-de_beta_test_1_D" onclick="document.getElementById('key').value=this.value;">D* en-de</option>-->
 </optgroup>
 
 </select>

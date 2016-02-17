@@ -2,7 +2,7 @@
 !!!
 %html
   %head
-    %title Debug view (Session ##{session_key})
+    %title Debug view (Session #{session_key})
   %link(rel="stylesheet" type="text/css" href="debug.css")
   %script{:src => "http://postedit.cl.uni-heidelberg.de/js/jquery.min.js"}
   %script{:src => "http://postedit.cl.uni-heidelberg.de/js/jquery.tablesorter.min.js"}
@@ -25,7 +25,10 @@
         %li
           %a{ :href => "#kbest" } K-best
 
-      %p.tiny Session: ##{session_key}
+      %p
+        Status:
+        %span#status ...
+      %p.tiny Session: #{session_key}
 
     /=#########################################################################
     %h2#controls Controls
@@ -44,23 +47,42 @@
         %a.ajax{:tgt => "/reset_extractor",       :href => "#controls"} Reset extractor
       %li
         %a.ajax{:tgt => "/reset_new_rules",       :href => "#controls"} Reset new rules
-      %li
-        %a.ajax{:tgt => "/shutdown",              :href => "#controls"} Initiate shutdown
+      /
+        %li
+          %a.ajax{:tgt => "/shutdown",              :href => "#controls"} Initiate shutdown
     %h3 Learning rates &amp; weights
-    %p Set default weight or rate for specific features:
+    %p Get current weight/rate for specific features:
+    %input#features_get{ :value => "Feature", :style => "text-align:center; width:20em" }
+    %select#features_type_get
+      %option{ :value => "/get_weight" } Weight
+      %option{ :value => "/get_rate" } Rate
+    %input#features_value_get{ :value => " ", :style => "text-align:right; width:10em" }
+    %button#get_features
+      Get
+    %p Set weight/rate for specific features:
+    %input#features{ :value => "Feature", :style => "text-align:center; width:20em" }
     %select#features_type
       %option{ :value => "/set_weights" } Weight
       %option{ :value => "/set_learning_rates" } Rate
-    %input#features{ :value => "Feature", :style => "text-align:center; width:20em" }
-    %input#features_value{ :value => "1e-05", :style => "text-align:right; width:5em" }
+    %input#features_value{ :value => "1e-05", :style => "text-align:right; width:10em" }
     %button#set_features
       Set
-    %p Set rate for feature groups:
+    %p
+      Set rate for feature groups:
+      %span.tiny (Features unseen in training/tuning have a common default rate.)
+    %select#feature_groups_get
+      %option{ :value => "R" } rule ids
+      %option{ :value => "RB" } rule bigrams
+      %option{ :value => "Shape" } rule shapes
+    %input#feature_groups_value_get{ :value => "1e-05", :style => "text-align:right; width:10em" }
+    %button#get_feature_groups
+      Get rate
+    %br
     %select#feature_groups
       %option{ :value => "R" } rule ids
       %option{ :value => "RB" } rule bigrams
       %option{ :value => "Shape" } rule shapes
-    %input#feature_groups_value{ :value => "1e-05", :style => "text-align:right; width:5em" }
+    %input#feature_groups_value{ :value => "1e-05", :style => "text-align:right; width:10em" }
     %button#set_feature_groups
       Set rate
 
@@ -81,7 +103,7 @@
       %tr
         %td.noborder
           %strong Progress:
-        %td.left.noborder #{[0,progress].max}
+        %td.left.noborder ##{[0,progress].max}
       %tr
         %td.noborder
           %strong MT Input:
@@ -109,14 +131,16 @@
       %tr
         %td.noborder
           %strong Best match (BLEU=#{(pairwise_ranking_data["best_match_score"]*100).round(2)}%):
-        %td.left.noborder #{pairwise_ranking_data["best_match"]}
+        %td.left.noborder.updated #{pairwise_ranking_data["best_match"]}
 
     %h3 Metadata
-    %p <strong>K:</strong>                      #{pairwise_ranking_data["samples_size"]}
-    %p <strong>Number of updates:</strong>      #{pairwise_ranking_data["num_up"]}
-    %p <strong>Updated features:</strong>       #{pairwise_ranking_data["updated_features"]}
-    %p <strong>Duration:</strong>               #{data["durations"][progress]}ms
-    %p <strong>Updated:</strong>                #{data["updated"][progress]}
+    %p
+      <strong>Updated:</strong>
+      %span#up_val #{data["updated"][progress]}
+    %p.updated <strong>K:</strong>                  #{pairwise_ranking_data["samples_size"]}
+    %p.updated <strong>Number of updates:</strong>  #{pairwise_ranking_data["num_up"]}
+    %p.updated <strong>Updated features:</strong>   #{pairwise_ranking_data["updated_features"]}
+    %p <strong>Duration:</strong>                   #{data["durations"][progress]}ms
 
     %h3 Derivation
     %p
@@ -137,6 +161,8 @@
 
     /=#########################################################################
     %h2#grammar Grammar
+
+    %p <strong>Notes:</strong> In addition to dynamically adding each source/post-edit instance to the suffix array extractor, the system additionally uses the provided phrase alignments to extract new rules. The extraction follows the original Hiero grammar extraction, but using phrases instead of words and using only a single binary feature: 'NewRule=1'. Extracted rules that already exist in a grammar are annotated with an additional feature: 'KnownRules=1'. OOVs are avoided by asking the user for translations of unknown words prior to translation. These are added to the grammars as new rules ('OOVFix=1').
 
     %h3
       New Rules
@@ -175,11 +201,13 @@
     /=#########################################################################
     %h2#weights Weights
 
-    %p N.B. that updates are only done if the post-edit is different from the original 1-best output of the decoder.
+    %p <strong>Notes:</strong> If the user modifies the string of the original one-best output, a standard pairwise ranking update is made, using the post-edit as reference translation. No update is performed if the string is not modified. The k-best list is not modified, as the original grammar is used (leave-one-out).
+    /
+      %p N.B. that updates are only done if the post-edit is different from the original 1-best output of the decoder.
     %p Update of a single row is: After = Before - (Rate * -Raw Diff.) = Before + (Rate * Raw. Diff.). The 'Raw Diff.' column is the sum of the difference vectors of the misranked pairs.
 
     %h3 Weight updates
-    %table.sortable
+    %table.sortable.updated
       %thead
         %tr
           %th Feature
@@ -218,8 +246,8 @@
                     ERROR: unknown key #{k}
 
     %p
-      %a{ :onclick => "$('#features').toggle()" } Explanations
-    %table#features{ :style => "display:none" }
+      %a{ :onclick => "$('#features_expl').toggle()" } Explanations
+    %table#features_expl{ :style => "display:none" }
       %tr
         %td EgivenFCoherent
         %td.left -log10[ c(e, f) / sample c(f) ]
@@ -273,7 +301,7 @@
         %td.left Indicator features for rule shapes (39 in total)
       %tr
         %td IsSupportedOnline
-        %td.left Rules with support from local context (Denkowski)
+        %td.left Rules with support from local context (added by Denkowski's online suffix array extractor)
 
     %p.up
       %a{ :href => "#" } ^ up
@@ -281,9 +309,10 @@
     /=#########################################################################
     %h2#kbest K-best list
     %p
+      <strong>Notes:</strong>
       %span.red In red:
-      %span Update needed, i.e. "any of the above hypotheses has a lower model score" (in default order).
-    %table.sortable
+      %span Update needed, i.e. "any of the above hypotheses has a lower model score" (if the list is ordered by BLEU score in descending order).
+    %table.sortable.updated
       %thead
         %tr
           %th.center{:style => "width:5%"}  Rank

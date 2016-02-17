@@ -266,6 +266,9 @@ def process_next reply
         s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
         new_rules_ids.has_key?(s)
       }
+      f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.known_rules"
+      f.write add_known_rules.join "\n"
+      f.close
       $known_rules += add_known_rules
       $known_rules.uniq! { |rs|
         splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
@@ -324,7 +327,8 @@ def process_next reply
       a = send_recv :atools, "#{a_fwd} ||| #{a_back}"
                                                           # 5d actual extractor
       $status = "Updating grammar extractor"                           # status
-      send_recv :extractor, "default_context ||| #{source} ||| #{post_edit} ||| #{a}"
+      msg = "default_context ||| #{source} ||| #{post_edit} ||| #{a}"
+      send_recv :extractor, msg
                                                            # 6. update database
       $db['updated'] << true
       `cp #{WORK_DIR}/dtrain.debug.json \
@@ -544,6 +548,13 @@ get '/status' do                                                 # check status
   return $status
 end
 
+get '/status_debug' do                                                 # check status
+  cross_origin
+  logmsg :server, "status: #{$status}"
+  return "[##{$db["progress"]}] Locked" if $locked
+  return "[##{$db["progress"]}] #{$status}"
+end
+
 get '/confirm' do                        # client confirms received translation
   cross_origin
   $confirmed = true
@@ -568,6 +579,24 @@ get '/set_learning_rates/:name/:rate' do                   # set learning rates
   logmsg :server, "set learning rate for '#{name}' to: #{rate}"
   return "locked" if $lock
   msg = send_recv :dtrain, "set_learning_rates #{name} #{rate}"
+
+  return msg
+end
+
+get '/get_weight/:name' do
+  name = params[:name].gsub " ", "_"
+  logmsg :server, "getting weight for '#{name}'"
+  return "locked" if $lock
+  msg = send_recv :dtrain, "get_weight #{name}"
+
+  return msg
+end
+
+get '/get_rate/:name' do
+  name = params[:name].gsub " ", "_"
+  logmsg :server, "getting rate for '#{name}'"
+  return "locked" if $lock
+  msg = send_recv :dtrain, "get_rate #{name}"
 
   return msg
 end
@@ -622,6 +651,8 @@ end
 get '/reset_new_rules' do                               # removed learned rules
   $new_rules.clear
   $known_rules.clear
+  `rm #{WORK_DIR}/*.*_rules`
+  `rm #{WORK_DIR}/g/*`
 
   return "reset new rules: done"
 end

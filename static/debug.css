@@ -14,13 +14,14 @@ td.right { text-align:right }
 .black { color:#000 }
 .red { color:red }
 .green { color:green }
-.small { font-size:.8em }
-.tiny { font-size:.6em!important }
+.small { font-size:.9em }
+.tiny { font-size:.8em!important }
 .big { font-size:1.1em }
 .mono { font-family:monospace }
 .even { background:#fff }
 .odd { background: #ffffe0  }
 .up { text-align:right;margin-right:1em }
+.stale { opacity:.125 }
 #svg_b64,#original_svg_b64 { display:none }
 #floater {
   float:right;

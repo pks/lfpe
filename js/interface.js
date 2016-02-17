@@ -1,5 +1,5 @@
 /*
- * (common) global vars
+ * Global vars
  *
  */
 var data,    // global data object
@@ -244,7 +244,7 @@ var next =  function ()
     send_data["original_svg"] = document.getElementById("original_svg").value;
   } else {
     post_edit = $.trim(target_textarea.value);
-    send_data["post_edit"] = post_edit;
+    send_data["post_edit"] = encodeURIComponent(post_edit);
     send_data['type'] = 't';
   }
 
