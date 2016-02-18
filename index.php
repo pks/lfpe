@@ -15,8 +15,8 @@
   <input type="text" id="key" name="key" style="width:20em" />
   &nbsp;&nbsp;&nbsp;&nbsp;Session type:
   <select name="ui_type">
-    <option value="t">text</option>
     <option value="g">graphical</option>
+    <option value="t">text</option>
 </select>
 &nbsp;&nbsp;&nbsp;&nbsp;
 <input type="submit" value="Submit" />
@@ -45,8 +45,8 @@
 </optgroup>
 
 <optgroup label="Session C">
-  <option value="product_en-de_beta_test_C" onclick="document.getElementById('key').value=this.value;">en-de</option>
   <option value="product_de-en_beta_test_C" onclick="document.getElementById('key').value=this.value;">de-en</option>
+  <option value="product_en-de_beta_test_C" onclick="document.getElementById('key').value=this.value;">en-de</option>
 <!--  <option value="product_en-de_beta_test_1_C" onclick="document.getElementById('key').value=this.value;">C* en-de</option>
   <option value="product_de-en_beta_test_1_C" onclick="document.getElementById('key').value=this.value;">C* de-en</option>-->
 </optgroup>

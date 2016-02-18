@@ -1,4 +1,4 @@
-var poll = function (url_prefix)
+var poll_debug = function (url_prefix)
 {
   setTimeout(function(){
      $.get(url_prefix+"/status_debug").done(function(response){
@@ -28,7 +28,7 @@ $().ready(function() {
   $("#features_value_get").focusout(function() { if (this.value == "") this.value = "1e-05"; });
   $("#feature_groups_value").click(function() { this.value = ""; });
   $("#feature_groups_value").focusout(function() { if (this.value == "") this.value = "1e-05"; });
-  // set all sorts of learning rates
+  // set/get all sorts of learning rates
   $("#set_features").click(function() {
     k = $("#features").val();
     v = $("#features_value").val();
@@ -51,6 +51,18 @@ $().ready(function() {
           $("#control_reply").html(result);
       }});
     }
+  });
+  $("#get_features").click(function () {
+    $.get("http://"+document.URL.split("/")[2]+$("#features_type_get").val()+"/"+$("#features_get").val(),
+    function (data) {
+      $("#features_value_get").val(data);
+    });
+  });
+  $("#get_feature_groups").click(function () {
+    $.get("http://"+document.URL.split("/")[2]+"/get_rate/"+$("#feature_groups_get").val(),
+    function (data) {
+      $("#feature_groups_value_get").val(data);
+    });
   });
 
   // sortable tables
@@ -93,21 +105,8 @@ $().ready(function() {
     $(".updated").each(function(i,el){$(el).addClass("stale")})
   }
 
-  poll("http://"+document.URL.split("/")[2]);
-
-  $("#get_features").click(function () {
-    $.get("http://"+document.URL.split("/")[2]+$("#features_type_get").val()+"/"+$("#features_get").val(),
-    function (data) {
-      $("#features_value_get").val(data);
-    });
-  });
-
-  $("#get_feature_groups").click(function () {
-    $.get("http://"+document.URL.split("/")[2]+"/get_rate/"+$("#feature_groups_get").val(),
-    function (data) {
-      $("#feature_groups_value_get").val(data);
-    });
-  });
+  // get current status + input ID
+  poll_debug("http://"+document.URL.split("/")[2]);
 
 });
 
