@@ -116,7 +116,7 @@ div#help {
   margin-left: 1em
   margin-top: .5em;
   font-size:  .8em;
-  width:      70%;
+  width:      100%;
   text-align: justify
 }
 div#help a { color:#000;text-decoration:underline }
