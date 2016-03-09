@@ -8,14 +8,14 @@ Alternatively, in the textual interface, you may just press return when the post
 <p><span style="border-bottom:1px solid #ccc">Instructions for the graphical interface:</span></p>
 <p>To submit a post-edition in the graphical interface all phrases have to be marked as finished (phrases are highlighted in dark gray color).</p>
 <ul>
-  <li><strong>Moving around:</strong> Press <strong>'S'</strong>, then select phrases using the arrow keys. This is the default mode.</li>
-  <li><strong>Editing text:</strong> Double click on a phrase or press <strong>'E'</strong> to edit the contents of the current phrase. Press 'Return' to save.</li>
-  <li><strong>Reordering of target phrases:</strong> Press <strong>'M'</strong>, then use the arrow keys to move the selected phrase. Press 'Return' to fix its position.</li>
-  <li><strong>Mark phrase as finished:</strong> Press <strong>'Return'</strong> to mark phrases as finished (press 'Return' again to undo). Moving, editing, aligning or deleting of finished phrases is not possible.</li>
+  <li><strong>Moving around:</strong> Press <strong>Shift+S</strong>, then select phrases using the arrow keys. This is the default mode.</li>
+  <li><strong>Editing text:</strong> Double click on a phrase or press <strong>Shift+E</strong> to edit the contents of the current phrase. Press 'Return' to save.</li>
+  <li><strong>Reordering of target phrases:</strong> Press <strong>Shift+M</strong>, then use the arrow keys to move the selected phrase. Press 'Return' to fix its position.</li>
+  <li><strong>Mark phrase as finished:</strong> Press <strong>Return</strong> to mark phrases as finished (press 'Return' again to undo). Moving, editing, aligning or deleting of finished phrases is not possible.</li>
   <li><strong>Adding target phrases:</strong> To add a phrase right next to the currently selected one, press <strong>'A'</strong>.</li>
-  <li><strong>Removing target phrases:</strong> Press <strong>'D'</strong> to delete the currently selected phrase.</li>
+  <li><strong>Removing target phrases:</strong> Press <strong>Shift+D</strong> to delete the currently selected phrase.</li>
   <li><strong>Adding/removing alignments:</strong> Select a source phrase by clicking on it, then click on a target phrase to connect or disconnect it with the selected source phrase. Click the selected source phrase again to cancel.</li>
-  <li><strong>Undo:</strong> Press <strong>'U'</strong> to undo alignments, text edits and deletion of phrases.</li>
+  <li><strong>Undo:</strong> Press <strong>Shift+U</strong> to undo alignments, text edits and deletion of phrases.</li>
   <li><strong>Reset:</strong> Click 'Reset' button to start from scratch.</li>
 </ul>
 
