@@ -61,23 +61,36 @@ var pause = function ()
   var paused          = document.getElementById("paused");
   var button          = document.getElementById("pause_button");
   var next_button     = document.getElementById("next");
+  var reset_button    = document.getElementById("reset_button");
   var target_textarea = document.getElementById("target_textarea")
   var initialized     = document.getElementById("init");
 
   if (paused.value == 0) {
     button.innerHTML = "Unpause";
     paused.value = 1;
-    next.setAttribute("disabled", "disabled");
-    target_textarea.setAttribute("disabled", "disabled");
+    next_button.setAttribute("disabled", "disabled");
+    reset_button.setAttribute("disabled", "disabled");
     Timer.pause();
+    if (ui_type=='g') {
+      $("#derivation_editor").fadeTo(200,0.1);
+      DE_ui_lock=true;
+    }
+    else target_textarea.setAttribute("disabled", "disabled");
   } else {
     button.innerHTML = "Pause";
     paused.value = 0;
-    next.removeAttribute("disabled");
-    if (initialized.value != "") {
-      target_textarea.removeAttribute("disabled");
-    }
+    next_button.removeAttribute("disabled");
+    reset_button.removeAttribute("disabled", "disabled");
     Timer.unpause();
+    if (ui_type=='g') {
+      $("#derivation_editor").fadeTo(200,1);
+      DE_ui_lock=false;
+    }
+    else {
+      if (initialized.value != "") {
+        target_textarea.removeAttribute("disabled");
+      }
+    }
   }
 }
 
@@ -127,7 +140,7 @@ var working = function ()
   target_textarea.setAttribute("disabled", "disabled");
   document.getElementById("reset_button").setAttribute("disabled", "disabled");
 
-  DE_locked = true;
+  DE_ui_lock = true;
 }
 function not_working(fadein=true)
 {
@@ -159,7 +172,7 @@ function not_working(fadein=true)
   document.getElementById("pause_button").removeAttribute("disabled");
   document.getElementById("reset_button").removeAttribute("disabled");
 
-  DE_locked = false;
+  DE_ui_lock = false;
 }
 
 /*
@@ -406,7 +419,6 @@ var request_and_process_next = function ()
       $("#next").html("Next");
       $("#oov_tgt0").focus();
       not_working(false);
-      DE_locked = true;
 
     // translation mode
     } else {
@@ -458,6 +470,7 @@ var request_and_process_next = function ()
 
       // load data into graphical UI
       if (ui_type == "g") {
+        DE_ui_lock = false;
         DE_init();
         var x = $.trim(JSON.parse(DE_extract_data())["target"].join(" "));
         last_post_edit.value = x;
@@ -513,4 +526,11 @@ $().ready(function()
     document.getElementById("textboxes").style.display = "block";
   }
 });
+
+
+function scroll(event) {
+    var x = event.clientX;
+    var xPercentage = x / screen.width;
+    window.scrollTo(xPercentage * width, 0);
+}
 
