@@ -27,6 +27,9 @@ if !FileTest.exist? LOCK_FILE        # locked?
   $env = {}                          # environment variables (socket connections to daemons)
 end
 $status                  = "Idle"    # current server status
+$pregenerated_grammars   = true      # FIXME config
+$oov_corrected           = {}
+$oov_corrected.default   = false
 
 # #############################################################################
 # Daemons
@@ -39,10 +42,10 @@ $daemons = {
   :detokenizer_src  => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a detokenize -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
   :truecaser        => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a truecase   -S '__ADDR__' -e #{EXTERNAL} -t #{SESSION_DIR}/truecase.model",
   :dtrain           => "#{CDEC}/training/dtrain/dtrain_net_interface -c #{SESSION_DIR}/dtrain.ini -d #{WORK_DIR}/dtrain.debug.json -o #{WORK_DIR}/weights -a '__ADDR__' -E -R",
-  :extractor        => "python -m cdec.sa.extract -c #{SESSION_DIR}/extract.ini --online -u -S '__ADDR__'",
-  :aligner_fwd      => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
-  :aligner_back     => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
-  :atools           => "#{CDEC}/utils/atools_net -c grow-diag-final-and -S '__ADDR__'"
+  #:extractor        => "python -m cdec.sa.extract -c #{SESSION_DIR}/extract.ini --online -u -S '__ADDR__'",
+  #:aligner_fwd      => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/forward.params  -m #{FWD_MEAN_SRCLEN_MULT}  -T #{FWD_TENSION}  --sock_url '__ADDR__'",
+  #:aligner_back     => "#{CDEC}/word-aligner/net_fa -f #{SESSION_DIR}/backward.params -m #{BACK_MEAN_SRCLEN_MULT} -T #{BACK_TENSION} --sock_url '__ADDR__'",
+  #:atools           => "#{CDEC}/utils/atools_net -c grow-diag-final-and -S '__ADDR__'"
 }
 
 # #############################################################################
@@ -181,7 +184,8 @@ def process_next reply
   if data["OOV"]                                              # OOV corrections
     $status = "Processing OOV corrections"
     logmsg :server, "received OOV corrections"                         # status
-    grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+    #grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+    grammar = "#{SESSION_DIR}/g/grammar.#{$db['progress']}"
     src, tgt = splitpipe(data["correct"]) # format:src1\tsrc2\tsrc..|||tgt1\t..
     tgt = clean_str tgt
     src = src.split("\t").map { |i| URI.decode(i).strip }
@@ -195,6 +199,7 @@ def process_next reply
       $new_rules << r
     }
     $confirmed = true
+    $oov_corrected[$db['progress']] = true
   end
 # received post-edit -> update models
 # 0. save raw post-edit
@@ -234,7 +239,8 @@ def process_next reply
       data["source_raw"].each { |i| f << URI.decode(i) }
                                                       # 2.5 new rule extraction
       $status = "Extracting rules from post edit"                      # status
-      grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+      #grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+      grammar = "#{SESSION_DIR}/g/grammar.#{$db['progress']}"
       current_grammar_ids = {}
       ReadFile.readlines_strip(grammar).each { |r|
         s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
@@ -311,11 +317,13 @@ def process_next reply
       logmsg :server, "updating ..."
                              # 4. update weights
                              # N.b.: this uses unaltered grammar [no new rules]
-      grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+      #grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+      grammar = "#{SESSION_DIR}/g/grammar.#{$db['progress']}"
       annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
       $status = "Learning from post-edit"                              # status
       send_recv :dtrain, "#{annotated_source} ||| #{post_edit}"
                                                   # 5. update grammar extractor
+      if !$pregenerated_grammars
                                                   # 5a. get forward alignment
       source_lc = source.downcase
       post_edit_lc = post_edit.downcase
@@ -329,6 +337,7 @@ def process_next reply
       $status = "Updating grammar extractor"                           # status
       msg = "default_context ||| #{source} ||| #{post_edit} ||| #{a}"
       send_recv :extractor, msg
+      end
                                                            # 6. update database
       $db['updated'] << true
       `cp #{WORK_DIR}/dtrain.debug.json \
@@ -384,11 +393,16 @@ def process_next reply
       $status = "Ready"                                                # status
       return
     end
+
                                      # 1. generate grammar for current sentence
     $status = "Generating grammar"                                     # status
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+    if !$pregenerated_grammars
     if !File.exist? grammar      # grammar already generated if there were OOVs
       send_recv :extractor, "default_context ||| #{source} ||| #{grammar}"
+    end
+    else
+      grammar = "#{SESSION_DIR}/g/grammar.#{$db['progress']}"
     end
                                                                 # - known rules
     logmsg :server, "annotating known rules"
@@ -415,6 +429,7 @@ def process_next reply
       `echo "#{rule}" >> #{grammar}`
     }
                                                             # 2. check for OOVs
+    if !$oov_corrected[$db['progress']]
     $status = "Checking for OOVs"                                      # status
     src_r = ReadFile.readlines(grammar).map {
       |l| splitpipe(l)[1].strip.split
@@ -445,6 +460,7 @@ def process_next reply
       $confirmed = false
       $status = "Ready"                                                # status
       return                                                           # return
+    end
     end
     # 3. translation
     $status = "Translating"                                            # status
