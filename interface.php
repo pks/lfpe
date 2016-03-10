@@ -8,15 +8,18 @@
   <script src="js/raphael-min.js"                                   type="text/javascript" charset="utf-8"></script>
   <script src="js/derivation_editor/raphael.inline_text_editing.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/derivation_editor/derivation-editor.js"           type="text/javascript" charset="utf-8"></script>
+  <script src="js/jquery.scrollTo.min.js"                           type="text/javascript" charset="utf-8"></script>
 </head>
 
 <body>
+
+<?php include("inc/db.inc.php"); ?>
 
 <?php include("inc/header.inc.php"); ?>
 
 <!-- Derivation editor -->
 <div id="derivation_editor">
-  <div id="holder"><img id="placeholder" src="static/placeholder.png" /></div>
+  <div id="holder" style="width:100px; overflow-x:scroll"></div>
 </div>
 <!-- /Derivation editor-->
 
@@ -47,12 +50,26 @@ Note that the source word may be distorted.
 
 <!-- Buttons -->
 <div>
+  <button id="help_button" class="button" onclick="$('#help').toggle('blind')">Help</button>
   <button id="pause_button" class='button' type="button" onclick="pause()">Pause</button>
   <button id="reset_button" class='button' type="button" onclick="DE_init()">Reset</button>
   <button id="next" type="button" class='button' onclick="next();">Start/Continue</button>
   <span id="status"><strong>Working: <span id="status_detail">...</span></strong> <img src="static/ajax-loader-large.gif" width="20px" /></span>
 </div>
 <!-- /Buttons -->
+
+<!-- Help -->
+<div id="help">
+  <?php include("inc/help.inc.php"); ?>
+  <p class="tiny">
+    Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a>
+  </p>
+  <p class="tiny">Session: <?php echo $_GET["key"]; ?> |
+    <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a>
+  </p>
+</div>
+<!-- /Help -->
+
 
 <!-- Debug -->
 <div id="debug"></div>
@@ -66,15 +83,6 @@ Note that the source word may be distorted.
   </table>
 </div>
 <!-- /Session overview -->
-
-<!-- Help -->
-<button id="help_button" class="button" onclick="$('#help').toggle('blind')">
-  Help
-</button>
-<div id="help">
-  <?php include("inc/help.inc.php"); ?>
-</div>
-<!-- /Help -->
 
 <?php include("inc/footer.inc.php"); ?>
 
