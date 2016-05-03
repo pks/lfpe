@@ -5,9 +5,9 @@ require 'zipf'
 module PhrasePhraseExtraction
 
 DEBUG                      = false
-MAX_NT                     = 2    # Chiang: 2
-MAX_SEED_NUM_WORDS         = 3    # Chiang: 10 words
-MAX_SRC_SZ                 = 3    # Chiang: 5 words
+MAX_NT                     = 1    # Chiang: 2
+MAX_SEED_NUM_WORDS         = 10   # Chiang: 10 words
+MAX_SRC_SZ                 = 5    # Chiang: 5 words
 FORBID_SRC_ADJACENT_SRC_NT = true # Chiang:true
 
 class Rule
