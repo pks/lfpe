@@ -1,15 +1,17 @@
 #!/bin/bash -x
 
-export LD_LIBRARY_PATH=/fast_scratch/simianer/lfpe/lib/nanomsg-0.5-beta/lib:$LD_LIBRARY_PATH
-export PYTHONPATH=/fast_scratch/simianer/lfpe/lib/python:$PYTHONPATH
-export GEM_PATH=/fast_scratch/simianer/lfpe/lib/ruby/:$GEM_PATH
-UTIL=/fast_scratch/simianer/lfpe/lfpe/util
+BASE_DIR=/srv/postedit
+export LD_LIBRARY_PATH=$BASE_DIR/lib/nanomsg-0.5-beta/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=$BASE_DIR/lib/python:$PYTHONPATH
+export GEM_PATH=$BASE_DIR/lib/ruby/:$GEM_PATH
+UTIL=$BASE_DIR/lfpe/util
 SESSION=$1
-DIR=/fast_scratch/simianer/lfpe/sessions/$SESSION
+SESSION_DIR=$BASE_DIR/sessions/$SESSION
 
-rm $DIR/work/lockfile
-rm -r $DIR/work/
-mkdir -p $DIR/work
-cp $DIR/data.json.original $DIR/data.json
-$UTIL/../server.rb $DIR/conf.rb &>$DIR/work/session.out
+rm $SESSION_DIR/work/lockfile
+rm -r $SESSION_DIR/work/
+mkdir -p $SESSION_DIR/work
+cp $SESSION_DIR/data.json.original $SESSION_DIR/data.json
+cp $SESSION_DIR/g/original/* $SESSION_DIR/g/
+$UTIL/../server.rb $SESSION_DIR/conf.rb &>$SESSION_DIR/work/session.out
 

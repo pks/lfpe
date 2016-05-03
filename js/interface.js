@@ -230,7 +230,7 @@ var next =  function ()
   working();
 
   // get metadata stored in DOM
-  var base_url = "http://coltrane.cl.uni-heidelberg.de";
+  var base_url = "http://lemmy.cl.uni-heidelberg.de";
   var port     = document.getElementById("port").value;
   var key      = document.getElementById("key").value;
 
@@ -334,7 +334,7 @@ var request_and_process_next = function ()
   var last_post_edit      = document.getElementById("last_post_edit");
 
   // get metadata stored in DOM
-  var base_url = "http://coltrane.cl.uni-heidelberg.de";
+  var base_url = "http://lemmy.cl.uni-heidelberg.de";
   var port     = document.getElementById("port").value;
   var key      = document.getElementById("key").value;
 
@@ -525,6 +525,7 @@ $().ready(function()
     init_text_editor();
     document.getElementById("textboxes").style.display = "block";
   }
+
 });
 
 

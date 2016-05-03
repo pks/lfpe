@@ -1,5 +1,5 @@
 AuthName "Post-Editing Interface"
 AuthType Basic
-AuthUserFile /fast_scratch/simianer/lfpe/.htpasswd
+AuthUserFile /srv/postedit/.htpasswd
 require valid-user
 
