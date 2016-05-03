@@ -43,10 +43,13 @@
         %a.ajax{:tgt => "/reset_weights",        :href => "#controls"} Reset weights
       %li
         %a.ajax{:tgt => "/reset_learning_rates", :href => "#controls"} Reset learning rates
+      /
+        %li
+          %a.ajax{:tgt => "/reset_extractor",       :href => "#controls"} Reset extractor
       %li
-        %a.ajax{:tgt => "/reset_extractor",       :href => "#controls"} Reset extractor
+        %a.ajax{:tgt => "/reset_grammars",       :href => "#controls"} Reset grammars
       %li
-        %a.ajax{:tgt => "/reset_new_rules",       :href => "#controls"} Reset new rules
+        %a.ajax{:tgt => "/reset_new_rules",      :href => "#controls"} Reset new rules
       /
         %li
           %a.ajax{:tgt => "/shutdown",              :href => "#controls"} Initiate shutdown
@@ -299,9 +302,9 @@
       %tr
         %td Shape_*
         %td.left Indicator features for rule shapes (39 in total)
-      %tr
-        %td IsSupportedOnline
-        %td.left Rules with support from local context (added by Denkowski's online suffix array extractor)
+      /=%tr
+      /=  %td IsSupportedOnline
+      /=  %td.left Rules with support from local context (added by Denkowski's online suffix array extractor)
 
     %p.up
       %a{ :href => "#" } ^ up
