@@ -1,8 +1,8 @@
 #!/bin/zsh -x
 
-cd /fast_scratch/simianer/lfpe/lfpe/util
+cd /srv/postedit/lfpe/util
 ./kill; ./kill; ./kill;
-for i in ../../sessions/product_de-en_beta_test_*; do
+for i in `ls -1 ../../sessions/ | grep -v "_1_" | grep -v data | grep -v toy`; do
   echo $i
   echo $(basename $i)
   ./run_server $(basename $i) &; sleep 600;
