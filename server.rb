@@ -295,6 +295,8 @@ def process_next reply
     $db['svg']                << data['svg']
     $db['original_svg']       << data['original_svg']
     $db['durations']          << data['duration'].to_f
+    $db['count_click']        << data['count_click'].to_i
+    $db['count_kbd']          << data['count_kbd'].to_i
     $db['post_edits_display'] << send_recv(:detokenizer, post_edit)
     $last_processed_postedit = $db['post_edits_display'].last
     # 1. tokenize
@@ -423,13 +425,13 @@ def process_next reply
         all_rules[j] = ar
       end
     }
-    WriteFile.new(grammar).write all_rules.join("\n")+"\n"
                                                            # - additional rules
-    logmsg :server, $new_rules.to_s
+    #logmsg :server, $new_rules.to_s
     if $new_rules.size > 0
-      s = $new_rules.join "\n"
-      `echo "#{s}" >> #{grammar}`
+      all_rules += $new_rules
+      #`echo "#{s}" >> #{grammar}`
     end
+    WriteFile.new(grammar).write all_rules.join("\n")+"\n"
     #$new_rules.each { |rule|
     # logmsg :server, "adding rule '#{rule}' to grammar '#{grammar}'"
     #  s = splitpipe(rule)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")

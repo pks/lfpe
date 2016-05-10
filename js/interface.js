@@ -5,6 +5,9 @@
 var data,    // global data object
     ui_type; // 't' (text) or 'g' (graphical)
 
+var TEXT_count_click=0,
+    TEXT_count_kbd=0;
+
 /*
  * cross-site request
  *
@@ -104,6 +107,18 @@ var catch_return = function (e)
     e.preventDefault();
     next();
   }
+
+  return false;
+}
+
+var TEXT_handle_keypress = function (e)
+{
+   if (e.keyCode == 13) {
+    e.preventDefault();
+    next();
+  }
+
+  TEXT_count_kbd += 1;
 
   return false;
 }
@@ -259,6 +274,8 @@ var next =  function ()
     post_edit = $.trim(target_textarea.value);
     send_data["post_edit"] = encodeURIComponent(post_edit);
     send_data['type'] = 't';
+    send_data["count_click"] = TEXT_count_click;
+    send_data["count_kbd"] = TEXT_count_kbd;
   }
 
   send_data["key"] = key;
@@ -456,8 +473,11 @@ var request_and_process_next = function ()
         target_textarea.rows     = Math.round(translation.length/80+0.5);
       //raw_source_textarea.rows = Math.round(raw_source.length/80+0.5);
       target_textarea.focus();
+      $("#original_mt").val(target_textarea.value);
       target_textarea.selectionStart = 0;
       target_textarea.selectionEnd   = 0;
+      TEXT_count_click = 0;
+      TEXT_count_kbd = 0;
 
       // remember aux data in DOM
       current_seg_id.value = id;
@@ -493,8 +513,33 @@ var init_text_editor = function ()
 {
   document.getElementById("target_textarea").value     = "";
   document.getElementById("target_textarea").setAttribute("disabled", "disabled");
+  
+  TEXT_count_click = 0;
+  TEXT_count_kbd = 0;
+
+  $("#target_textarea").click(function () {
+    TEXT_count_click += 1;
+  });
 
   return false;
+}
+
+var get_ui_type = function ()
+{
+  return document.getElementById("ui_type").value;
+}
+
+var reset = function ()
+{
+  var ui_type = get_ui_type();
+  if (ui_type == "t") {
+    if (!$("#init").val()) return;
+    TEXT_count_click = 0;
+    TEXT_count_kbd = 0;
+    $("#target_textarea").val($("#original_mt").val());
+  } else if (ui_type == "g") {
+    DE_init()
+  }
 }
 
 /*
@@ -514,7 +559,7 @@ $().ready(function()
 
   not_working();
 
-  ui_type = document.getElementById("ui_type").value;
+  ui_type = get_ui_type();
 
   // graphical derivation editor
   if (ui_type == "g") {
