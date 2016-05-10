@@ -6,8 +6,8 @@ module PhrasePhraseExtraction
 
 DEBUG                      = false
 MAX_NT                     = 2    # Chiang: 2
-MAX_SEED_NUM_WORDS         = 3    # Chiang: 10 words
-MAX_SRC_SZ                 = 3    # Chiang: 5 words
+MAX_SEED_NUM_WORDS         = 4    # Chiang: 10 words, -> phrases!
+MAX_SRC_SZ                 = 10   # Chiang: 5 words, -> words!
 FORBID_SRC_ADJACENT_SRC_NT = true # Chiang:true
 
 class Rule
@@ -51,6 +51,21 @@ class Rule
     return src_len
   end
 
+  def len_src_w
+    src_len = 0
+    @source.each { |i|
+      if i.is_a? String
+        src_len += i.split.size #1
+      else
+        i.each { |j|
+          src_len += source_context[j].split.size
+        }
+      end
+    }
+
+    return src_len
+  end
+
   def len_tgt
     tgt_len = 0
     @target.each { |i|
@@ -58,6 +73,21 @@ class Rule
         tgt_len += 1
       else
         tgt_len += i.last-i.first+1
+      end
+    }
+
+    return tgt_len
+  end
+
+  def len_tgt_w
+    tgt_len = 0
+    @target.each { |i|
+      if i.is_a? String
+        tgt_len += i.split.size
+      else
+        i.each { |j|
+          tgt_len += target_context[j].split.size
+        }
       end
     }
 
@@ -625,7 +655,7 @@ end
 
 def PhrasePhraseExtraction.remove_too_long_src_sides rules
   return rules.reject { |r|
-    r.len_src > PhrasePhraseExtraction::MAX_SRC_SZ
+    r.len_src_w > PhrasePhraseExtraction::MAX_SRC_SZ
   }
 end
 

@@ -33,7 +33,7 @@
     <tr>
       <td align="right">Target:</td>
       <td>
-        <textarea id="target_textarea" name="target" cols="80" rows="1" onkeypress="catch_return(event);" disabled></textarea>
+        <textarea id="target_textarea" name="target" cols="80" rows="1" onkeypress="TEXT_handle_keypress(event);" disabled></textarea>
       </td>
     </tr>
   </table>
@@ -52,7 +52,7 @@ Note that the source word may be distorted.
 <div>
   <button id="help_button" class="button" onclick="$('#help').toggle('blind')">Help</button>
   <button id="pause_button" class='button' type="button" onclick="pause()">Pause</button>
-  <button id="reset_button" class='button' type="button" onclick="DE_init()">Reset</button>
+  <button id="reset_button" class='button' type="button" onclick="reset()">Reset</button>
   <button id="next" type="button" class='button' onclick="next();">Start/Continue</button>
   <span id="status"><strong>Working: <span id="status_detail">...</span></strong> <img src="static/ajax-loader-large.gif" width="20px" /></span>
 </div>
@@ -103,5 +103,6 @@ Note that the source word may be distorted.
 <textarea style="display:none" id="ui_type"           ><?php echo $_GET["ui_type"]; ?></textarea>
 <textarea style="display:none" id="data"              ></textarea>
 <textarea style="display:none" id="original_svg"      ></textarea>
+<textarea style="display:none" id="original_mt"       ></textarea>
 <!-- /Data -->
 

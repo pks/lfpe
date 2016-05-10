@@ -3,13 +3,13 @@
 
 	ServerAdmin simianer@cl.uni-heidelberg.de
 
-	DocumentRoot /fast_scratch/simianer/lfpe/lfpe
+	DocumentRoot /srv/postedit/lfpe
 
-	ErrorLog /fast_scratch/simianer/lfpe/lfpe/logs/apache2.error.log
+	ErrorLog /srv/postedit/lfpe/logs/apache2.error.log
 	LogLevel warn
-	CustomLog /fast_scratch/simianer/lfpe/lfpe/logs/apache2.access.log combined
+	CustomLog /srv/postedit/lfpe/logs/apache2.access.log combined
 
-	<Directory /fast_scratch/simianer/lfpe/lfpe>
+	<Directory /srv/postedit/lfpe>
                 Options +FollowSymLinks
                 AllowOverride All
                 order allow,deny

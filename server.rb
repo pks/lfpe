@@ -34,7 +34,7 @@ $oov_corrected.default   = false
 # #############################################################################
 # Daemons
 # #############################################################################
-DIR="/fast_scratch/simianer/lfpe"
+DIR="/srv/postedit"
 $daemons = {
   :tokenizer        => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{TARGET_LANG}",
   :tokenizer_src    => "#{DIR}/lfpe/util/nanomsg_wrapper.rb -a tokenize   -S '__ADDR__' -e #{EXTERNAL} -l #{SOURCE_LANG}",
@@ -123,6 +123,8 @@ def init
     $env[name] = { :socket => sock, :pid => pid }
     port += 1
   }
+
+  send_recv :truecaser, "lOaD iT"
                                                                    #  lock file
   `touch #{LOCK_FILE}`
   $status = "Initialized"                                              # status
@@ -293,6 +295,8 @@ def process_next reply
     $db['svg']                << data['svg']
     $db['original_svg']       << data['original_svg']
     $db['durations']          << data['duration'].to_f
+    $db['count_click']        << data['count_click'].to_i
+    $db['count_kbd']          << data['count_kbd'].to_i
     $db['post_edits_display'] << send_recv(:detokenizer, post_edit)
     $last_processed_postedit = $db['post_edits_display'].last
     # 1. tokenize
@@ -406,7 +410,7 @@ def process_next reply
     end
                                                                 # - known rules
     logmsg :server, "annotating known rules"
-    $status = "Adding rules to grammar"                                # status
+    $status = "Adding rules to the grammar"                            # status
     match = {}
     $known_rules.each { |r|
       _,src,tgt,_,_ = splitpipe r
@@ -421,13 +425,18 @@ def process_next reply
         all_rules[j] = ar
       end
     }
-    WriteFile.new(grammar).write all_rules.join("\n")+"\n"
                                                            # - additional rules
-    $new_rules.each { |rule|
-     logmsg :server, "adding rule '#{rule}' to grammar '#{grammar}'"
-      s = splitpipe(rule)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-      `echo "#{rule}" >> #{grammar}`
-    }
+    #logmsg :server, $new_rules.to_s
+    if $new_rules.size > 0
+      all_rules += $new_rules
+      #`echo "#{s}" >> #{grammar}`
+    end
+    WriteFile.new(grammar).write all_rules.join("\n")+"\n"
+    #$new_rules.each { |rule|
+    # logmsg :server, "adding rule '#{rule}' to grammar '#{grammar}'"
+    #  s = splitpipe(rule)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+    #  `echo "#{rule}" >> #{grammar}`
+    #}
                                                             # 2. check for OOVs
     if !$oov_corrected[$db['progress']]
     $status = "Checking for OOVs"                                      # status
@@ -664,11 +673,21 @@ get '/reset_extractor' do                             # reset grammar extractor
   return "reset extractor: done"
 end
 
+get '/reset_grammars' do                               # reset grammar extractor
+  logmsg :server, "reset grammars"
+  return "locked" if $lock
+  `cp #{SESSION_DIR}/g/original/* #{SESSION_DIR}/g/`
+  $last_reply = nil
+
+  return "reset grammars: done"
+end
+
 get '/reset_new_rules' do                               # removed learned rules
   $new_rules.clear
   $known_rules.clear
   `rm #{WORK_DIR}/*.*_rules`
   `rm #{WORK_DIR}/g/*`
+  $last_reply = nil
 
   return "reset new rules: done"
 end
