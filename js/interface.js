@@ -263,6 +263,13 @@ var next =  function ()
       not_working();
       return;
     }
+    if (!DE_check_align()) {
+      if(confirm("Not all phrases are algined, continue?")) {
+      } else {
+        not_working();
+        return;
+      }
+    }
     send_data = JSON.parse(data_s);
     post_edit = $.trim(send_data["target"].join(" "));
     if (DE_target_done.length != DE_target_shapes.length)
@@ -513,7 +520,7 @@ var init_text_editor = function ()
 {
   document.getElementById("target_textarea").value     = "";
   document.getElementById("target_textarea").setAttribute("disabled", "disabled");
-  
+
   TEXT_count_click = 0;
   TEXT_count_kbd = 0;
 
@@ -572,11 +579,4 @@ $().ready(function()
   }
 
 });
-
-
-function scroll(event) {
-    var x = event.clientX;
-    var xPercentage = x / screen.width;
-    window.scrollTo(xPercentage * width, 0);
-}
 
