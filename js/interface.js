@@ -263,8 +263,8 @@ var next =  function ()
       not_working();
       return;
     }
-    if (!DE_check_align()) {
-      if(confirm("Not all phrases are algined, continue?")) {
+    if (document.getElementById("oov_correct").value != "true" && !DE_check_align()) {
+      if(confirm("Not all phrases are aligned, continue?")) {
       } else {
         not_working();
         return;
