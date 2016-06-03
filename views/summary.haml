@@ -1,0 +1,53 @@
+- require 'zipf'
+!!!
+%html
+  %head
+    %title Summary (Session #{session_key})
+  %link(rel="stylesheet" type="text/css" href="debug.css")
+  %script{:src => "http://postedit.cl.uni-heidelberg.de/js/jquery.min.js"}
+  %script{:src => "http://postedit.cl.uni-heidelberg.de/js/jquery.tablesorter.min.js"}
+  %script{:src => "http://postedit.cl.uni-heidelberg.de/js/debug.js"}
+  %body
+    %h1 Summary
+    %p (Session #{session_key})
+    %p Data is shown in the MT system's formatting. BLEU is calculated without smoothing.
+    %table
+      %tr
+        %td
+          #{"#"}
+        %td
+          %strong Source
+        %td
+          %strong
+            Post-Edit
+        %td
+          %strong
+            Reference
+        %td
+          %strong
+            BLEU
+        %td
+          %strong
+            TER
+        %td
+          %strong
+            Keystrokes
+        %td
+          %strong
+            Mouse actions
+        %td
+          %strong
+            Duration
+        - data["post_edits"].each_with_index do |pe,j|
+          %tr
+            %td.center #{j+1}.
+            %td #{data["source_segments"][j]}
+            %td #{pe}
+            %td #{data["references"][j]}
+            %td.center #{(BLEU::per_sentence_bleu(pe, [data["references"][j]], 4, 0)*100).round 2}%
+            %td.center #{ter_scores[j]}
+            %td.center #{data["count_kbd"][j]}
+            %td.center #{data["count_click"][j]}
+            %td.center #{(data["durations"][j]/1000).round 1}s
+
+

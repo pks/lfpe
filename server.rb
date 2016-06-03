@@ -239,49 +239,52 @@ def process_next reply
       logmsg :server, "post-edit after processing: '#{e.join " "}'"
       f = []
       data["source_raw"].each { |i| f << URI.decode(i) }
-                                                      # 2.5 new rule extraction
-      $status = "Extracting rules from post edit"                      # status
-      #grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
-      grammar = "#{SESSION_DIR}/g/grammar.#{$db['progress']}"
-      current_grammar_ids = {}
-      ReadFile.readlines_strip(grammar).each { |r|
-        s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-        current_grammar_ids[s] = true
-      }
-      new_rules = PhrasePhraseExtraction.extract_rules f, e, data["align"], true
-      new_rules_ids = {}
-      $new_rules.each { |r|
-        s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-        new_rules_ids[s] = true
-      }
-      new_rules = new_rules.map { |r| r.as_trule_string }
-      _ = new_rules.dup
-      logmsg :server, "# rules before filtering #{new_rules.size}"
-      new_rules.reject! { |rs|
-        s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-        current_grammar_ids.has_key?(s) || new_rules_ids.has_key?(s)
-      }
-      $new_rules += new_rules
-      $new_rules.uniq! { |rs|
-        splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-      }
-      f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.new_rules"
-      f.write new_rules.join "\n"
-      f.close
-      logmsg :server, "# rules after filtering #{new_rules.size}"
-      add_known_rules = _-new_rules
-      add_known_rules.reject! { |rs|
-        s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-        new_rules_ids.has_key?(s)
-      }
-      f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.known_rules"
-      f.write add_known_rules.join "\n"
-      f.close
-      $known_rules += add_known_rules
-      $known_rules.uniq! { |rs|
-        splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
-      }
-      add_known_rules.each { |r| logmsg :server, "known_rule: '#{r}'" }
+
+      if !NOGRAMMAR
+                                                        # 2.5 new rule extraction
+        $status = "Extracting rules from post edit"                      # status
+        #grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
+        grammar = "#{SESSION_DIR}/g/grammar.#{$db['progress']}"
+        current_grammar_ids = {}
+        ReadFile.readlines_strip(grammar).each { |r|
+          s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+          current_grammar_ids[s] = true
+        }
+        new_rules = PhrasePhraseExtraction.extract_rules f, e, data["align"], true
+        new_rules_ids = {}
+        $new_rules.each { |r|
+          s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+          new_rules_ids[s] = true
+        }
+        new_rules = new_rules.map { |r| r.as_trule_string }
+        _ = new_rules.dup
+        logmsg :server, "# rules before filtering #{new_rules.size}"
+        new_rules.reject! { |rs|
+          s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+          current_grammar_ids.has_key?(s) || new_rules_ids.has_key?(s)
+        }
+        $new_rules += new_rules
+        $new_rules.uniq! { |rs|
+          splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+        }
+        f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.new_rules"
+        f.write new_rules.join "\n"
+        f.close
+        logmsg :server, "# rules after filtering #{new_rules.size}"
+        add_known_rules = _-new_rules
+        add_known_rules.reject! { |rs|
+          s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+          new_rules_ids.has_key?(s)
+        }
+        f = WriteFile.new "#{WORK_DIR}/#{$db['progress']}.known_rules"
+        f.write add_known_rules.join "\n"
+        f.close
+        $known_rules += add_known_rules
+        $known_rules.uniq! { |rs|
+          splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
+        }
+        add_known_rules.each { |r| logmsg :server, "known_rule: '#{r}'" }
+      end
     else                                                       # text interface
       post_edit = data["post_edit"]
     end
@@ -328,19 +331,19 @@ def process_next reply
       send_recv :dtrain, "#{annotated_source} ||| #{post_edit}"
                                                   # 5. update grammar extractor
       if !$pregenerated_grammars
-                                                  # 5a. get forward alignment
-      source_lc = source.downcase
-      post_edit_lc = post_edit.downcase
-      $status = "Aligning post-edit"                                   # status
-      a_fwd = send_recv :aligner_fwd, "#{source_lc} ||| #{post_edit_lc}"
+                                                    # 5a. get forward alignment
+        source_lc = source.downcase
+        post_edit_lc = post_edit.downcase
+        $status = "Aligning post-edit"                                 # status
+        a_fwd = send_recv :aligner_fwd, "#{source_lc} ||| #{post_edit_lc}"
                                                    # 5b. get backward alignment
-      a_back = send_recv :aligner_back, "#{source_lc} ||| #{post_edit_lc}"
-                                                     # 5c. symmetrize alignment
-      a = send_recv :atools, "#{a_fwd} ||| #{a_back}"
+        a_back = send_recv :aligner_back, "#{source_lc} ||| #{post_edit_lc}"
+                                                       # 5c. symmetrize alignment
+        a = send_recv :atools, "#{a_fwd} ||| #{a_back}"
                                                           # 5d actual extractor
-      $status = "Updating grammar extractor"                           # status
-      msg = "default_context ||| #{source} ||| #{post_edit} ||| #{a}"
-      send_recv :extractor, msg
+        $status = "Updating grammar extractor"                         # status
+        msg = "default_context ||| #{source} ||| #{post_edit} ||| #{a}"
+        send_recv :extractor, msg
       end
                                                            # 6. update database
       $db['updated'] << true
@@ -534,12 +537,18 @@ get '/debug' do                                                    # debug view
     pairwise_ranking_data = JSON.parse ReadFile.read(fn).force_encoding("UTF-8")
   end
 
+  admin = false
+  if params[:admin]
+    admin = true
+  end
+
   haml :debug, :locals => { :data => data,
                             :pairwise_ranking_data => pairwise_ranking_data, \
                             :progress => $db["progress"]-1,
                             :new_rules => $new_rules, \
                             :known_rules => $known_rules, \
-                            :session_key => SESSION_KEY }
+                            :session_key => SESSION_KEY, \
+                            :admin => admin }
 end
 
 get '/new_rules'     do                                       # new/known rules
@@ -697,5 +706,29 @@ get '/shutdown' do                          # stop daemons and shut down server
   stop_all_daemons
 
   return "stopped all daemons, ready to shutdown"
+end
+
+get '/summary' do
+  logmsg :server, "showing summary"
+
+  data = JSON.parse ReadFile.read(DB_FILE).force_encoding("UTF-8")
+
+  ter_scores = []
+  data["post_edits"].each_with_index { |pe,j|
+    f = Tempfile.new "lfpe-summary-pe"
+    g = Tempfile.new "lfpe-summary-ref"
+    f.write pe+"\n"
+    g.write data["references"][j]+"\n"
+    f.close
+    g.close
+    ter_scores << (`#{CDEC}/mteval/fast_score -i #{f.path} -r #{g.path} -m ter 2>/dev/null`.to_f).round(2)
+    f.unlink
+    g.unlink
+  }
+
+  haml :summary, :locals => { :session_key => SESSION_KEY,
+                              :data => data,
+                              :ter_scores => ter_scores }
+
 end
 

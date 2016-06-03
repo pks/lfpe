@@ -14,8 +14,9 @@
         %p.red
           %strong No data to show!
       %ul
-        %li
-          %a{ :href => "#controls" } Controls
+        -if admin
+          %li
+            %a{ :href => "#controls" } Controls
         %li
           %a{ :href => "#post_edit" } Post-edit
         %li
@@ -31,63 +32,64 @@
       %p.tiny Session: #{session_key}
 
     /=#########################################################################
-    %h2#controls Controls
-    %h3 Reset
-    %p
-      %strong [Server reply]
-      %span#control_reply
-    %ul
-      %li
-        %a.ajax{:tgt => "/reset_progress",       :href => "#controls"} Reset progress
-      %li
-        %a.ajax{:tgt => "/reset_weights",        :href => "#controls"} Reset weights
-      %li
-        %a.ajax{:tgt => "/reset_learning_rates", :href => "#controls"} Reset learning rates
-      /
+    -if admin
+      %h2#controls Controls
+      %h3 Reset
+      %p
+        %strong [Server reply]
+        %span#control_reply
+      %ul
         %li
-          %a.ajax{:tgt => "/reset_extractor",       :href => "#controls"} Reset extractor
-      %li
-        %a.ajax{:tgt => "/reset_grammars",       :href => "#controls"} Reset grammars
-      %li
-        %a.ajax{:tgt => "/reset_new_rules",      :href => "#controls"} Reset new rules
-      /
+          %a.ajax{:tgt => "/reset_progress",       :href => "#controls"} Reset progress
         %li
-          %a.ajax{:tgt => "/shutdown",              :href => "#controls"} Initiate shutdown
-    %h3 Learning rates &amp; weights
-    %p Get current weight/rate for specific features:
-    %input#features_get{ :value => "Feature", :style => "text-align:center; width:20em" }
-    %select#features_type_get
-      %option{ :value => "/get_weight" } Weight
-      %option{ :value => "/get_rate" } Rate
-    %input#features_value_get{ :value => " ", :style => "text-align:right; width:10em" }
-    %button#get_features
-      Get
-    %p Set weight/rate for specific features:
-    %input#features{ :value => "Feature", :style => "text-align:center; width:20em" }
-    %select#features_type
-      %option{ :value => "/set_weights" } Weight
-      %option{ :value => "/set_learning_rates" } Rate
-    %input#features_value{ :value => "1e-05", :style => "text-align:right; width:10em" }
-    %button#set_features
-      Set
-    %p
-      Set rate for feature groups:
-      %span.tiny (Features unseen in training/tuning have a common default rate.)
-    %select#feature_groups_get
-      %option{ :value => "R" } rule ids
-      %option{ :value => "RB" } rule bigrams
-      %option{ :value => "Shape" } rule shapes
-    %input#feature_groups_value_get{ :value => "1e-05", :style => "text-align:right; width:10em" }
-    %button#get_feature_groups
-      Get rate
-    %br
-    %select#feature_groups
-      %option{ :value => "R" } rule ids
-      %option{ :value => "RB" } rule bigrams
-      %option{ :value => "Shape" } rule shapes
-    %input#feature_groups_value{ :value => "1e-05", :style => "text-align:right; width:10em" }
-    %button#set_feature_groups
-      Set rate
+          %a.ajax{:tgt => "/reset_weights",        :href => "#controls"} Reset weights
+        %li
+          %a.ajax{:tgt => "/reset_learning_rates", :href => "#controls"} Reset learning rates
+        /
+          %li
+            %a.ajax{:tgt => "/reset_extractor",       :href => "#controls"} Reset extractor
+        %li
+          %a.ajax{:tgt => "/reset_grammars",       :href => "#controls"} Reset grammars
+        %li
+          %a.ajax{:tgt => "/reset_new_rules",      :href => "#controls"} Reset new rules
+        /
+          %li
+            %a.ajax{:tgt => "/shutdown",              :href => "#controls"} Initiate shutdown
+      %h3 Learning rates &amp; weights
+      %p Get current weight/rate for specific features:
+      %input#features_get{ :value => "Feature", :style => "text-align:center; width:20em" }
+      %select#features_type_get
+        %option{ :value => "/get_weight" } Weight
+        %option{ :value => "/get_rate" } Rate
+      %input#features_value_get{ :value => " ", :style => "text-align:right; width:10em" }
+      %button#get_features
+        Get
+      %p Set weight/rate for specific features:
+      %input#features{ :value => "Feature", :style => "text-align:center; width:20em" }
+      %select#features_type
+        %option{ :value => "/set_weights" } Weight
+        %option{ :value => "/set_learning_rates" } Rate
+      %input#features_value{ :value => "1e-05", :style => "text-align:right; width:10em" }
+      %button#set_features
+        Set
+      %p
+        Set rate for feature groups:
+        %span.tiny (Features unseen in training/tuning have a common default rate.)
+      %select#feature_groups_get
+        %option{ :value => "R" } rule ids
+        %option{ :value => "RB" } rule bigrams
+        %option{ :value => "Shape" } rule shapes
+      %input#feature_groups_value_get{ :value => "1e-05", :style => "text-align:right; width:10em" }
+      %button#get_feature_groups
+        Get rate
+      %br
+      %select#feature_groups
+        %option{ :value => "R" } rule ids
+        %option{ :value => "RB" } rule bigrams
+        %option{ :value => "Shape" } rule shapes
+      %input#feature_groups_value{ :value => "1e-05", :style => "text-align:right; width:10em" }
+      %button#set_feature_groups
+        Set rate
 
 
     /=#########################################################################
@@ -109,12 +111,12 @@
         %td.left.noborder ##{[0,progress].max}
       %tr
         %td.noborder
-          %strong MT Input:
-        %td.left.noborder #{data["source_segments"][[0,progress].max]}
-      %tr
-        %td.noborder
           %strong Raw source:
         %td.left.noborder #{data["raw_source_segments"][[0,progress].max]}
+      %tr
+        %td.noborder
+          %strong MT Input:
+        %td.left.noborder #{data["source_segments"][[0,progress].max]}
       %tr
         %td.noborder
           %strong Post-edit:
