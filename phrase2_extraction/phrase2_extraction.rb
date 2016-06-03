@@ -5,9 +5,9 @@ require 'zipf'
 module PhrasePhraseExtraction
 
 DEBUG                      = false
-MAX_NT                     = 2    # Chiang: 2
-MAX_SEED_NUM_WORDS         = 4    # Chiang: 10 words, -> phrases!
-MAX_SRC_SZ                 = 10   # Chiang: 5 words, -> words!
+MAX_NT                     = 1    # Chiang: 2
+MAX_SEED_NUM_WORDS         = 3    # Chiang: 10 words, -> phrases!
+MAX_SRC_SZ                 = 7    # Chiang: 5 words, -> words!
 FORBID_SRC_ADJACENT_SRC_NT = true # Chiang:true
 
 class Rule
@@ -544,7 +544,7 @@ def PhrasePhraseExtraction.extract fstart, fend, estart, eend, f, e, a, flen, el
       }
       rules.last.rebase_alignment fs, estart
       fe += 1
-      break if has_alignment(a, fe, "src")||fe>=elen
+      break if has_alignment(a, fe, "src")||fe>=flen
     end
     fs -= 1
     break has_alignment(a, fs, "src")||fs<0
@@ -649,7 +649,20 @@ def PhrasePhraseExtraction.remove_adjacent_nt rules
         prev = false
       end
     }
-    b
+    c = false
+    prev = false
+    r.target.each { |i|
+      if i.is_a? String
+        if prev
+          c = true
+          break
+        end
+        prev = true
+      else
+        prev = false
+      end
+    }
+    b || c
   }
 end
 

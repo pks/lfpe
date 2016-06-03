@@ -33,7 +33,7 @@
     <tr>
       <td align="right">Target:</td>
       <td>
-        <textarea id="target_textarea" name="target" cols="80" rows="1" onkeypress="TEXT_handle_keypress(event);" disabled></textarea>
+        <textarea id="target_textarea" name="target" cols="80" rows="2" onkeypress="TEXT_handle_keypress(event);" disabled></textarea>
       </td>
     </tr>
   </table>
@@ -47,6 +47,10 @@ Note that the source word may be distorted.
   <div id="oov_fields"></div>
 </div>
 <!-- /Source and target textboxes -->
+
+<!-- Summary -->
+<div id="view_summary" style="display:none;margin:2em"><strong>Session finished, thank you!</strong> View <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/summary" target="_blank">summary</a>.</div>
+<!-- /Summary -->
 
 <!-- Buttons -->
 <div>
@@ -65,7 +69,8 @@ Note that the source word may be distorted.
     Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a>
   </p>
   <p class="tiny">Session: <?php echo $_GET["key"]; ?> |
-    <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a>
+    <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a> |
+    <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/summary" target="_blank">Summary</a>
   </p>
 </div>
 <!-- /Help -->

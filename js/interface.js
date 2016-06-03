@@ -398,10 +398,11 @@ var request_and_process_next = function ()
     if (data["fin"]) {
       target_textarea.setAttribute("disabled", "disabled");
       status.style.display              = "none";
-      button.innerHTML                  = "Session finished, thank you!";
+      button.innerHTML                  = "---";
+      $("#view_summary").toggle()
       $("#raw_source_textarea").html("");
       $("#target_textarea").val("");
-      $("#target_textarea").attr("rows", 1);
+      $("#target_textarea").attr("rows", 2);
             button.setAttribute("disabled", "disabled");
       pause_button.setAttribute("disabled", "disabled");
       if (current_seg_id.value)
@@ -477,7 +478,7 @@ var request_and_process_next = function ()
         $("#seg_"+(id-1)).removeClass("bold");
       }
       if (translation)
-        target_textarea.rows     = Math.round(translation.length/80+0.5);
+        target_textarea.rows     = Math.round(translation.length/80+0.5)+2;
       //raw_source_textarea.rows = Math.round(raw_source.length/80+0.5);
       target_textarea.focus();
       $("#original_mt").val(target_textarea.value);
