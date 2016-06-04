@@ -22,17 +22,12 @@
 <input type="submit" value="Submit" />
 </form>
 
-<div class="small" style="background:#eee;margin: 5em 0 5em 0;padding:.5em; max-width:10%">
+<div class="small" style="background:#eee;margin: 5em 0 5em 0;padding:.5em; max-width:25%">
 <p>Select:
 <select class="small">
 
-  <option value="final_model_en-de_g0" onclick="document.getElementById('key').value=this.value;">0</option>
-  <option value="final_model_en-de_g1" onclick="document.getElementById('key').value=this.value;">1</option>
-  <option value="final_model_en-de_g2" onclick="document.getElementById('key').value=this.value;">2</option>
-  <option value="final_model_en-de_g3" onclick="document.getElementById('key').value=this.value;">3</option>
-  <option value="final_model_en-de_g4" onclick="document.getElementById('key').value=this.value;">4</option>
-  <option value="final_model_en-de_g5" onclick="document.getElementById('key').value=this.value;">5</option>
-  <option value="final_model_en-de_g6" onclick="document.getElementById('key').value=this.value;">6</option>
+  <option value="final_model_en-de_g0_demo_nomt" onclick="document.getElementById('key').value=this.value;">Demo (no PE, text only)</option>
+  <option value="final_model_en-de_g0_demo_pe" onclick="document.getElementById('key').value=this.value;">Demo (PE)</option>
 
 <!--<optgroup label="________________">
   <option value="product_de-en_toy_example" onclick="document.getElementById('key').value=this.value;">toy example</option>
