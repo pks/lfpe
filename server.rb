@@ -180,7 +180,7 @@ def process_next reply
   end
   $lock = true                                                           # lock
   if data['key'] != SESSION_KEY
-    $status =  "Error: Key mismatch"
+    $status =  "Error: Key mismatch (#{data['key']}, #{SESSION_KEY})"
     return
   end
   if data["OOV"]                                              # OOV corrections

@@ -7,7 +7,7 @@ module PhrasePhraseExtraction
 DEBUG                      = false
 MAX_NT                     = 1    # Chiang: 2
 MAX_SEED_NUM_WORDS         = 3    # Chiang: 10 words, -> phrases!
-MAX_SRC_SZ                 = 7    # Chiang: 5 words, -> words!
+MAX_SRC_SZ                 = 8    # Chiang: 5 words, -> words!
 FORBID_SRC_ADJACENT_SRC_NT = true # Chiang:true
 
 class Rule
@@ -649,6 +649,8 @@ def PhrasePhraseExtraction.remove_adjacent_nt rules
         prev = false
       end
     }
+    b
+=begin
     c = false
     prev = false
     r.target.each { |i|
@@ -663,6 +665,7 @@ def PhrasePhraseExtraction.remove_adjacent_nt rules
       end
     }
     b || c
+=end
   }
 end
 

@@ -1,0 +1,14 @@
+body { background: #fff; color: #fff}
+
+td {
+  background:#eee;
+  color: #000;
+  padding: 2em;
+  font-weight: bold;
+  font-size: 1.2em;
+  text-align:center;
+}
+
+td:hover {
+  background: #fff
+}
