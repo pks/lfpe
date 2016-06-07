@@ -31,14 +31,12 @@
 
     <?php
       $f = fopen("../sessions/sessions", "r");
-      $a = array();
       $b = array();
       $max = -1;
       while (($line = fgets($f)) !== false) {
         $x = explode("\t", $line, 2);
         $j = intval($x[0]);
-        $a[$x[1]] = $j;
-        $b[$j] = $x[1];
+        $b[$j] = trim($x[1]);
         if ($j>$max) {
           $max = $j;
         }
