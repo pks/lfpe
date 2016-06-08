@@ -49,7 +49,7 @@ Note that the source word may be distorted.
 <!-- /Source and target textboxes -->
 
 <!-- Summary -->
-<div id="view_summary" style="display:none;margin:2em"><strong>Session finished, thank you!</strong> View <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/summary" target="_blank">summary</a>.</div>
+<div id="view_summary" style="display:none;margin:2em"><strong>Session finished, thank you!</strong> View <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/summary" target="_blank">Summary</a>.</div>
 <!-- /Summary -->
 
 <!-- Buttons -->
