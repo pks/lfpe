@@ -1,5 +1,6 @@
-<p>Press the 'Next' button to <strong>submit</strong> your post-edit and to request the next segment for post-edition.
-In the textual interface, you may just press return when the post-edit is finished (and 'Target' text area is in focus).</p>
+<p>Press the 'Next' button to <strong>submit</strong> your translation or post-edit and to request the next segment for post-edition.
+<!--In the textual interface, you may just press return when the post-edit is finished (and 'Target' text area is in focus).-->
+</p>
 
 <p>The session can be paused at any time and continued later -- just press 'Pause'. Note that we are collecting timing information, so pausing your session on inactivity is important for us. You may also just reload this site upon your return and re-request the segment to reset the timer.</p>
 
