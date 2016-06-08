@@ -33,10 +33,10 @@ textarea, input {
 .tiny { font-size:.6em }
 
 a {
-  color:           #ddd;
+  color:           #000;
   text-decoration: underline
 }
-a:hover { color: #000 }
+a:hover { color: #ccc; text-decoration: none }
 
 div#wrapper {
   margin:  2em;
