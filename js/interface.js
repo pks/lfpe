@@ -115,7 +115,7 @@ var TEXT_handle_keypress = function (e)
 {
    if (e.keyCode == 13) {
     e.preventDefault();
-    next();
+    //next();
   }
 
   TEXT_count_kbd += 1;
