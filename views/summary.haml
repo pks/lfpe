@@ -9,8 +9,8 @@
   %script{:src => "http://postedit.cl.uni-heidelberg.de/js/debug.js"}
   %body
     %h1 Summary
-    %p (Session #{session_key})
-    %p Data is shown in the MT system's formatting. BLEU is calculated without smoothing.
+    %p.small (Session #{session_key})
+    %p Data is shown in the MT system's formatting. BLEU is calculated without smoothing. TER capped at 1.0.
     %table
       %tr
         %td
