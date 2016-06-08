@@ -1,6 +1,7 @@
 #!/bin/zsh -x
 
-for i in `find ../sessions -maxdepth 1 | cut -d "/" -f 3 | grep -P "^session_"`; do
+#for i in `find ../sessions -maxdepth 1 | cut -d "/" -f 3 | grep -P "^sess_"`; do
+for i in `cat ../sessions/sessions | cut -f 1`; do
   echo $i
   ./util/run_server $i &
 done
