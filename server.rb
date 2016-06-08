@@ -721,7 +721,7 @@ get '/summary' do
     g.write data["references"][j]+"\n"
     f.close
     g.close
-    ter_scores << (`#{CDEC}/mteval/fast_score -i #{f.path} -r #{g.path} -m ter 2>/dev/null`.to_f).round(2)
+    ter_scores << [1.0, (`#{CDEC}/mteval/fast_score -i #{f.path} -r #{g.path} -m ter 2>/dev/null`.to_f).round(2)].min
     f.unlink
     g.unlink
   }
