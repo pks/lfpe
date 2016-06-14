@@ -1,7 +1,10 @@
 <?php
 
 $SESSION_DIR="/srv/postedit/sessions";
-$json = file_get_contents($SESSION_DIR."/".$_GET["key"]."/data.json");
+$key = $_GET["key"];
+if (preg_match('/^[a-z0-9]{1,4}$/', $key)) {
+  $json = file_get_contents($SESSION_DIR."/".$key."/data.json");
+}
 $db = json_decode($json);
 
 ?>

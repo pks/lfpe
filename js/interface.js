@@ -105,7 +105,7 @@ var catch_return = function (e)
 {
   if (e.keyCode == 13) {
     e.preventDefault();
-    next();
+    //next();
   }
 
   return false;
@@ -115,7 +115,7 @@ var TEXT_handle_keypress = function (e)
 {
    if (e.keyCode == 13) {
     e.preventDefault();
-    next();
+    //next();
   }
 
   TEXT_count_kbd += 1;
@@ -286,6 +286,7 @@ var next =  function ()
   }
 
   send_data["key"] = key;
+  send_data["name"] = $("#name").val();
 
   // send data
   if (oov_correct.value=="false" && post_edit != "") {
@@ -398,7 +399,7 @@ var request_and_process_next = function ()
     if (data["fin"]) {
       target_textarea.setAttribute("disabled", "disabled");
       status.style.display              = "none";
-      button.innerHTML                  = "---";
+      //button.innerHTML                  = "-----";
       $("#view_summary").toggle()
       $("#raw_source_textarea").html("");
       $("#target_textarea").val("");
@@ -542,11 +543,11 @@ var reset = function ()
   var ui_type = get_ui_type();
   if (ui_type == "t") {
     if (!$("#init").val()) return;
-    TEXT_count_click = 0;
-    TEXT_count_kbd = 0;
+    //TEXT_count_click = 0;
+    //TEXT_count_kbd = 0;
     $("#target_textarea").val($("#original_mt").val());
   } else if (ui_type == "g") {
-    DE_init()
+    DE_init(false)
   }
 }
 

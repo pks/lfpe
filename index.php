@@ -3,6 +3,15 @@
   <meta charset="utf-8" />
   <title>Post-Editing Interface</title>
   <script src="js/jquery.min.js" charset="utf-8"></script>
+  <script type="text/javascript">
+  var check_submit = function () {
+    if ($("#name").val()=="" || $("#key").val()=="") {
+      alert("Please enter a session key and a name.")
+      return;
+    }
+    document.sess.submit();
+  }
+  </script>
   <link rel="stylesheet" type="text/css" href="static/main.css" />
 </head>
 
@@ -10,23 +19,49 @@
 
 <?php include("inc/header.inc.php"); ?>
 
-<form method="get" action="interface.php">
-  <strong>Please enter your session key:</strong>
-  <input type="text" id="key" name="key" style="width:20em" />
-  &nbsp;&nbsp;&nbsp;&nbsp;Session type:
+<form method="get" name="sess" action="interface.php">
+  <strong>Session key:</strong>
+  <input type="text" id="key" name="key" style="width:8em" />
+  &nbsp;&nbsp;&nbsp;&nbsp;<strong>Name:</strong>
+  <input type="txt" id="name" name="name" style="width:12em" />
+  &nbsp;&nbsp;&nbsp;&nbsp;<strong>Session type:</strong>
   <select name="ui_type">
-    <option value="g">graphical</option>
     <option value="t">text</option>
+    <option value="g">graphical</option>
 </select>
 &nbsp;&nbsp;&nbsp;
-<input type="submit" value="Submit" />
+<input type="button" value="Submit" onclick="check_submit()" />
 </form>
 
 <!--<div class="small" style="background:#eee;margin: 5em 0 5em 0;padding:.5em; max-width:25%">
-<p>Select:
-<select class="small">
 
-  <option value="g0_0_nomt" onclick="document.getElementById('key').value=this.value;">#0 (from scratch)</option>
+
+<?php
+//if ($_GET['manual']) {
+echo "<p>Select session: ";
+echo "<select class='small'>";
+
+  $f = fopen("../sessions/sessions", "r");
+  $a = array();
+  while (($line = fgets($f)) !== false) {
+    $x = explode("\t", $line, 4);
+    $a[$x[3]] = $x[0];
+  }
+  fclose($f);
+
+  asort($a);
+
+  foreach ($a as $key => $val) {
+    echo "<option value='".$val."' onclick=\"document.getElementById('key').value=this.value;\">Session ".$key."</option>";
+  }
+  echo "</select></p>";
+//} else {
+//  echo '<p style="padding:1em"><a style="font-size:1.2em;color:#000" href="pool.php">Assignment</a></p><p><a href="?manual=1">Manual</a>';
+//}
+?>
+-->
+
+<!--  <option value="g0_0_nomt" >#0 (from scratch)</option>
   <option value="g0_0_pe" onclick="document.getElementById('key').value=this.value;">#0 (post-editing)</option>
 <optgroup label="________________"></optgroup>
   <option value="g0_1_nomt" onclick="document.getElementById('key').value=this.value;">#1 (from scratch)</option>
@@ -133,11 +168,10 @@
   <option value="product_en-de_beta_test_1_D" onclick="document.getElementById('key').value=this.value;">D* en-de</option>
 </optgroup>-->
 
-<!--</select>
-</p>
-</div>-->
 
-<a style="font-size:1.2em;color:#000" href="pool.php">Assignment</a>
+
+</div>
+
 
 <?php include("inc/footer.inc.php"); ?>
 

@@ -11,7 +11,7 @@
 </head>
 
 <body>
-  <p style='margin:2em;color:#000'><strong>Click on a table cell, enter your name, and click 'Begin' to begin your session. Reload the page if you clicked on the wrong cell.</strong></p>
+  <p style='margin:2em;color:#000'><strong>Click on a table cell, enter your name, and click 'Begin' to begin your session. Reload the page if you clicked on the wrong cell or if the session is already used by someone else.</strong></p>
   <table border=1 style="margin-left:10%">
     <tr><td>#0</td></tr>
   </table>
@@ -41,8 +41,8 @@
           $max = $j;
         }
       }
-      fclose($f);  
-      
+      fclose($f);
+
       for ($i=1; $i<=$max; $i++) {
         echo "<td class='item' session='".$b[$i]."' id='item".$i."'>#".$i."<br /><span style='font-size:.5em'>".$b[$i]."</span></td>\n";
         if ($i%5 == 0) {
