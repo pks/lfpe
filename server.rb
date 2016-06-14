@@ -179,6 +179,10 @@ def process_next reply
     return
   end
   $lock = true                                                           # lock
+  if !data['name'] || data['name'] == ""
+    $status = "Error: Name not given."
+    return
+  end
   if data['key'] != SESSION_KEY
     $status =  "Error: Key mismatch (#{data['key']}, #{SESSION_KEY})"
     return

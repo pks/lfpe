@@ -4,7 +4,13 @@
   <title>Post-Editing Interface</title>
   <script src="js/jquery.min.js" charset="utf-8"></script>
   <script type="text/javascript">
-  
+  var check_submit = function () {
+    if ($("#name").val()=="" || $("#key").val()=="") {
+      alert("Please enter a session key and a name.")
+      return;
+    }
+    document.sess.submit();
+  }
   </script>
   <link rel="stylesheet" type="text/css" href="static/main.css" />
 </head>
@@ -13,16 +19,18 @@
 
 <?php include("inc/header.inc.php"); ?>
 
-<form method="get" action="interface.php">
-  <strong>Please enter your session key:</strong>
+<form method="get" name="sess" action="interface.php">
+  <strong>Session key:</strong>
   <input type="text" id="key" name="key" style="width:8em" />
-  &nbsp;&nbsp;&nbsp;&nbsp;Session type:
+  &nbsp;&nbsp;&nbsp;&nbsp;<strong>Name:</strong>
+  <input type="txt" id="name" name="name" style="width:12em" />
+  &nbsp;&nbsp;&nbsp;&nbsp;<strong>Session type:</strong>
   <select name="ui_type">
-    <!--<option value="g">graphical</option>-->
     <option value="t">text</option>
+    <option value="g">graphical</option>
 </select>
 &nbsp;&nbsp;&nbsp;
-<input type="submit" value="Submit" />
+<input type="button" value="Submit" onclick="check_submit()" />
 </form>
 
 <!--<div class="small" style="background:#eee;margin: 5em 0 5em 0;padding:.5em; max-width:25%">

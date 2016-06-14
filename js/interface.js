@@ -286,6 +286,7 @@ var next =  function ()
   }
 
   send_data["key"] = key;
+  send_data["name"] = $("#name").val();
 
   // send data
   if (oov_correct.value=="false" && post_edit != "") {

@@ -4,5 +4,6 @@
 for i in `cat ../sessions/sessions | cut -f 1`; do
   echo $i
   ./util/run_server $i &
+  sleep 15
 done
 

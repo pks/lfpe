@@ -109,5 +109,6 @@ Note that the source word may be distorted.
 <textarea style="display:none" id="data"              ></textarea>
 <textarea style="display:none" id="original_svg"      ></textarea>
 <textarea style="display:none" id="original_mt"       ></textarea>
+<textarea style="display:none" id="name"              ><?php echo $_GET["name"]; ?></textarea>
 <!-- /Data -->
 
