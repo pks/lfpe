@@ -5,7 +5,9 @@
   <script src="js/jquery.min.js" charset="utf-8"></script>
   <script type="text/javascript">
   var check_submit = function () {
-    if ($("#name").val()=="" || $("#key").val()=="") {
+    var name = $("#name").val().trim();
+    $("#name").val(name);
+    if (name=="" || $("#key").val()=="" || !$("#key").val().match(/^[a-f0-9]{1,4}$/)) {
       alert("Please enter a session key and a name.")
       return;
     }
@@ -22,12 +24,12 @@
 <form method="get" name="sess" action="interface.php">
   <strong>Session key:</strong>
   <input type="text" id="key" name="key" style="width:8em" />
-  &nbsp;&nbsp;&nbsp;&nbsp;<strong>Name:</strong>
+  &nbsp;&nbsp;&nbsp;&nbsp;<strong>E-Mail:</strong>
   <input type="txt" id="name" name="name" style="width:12em" />
   &nbsp;&nbsp;&nbsp;&nbsp;<strong>Session type:</strong>
   <select name="ui_type">
     <option value="t">text</option>
-    <option value="g">graphical</option>
+    <!--<option value="g">graphical</option>-->
 </select>
 &nbsp;&nbsp;&nbsp;
 <input type="button" value="Submit" onclick="check_submit()" />

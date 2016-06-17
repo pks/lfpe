@@ -671,6 +671,8 @@ get '/reset_progress' do                                # reset current session
   $db['original_svg'].clear
   $db['feedback'].clear
   $db['progress'] = -1
+  $db['count_kbd'].clear
+  $db['count_click'].clear
   update_database true
   $confirmed = true
   $last_reply = nil
