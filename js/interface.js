@@ -225,6 +225,11 @@ var wait_for_processed_postedit = function (url_prefix, seg_id)
   }, 3000);
 }
 
+var safe_str = function (s)
+{
+  return encodeURIComponent(JSON.stringify(s)).replace(/^%22/,"").replace(/%22$/,"");
+}
+
 /*
  * next button
  *
@@ -274,25 +279,25 @@ var next =  function ()
     post_edit = $.trim(send_data["target"].join(" "));
     if (DE_target_done.length != DE_target_shapes.length)
       post_edit = "";
-    send_data["post_edit"] = encodeURIComponent(post_edit);
+    send_data["post_edit"] = safe_str(post_edit);
     send_data['type'] = 'g';
     send_data["original_svg"] = document.getElementById("original_svg").value;
   } else {
     post_edit = $.trim(target_textarea.value);
-    send_data["post_edit"] = encodeURIComponent(post_edit);
+    send_data["post_edit"] = safe_str(post_edit);
     send_data['type'] = 't';
     send_data["count_click"] = TEXT_count_click;
     send_data["count_kbd"] = TEXT_count_kbd;
   }
 
   send_data["key"] = key;
-  send_data["name"] = encodeURIComponent($("#name").val().replace(/"/g, ' ').trim());
+  send_data["name"] = safe_str($.trim($("#name").val()));
 
   // send data
   if (oov_correct.value=="false" && post_edit != "") {
       send_data["EDIT"] = true;
       send_data["duration"] = Timer.get();
-      send_data["source_value"] = encodeURIComponent(source.value);
+      send_data["source_value"] = safe_str(source.value);
       // compose request
       // no change?
       if (post_edit == last_post_edit.value) {
@@ -307,8 +312,8 @@ var next =  function ()
      var src = [];
      var tgt = [];
      for (var i=0; i<l; i++) {
-       src.push(encodeURIComponent($.trim(document.getElementById("oov_src"+i).value)));
-       tgt.push(encodeURIComponent($.trim(document.getElementById("oov_tgt"+i).value)));
+       src.push(safe_str($.trim(document.getElementById("oov_src"+i).value)));
+       tgt.push(safe_str($.trim(document.getElementById("oov_tgt"+i).value)));
        if (tgt[tgt.length-1] == "") { // empty correction
          alert("Please provide translations for all words.");
          not_working();
