@@ -190,6 +190,7 @@ def process_next reply
   if data["OOV"]                                              # OOV corrections
     $status = "Processing OOV corrections"
     logmsg :server, "received OOV corrections"                         # status
+    logmsg :server, "#{data.to_s}"
     #grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
     grammar = "#{SESSION_DIR}/g/grammar.#{$db['progress']}"
     src, tgt = splitpipe(data["correct"]) # format:src1\tsrc2\tsrc..|||tgt1\t..
@@ -407,16 +408,18 @@ def process_next reply
 
                                      # 1. generate grammar for current sentence
     $status = "Generating grammar"                                     # status
+    logmsg :server, "generating grammar for segment ##{$db['progress']}"
     grammar = "#{WORK_DIR}/g/#{$db['progress']}.grammar"
     if !$pregenerated_grammars
-    if !File.exist? grammar      # grammar already generated if there were OOVs
-      send_recv :extractor, "default_context ||| #{source} ||| #{grammar}"
-    end
+      if !File.exist? grammar      # grammar already generated if there were OOVs
+        send_recv :extractor, "default_context ||| #{source} ||| #{grammar}"
+      end
     else
       grammar = "#{SESSION_DIR}/g/grammar.#{$db['progress']}"
     end
                                                                 # - known rules
     logmsg :server, "annotating known rules"
+    logmsg :server, "grammar file: #{grammar}"
     $status = "Adding rules to the grammar"                            # status
     match = {}
     $known_rules.each { |r|
@@ -433,12 +436,12 @@ def process_next reply
       end
     }
                                                            # - additional rules
-    #logmsg :server, $new_rules.to_s
     if $new_rules.size > 0
       all_rules += $new_rules
-      #`echo "#{s}" >> #{grammar}`
     end
-    WriteFile.new(grammar).write all_rules.join("\n")+"\n"
+    f = WriteFile.new(grammar)
+    f.write(all_rules.join("\n")+"\n")
+    f.close
     #$new_rules.each { |rule|
     # logmsg :server, "adding rule '#{rule}' to grammar '#{grammar}'"
     #  s = splitpipe(rule)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
@@ -447,10 +450,13 @@ def process_next reply
                                                             # 2. check for OOVs
     if !$oov_corrected[$db['progress']]
     $status = "Checking for OOVs"                                      # status
+    logmsg :server, "checking for oovs"
     src_r = ReadFile.readlines(grammar).map {
       |l| splitpipe(l)[1].strip.split
     }.flatten.uniq
     oovs = []
+    logmsg :server, "OOVs in '#{source}'"
+    logmsg :server, "coverage: #{src_r.to_s}"
     source.split.each { |token|
       if !src_r.include? token
         oovs << token
@@ -732,9 +738,23 @@ get '/summary' do
     g.unlink
   }
 
+  hter_scores = []
+  data["post_edits"].each_with_index { |pe,j|
+    f = Tempfile.new "lfpe-summary-mt"
+    g = Tempfile.new "lfpe-summary-pe"
+    f.write data["mt_raw"][j]+"\n"
+    g.write pe+"\n"
+    f.close
+    g.close
+    hter_scores << [1.0, (`#{CDEC}/mteval/fast_score -i #{f.path} -r #{g.path} -m ter 2>/dev/null`.to_f).round(2)].min
+    f.unlink
+    g.unlink
+  }
+
   haml :summary, :locals => { :session_key => SESSION_KEY,
                               :data => data,
-                              :ter_scores => ter_scores }
+                              :ter_scores => ter_scores,
+                              :hter_scores => hter_scores }
 
 end
 

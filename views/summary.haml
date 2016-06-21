@@ -31,13 +31,19 @@
             TER
         %td
           %strong
-            Keystrokes
+            MT
         %td
           %strong
-            Mouse actions
+            HTER
         %td
           %strong
-            Duration
+            Key.
+        %td
+          %strong
+            M.a.
+        %td
+          %strong
+            Dur.
         - data["post_edits"].each_with_index do |pe,j|
           %tr
             %td.center #{j+1}.
@@ -46,8 +52,10 @@
             %td #{data["references"][j]}
             %td.center #{(BLEU::per_sentence_bleu(pe, [data["references"][j]], 4, 0)*100).round 2}%
             %td.center #{ter_scores[j]}
+            %td #{data["mt_raw"][j]}
+            %td.center #{hter_scores[j]}
             %td.center #{data["count_kbd"][j]}
             %td.center #{data["count_click"][j]}
-            %td.center #{(data["durations"][j]/1000).round 1}s
+            %td.center #{((data["durations"][j]/1000.0)/60.0).round 1} min
 
 

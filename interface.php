@@ -69,8 +69,8 @@ Note that the source word may be distorted.
     Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a>
   </p>
   <p class="tiny">Session: <?php echo $_GET["key"]; ?> |
-    <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a> |
-    <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/summary" target="_blank">Summary</a>
+    <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a>
+    <!--| <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/summary" target="_blank">Summary</a>-->
   </p>
 </div>
 <!-- /Help -->
