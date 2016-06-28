@@ -3,7 +3,7 @@
 #for i in `find ../sessions -maxdepth 1 | cut -d "/" -f 3 | grep -P "^sess_"`; do
 for i in `cat ../sessions/sessions | cut -f 1`; do
   echo $i
-  ./util/run_server $i &
+  ./util/run_session $i &
   sleep 60
 done
 

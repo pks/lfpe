@@ -1,4 +1,4 @@
 #!/bin/zsh -x
 
-for i in {0..24}; do for j in pe nomt; do ./util/run_server g0_"$i"_"$j" &; done; done
+for i in {0..24}; do for j in pe nomt; do ./util/run_session g0_"$i"_"$j" &; done; done
 

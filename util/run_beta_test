@@ -5,6 +5,6 @@ cd /srv/postedit/lfpe/util
 for i in `ls -1 ../../sessions/ | grep -v "_1_" | grep -v data | grep -v toy`; do
   echo $i
   echo $(basename $i)
-  ./run_server $(basename $i) &; sleep 600;
+  ./run_session $(basename $i) &; sleep 600;
 done
 
