@@ -450,6 +450,9 @@ var request_and_process_next = function ()
       $("#next").html("Next");
       $("#oov_tgt0").focus();
       not_working(false);
+      if (ui_type == "g") {
+        DE_ui_lock = true;
+      }
 
     // translation mode
     } else {

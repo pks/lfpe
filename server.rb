@@ -682,6 +682,7 @@ get '/reset_progress' do                                # reset current session
   update_database true
   $confirmed = true
   $last_reply = nil
+  $oov_corrected.clear
 
   return "progress reset: done"
 end
