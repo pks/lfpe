@@ -20,6 +20,10 @@
 <!-- Derivation editor -->
 <div id="derivation_editor">
   <div id="holder" style="width:100px; overflow-x:scroll"></div>
+  <div class="small">
+    <p><strong>Source:</strong> <span id="de_source">n/a</span></p>
+    <p><strong>Target:</strong> <span id="de_original_mt">n/a</span></p>
+  </div>
 </div>
 <!-- /Derivation editor-->
 
