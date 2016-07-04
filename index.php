@@ -28,8 +28,8 @@
   <input type="txt" id="name" name="name" style="width:12em" />
   &nbsp;&nbsp;&nbsp;&nbsp;<strong>Session type:</strong>
   <select name="ui_type">
-    <option value="t">text</option>
-    <!--<option value="g">graphical</option>-->
+    <!--<option value="t">text</option>-->
+    <option value="g">graphical</option>
 </select>
 &nbsp;&nbsp;&nbsp;
 <input type="button" value="Submit" onclick="check_submit()" />
