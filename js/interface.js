@@ -460,6 +460,8 @@ var request_and_process_next = function ()
         $("#textboxes").fadeTo(200,1);
       } else {
         $("#derivation_editor").fadeTo(200,1);
+        $("#de_source").text(data["raw_source"]);
+        $("#de_original_mt").text(data["transl_detok"]);
       }
 
       var id          = data["progress"];
@@ -555,7 +557,8 @@ var reset = function ()
     //TEXT_count_kbd = 0;
     $("#target_textarea").val($("#original_mt").val());
   } else if (ui_type == "g") {
-    DE_init(false)
+    DE_init(false);
+    DE_update_str();
   }
 }
 
