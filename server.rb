@@ -15,7 +15,10 @@ require_relative './phrase2_extraction/phrase2_extraction'
 # #############################################################################
 # Load configuration file and setup global variables
 # #############################################################################
-require_relative "#{ARGV[0]}" # load configuration for this session
+NOLOO = nil                          # added later, warning
+OLM = nil                            # added later, warning
+$olm_pipe = nil
+require_relative "#{ARGV[0]}"        # load configuration for this session
 $lock                    = false     # lock if currently learning/translating
 $last_reply              = nil       # cache last reply
 $last_processed_postedit = ""        # to show to the user
@@ -73,9 +76,9 @@ end
 def start_daemon cmd, name, addr
   logmsg :server, "starting #{name} daemon"
   cmd.gsub! '__ADDR__', addr
-  pid = fork do
-    exec cmd
-  end
+  pid = spawn(cmd)
+  Process.detach pid
+  logmsg :server, "#{name} detached"
   sock = NanoMsg::PairSocket.new
   sock.connect addr
   logmsg :server, "< got #{sock.recv} from #{name}"
@@ -116,6 +119,11 @@ def init
                                                             # working directory
   `mkdir -p #{WORK_DIR}/`
   `mkdir #{WORK_DIR}/g`
+
+  if OLM
+    `mkfifo #{WORK_DIR}/refp`
+  end
+
                                              # setup environment, start daemons
   port = BEGIN_PORT_RANGE
   $daemons.each { |name,cmd|
@@ -124,7 +132,19 @@ def init
     port += 1
   }
 
+  if OLM
+    logmsg :server, "writing to OLM pipe"
+    $olm_pipe = File.new "#{WORK_DIR}/refp", "w"
+    $olm_pipe.write " \n"
+    $olm_pipe.flush
+    logmsg :server, "writing to OLM pipe, done!"
+  end
+
   send_recv :truecaser, "lOaD iT"
+
+  #if OLM
+  #  $olm_pipe = File.new "#{WORK_DIR}/refp", "w"
+  #end
                                                                    #  lock file
   `touch #{LOCK_FILE}`
   $status = "Initialized"                                              # status
@@ -220,6 +240,7 @@ def process_next reply
 # 5b. backward alignment
 # 5c. symmetrize alignment
 # 5d. actual update
+# 5e. update LM
 # 6. update database
   if data["EDIT"]
     $status = "Processing post-edit"                                   # status
@@ -245,6 +266,10 @@ def process_next reply
       f = []
       data["source_raw"].each { |i| f << URI.decode(i) }
 
+      # no loo rules
+      no_loo_known_rules = []
+      no_loo_new_rules = []
+
       if !NOGRAMMAR
                                                         # 2.5 new rule extraction
         $status = "Extracting rules from post edit"                      # status
@@ -255,6 +280,36 @@ def process_next reply
           s = splitpipe(r.to_s)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
           current_grammar_ids[s] = true
         }
+        # no loo rules
+        no_loo_known_rules = []
+        no_loo_new_rules = []
+        if NOLOO
+          tmp_rules = []
+          logmsg :server, "rule diff: #{data['rule_diff'].to_s}"
+          data["rule_diff"].each_key { |k|
+            x = k.split(",").map{|i|i.to_i}.sort
+            tgt_a = data["rule_diff"][k]["tgt_a"]
+            tgt_first,src,tgt = splitpipe data["rule_diff"][k]
+            tgt_first = tgt_first.lstrip.strip
+            src = src.lstrip.strip
+            tgt = tgt.lstrip.strip
+            prev = tgt[0]
+            logmsg :server, "tgt_first #{tgt_first}"
+            tgt = send_recv :truecaser, tgt
+            tgt[0] = prev if tgt_first=="false"
+            if x.first == 0
+              src[0] = data["source_value"][0]
+            end
+            tmp_rules << [src, tgt]
+          }
+          tmp_rules_new = tmp_rules.reject { |r|
+              current_grammar_ids.has_key? r
+          }
+          tmp_rules_known = tmp_rules - tmp_rules_new
+          tmp_rules_known.each { |i| no_loo_known_rules << "[X] ||| #{i[0]} ||| #{i[1]} ||| KnownRule=1 ||| 0-0" }
+          tmp_rules_new.each { |i| no_loo_new_rules << "[X] ||| #{i[0]} ||| #{i[1]} ||| NewRule=1 ||| 0-0" }
+        end
+        # regular
         new_rules = PhrasePhraseExtraction.extract_rules f, e, data["align"], true
         new_rules_ids = {}
         $new_rules.each { |r|
@@ -269,6 +324,7 @@ def process_next reply
           current_grammar_ids.has_key?(s) || new_rules_ids.has_key?(s)
         }
         $new_rules += new_rules
+        $new_rules += no_loo_new_rules
         $new_rules.uniq! { |rs|
           splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
         }
@@ -277,6 +333,7 @@ def process_next reply
         f.close
         logmsg :server, "# rules after filtering #{new_rules.size}"
         add_known_rules = _-new_rules
+        add_known_rules += no_loo_known_rules
         add_known_rules.reject! { |rs|
           s = splitpipe(rs)[1..2].map{|i|i.strip.lstrip}.join(" ||| ")
           new_rules_ids.has_key?(s)
@@ -333,7 +390,45 @@ def process_next reply
       grammar = "#{SESSION_DIR}/g/grammar.#{$db['progress']}"
       annotated_source = "<seg grammar=\"#{grammar}\"> #{source} </seg>"
       $status = "Learning from post-edit"                              # status
-      send_recv :dtrain, "#{annotated_source} ||| #{post_edit}"
+      if NOLOO
+        `cp #{grammar} #{grammar}.pass0`
+        match = {}
+        no_loo_known_rules.each { |r|
+          _,src,tgt,_,_ = splitpipe r
+          match["#{src.strip.lstrip} ||| #{tgt.strip.lstrip}".hash] = true
+        }
+        all_rules = ReadFile.readlines_strip grammar
+        all_rules.each_with_index { |r,j|
+          nt,src,tgt,f,a = splitpipe(r).map { |i| i.strip.lstrip }
+          if match["#{src} ||| #{tgt}".hash]
+            ar = "#{nt} ||| #{src} ||| #{tgt} ||| #{f} KnownRule=1 ||| #{a}"
+            logmsg :server, "replacing rule '#{r}' with '#{ar}'"
+            all_rules[j] = ar
+          end
+        }
+        if no_loo_new_rules.size > 0
+          all_rules += no_loo_new_rules
+        end
+        f = WriteFile.new(grammar)
+        f.write(all_rules.join("\n")+"\n")
+        f.close
+        logmsg :server, "adding rules and re-translate"
+        if OLM # again ..
+          $status = "Updating language model"
+          logmsg :server, "fake updating lm"
+          $olm_pipe.write " \n"
+          $olm_pipe.flush
+        end
+        `cp #{WORK_DIR}/dtrain.debug.json \
+          #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json.pass0`
+        send_recv :dtrain, "act:translate_learn ||| #{annotated_source} ||| #{post_edit}"
+        `cp #{WORK_DIR}/dtrain.debug.json \
+          #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json.pass1`
+      else
+        send_recv :dtrain, "act:learn ||| #{annotated_source} ||| #{post_edit}"
+        `cp #{WORK_DIR}/dtrain.debug.json \
+          #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json.pass0`
+      end
                                                   # 5. update grammar extractor
       if !$pregenerated_grammars
                                                     # 5a. get forward alignment
@@ -350,12 +445,26 @@ def process_next reply
         msg = "default_context ||| #{source} ||| #{post_edit} ||| #{a}"
         send_recv :extractor, msg
       end
+                                                           # 5e update LM
+      if OLM
+        $status = "Updating language model"
+        logmsg :server, "updating lm"
+        #`echo "#{post_edit}" >> #{WORK_DIR}/refp`
+        $olm_pipe.write "#{post_edit}\n"
+        $olm_pipe.flush
+      end
                                                            # 6. update database
       $db['updated'] << true
-      `cp #{WORK_DIR}/dtrain.debug.json \
-        #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json`
     else
+      `cp #{WORK_DIR}/dtrain.debug.json \
+        #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json.nolearn`
       $db['updated'] << false
+      if OLM
+        $status = "Updating language model"
+        logmsg :server, "fake updating lm"
+        $olm_pipe.write " \n"
+        $olm_pipe.flush
+      end
     end
     logmsg :db, "updating database"
     update_database
@@ -532,19 +641,33 @@ end
 
 get '/debug' do                                                    # debug view
   data = {}
-  data = JSON.parse ReadFile.read(DB_FILE).force_encoding("UTF-8")
+  s = File.binread(DB_FILE).encode('UTF-8', 'UTF-8', :invalid => :replace, :replace => "__INVALID__")
+  data = JSON.parse s
   if data["durations"].size == 0
     data["durations"] << -1
   end
 
-  fn = "#{WORK_DIR}/dtrain.debug.json"
+  fn = "#{WORK_DIR}/#{$db["progress"]-1}.dtrain.debug.json.pass"
+  pass = 0
+  if File.exist? fn+"1"
+    fn += "1"
+    pass = 1
+  else
+    fn += "0"
+    pass = 0
+  end
   pairwise_ranking_data                     = {}
   pairwise_ranking_data["kbest"]            = []
   pairwise_ranking_data["weights_before"]   = {}
   pairwise_ranking_data["weights_after"]    = {}
   pairwise_ranking_data["best_match_score"] = 0
   if File.exist? fn
-    pairwise_ranking_data = JSON.parse ReadFile.read(fn).force_encoding("UTF-8")
+    s = File.binread(fn).encode('UTF-8', 'UTF-8', :invalid => :replace, :replace => "__INVALID__").force_encoding("utf-8")
+    begin
+      pairwise_ranking_data = JSON.parse s
+    rescue
+      logmsg :server, s.encoding
+    end
   end
 
   admin = false
@@ -555,6 +678,7 @@ get '/debug' do                                                    # debug view
   haml :debug, :locals => { :data => data,
                             :pairwise_ranking_data => pairwise_ranking_data, \
                             :progress => $db["progress"]-1,
+                            :pass => pass,
                             :new_rules => $new_rules, \
                             :known_rules => $known_rules, \
                             :session_key => SESSION_KEY, \
