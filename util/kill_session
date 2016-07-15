@@ -1,0 +1,5 @@
+#!/usr/bin/zsh -x
+
+lsof /srv/postedit/sessions/$1/work/session.out | cut -d " " -f 2- | /srv/postedit/scripts/strips | cut -d " " -f 1 | grep -v PID  | xargs kill
+lsof /srv/postedit/sessions/$1/work/session.out
+
