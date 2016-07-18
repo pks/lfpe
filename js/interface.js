@@ -874,7 +874,7 @@ var get_simplest_rules1 = function ()
                 if (s2t[r.src_gaps[k][l]] > id2idx(r.tgt[0])) { // before
                   r["tgt_gaps_pos"].push(0);
                 } else if(s2t[r.src_gaps[k][l]] < id2idx(r.tgt[r.tgt.length-1])) { //after
-                  alert("!!");
+                  //alert("!!");
                   r["tgt_gaps_pos"].push(1);
                 } else {
                 }
@@ -900,7 +900,7 @@ var get_simplest_rules1 = function ()
   rs = {}
   for (r in rules) {
     if (r.invalid) {
-      alert(r);
+      //alert(r);
       continue;
     }
     var src = "", tgt = "";
@@ -1012,7 +1012,7 @@ var get_simplest_rules1 = function ()
       if (accept) {
         rs[rules[r]["src"]] = b+" ||| "+$.trim(src+tgt);
       } else {
-        alert(src+tgt+" "+rules[r]["tgt_gaps"].length+" "+src_gaps_covered.length+" --- "+String(x.length==y.length) + " " + String(uniq) + " " + String(same));
+        //alert(src+tgt+" "+rules[r]["tgt_gaps"].length+" "+src_gaps_covered.length+" --- "+String(x.length==y.length) + " " + String(uniq) + " " + String(same));
       }
     }
   }
