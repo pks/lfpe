@@ -307,7 +307,17 @@ def process_next reply
           }
           tmp_rules_known = tmp_rules - tmp_rules_new
           tmp_rules_known.each { |i| no_loo_known_rules << "[X] ||| #{i[0]} ||| #{i[1]} ||| KnownRule=1 ||| 0-0" }
-          tmp_rules_new.each { |i| no_loo_new_rules << "[X] ||| #{i[0]} ||| #{i[1]} ||| NewRule=1 ||| 0-0" }
+          tmp_rules_new.each { |i|
+            a = []
+            i[0].strip.lstrip.split.each_with_index { |s,ii|
+              i[1].strip.lstrip.split.each_with_index { |t,j|
+                if !s.match /\[X,\d+\]/ and !t.match /\[X,\d+\]/
+                  a << "#{ii}-#{j}"
+                end
+              }
+            }
+            no_loo_new_rules << "[X] ||| #{i[0]} ||| #{i[1]} ||| NewRule=1 ||| #{a.join ' '}"
+          }
         end
         # regular
         new_rules = PhrasePhraseExtraction.extract_rules f, e, data["align"], true
