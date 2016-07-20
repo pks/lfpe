@@ -8,6 +8,8 @@ var data,    // global data object
 var TEXT_count_click=0,
     TEXT_count_kbd=0;
 
+var rules_orig = {};
+
 /*
  * cross-site request
  *
@@ -282,6 +284,11 @@ var next =  function ()
     send_data["post_edit"] = safe_str(post_edit);
     send_data['type'] = 'g';
     send_data["original_svg"] = document.getElementById("original_svg").value;
+    var dx = rule_diff(rules_orig, get_simplest_rules1());
+    for (k in dx) {
+      dx[k] = safe_str(dx[k]);
+    }
+    send_data["rule_diff"] = dx;
   } else {
     post_edit = $.trim(target_textarea.value);
     send_data["post_edit"] = safe_str(post_edit);
@@ -514,6 +521,7 @@ var request_and_process_next = function ()
         var x = $.trim(JSON.parse(DE_extract_data())["target"].join(" "));
         last_post_edit.value = x;
         document.getElementById("original_svg").value = DE_get_raw_svg_data();
+        rules_orig = get_simplest_rules1();
       }
 
       // start timer
@@ -592,4 +600,425 @@ $().ready(function()
   }
 
 });
+
+var explore = function (o,src,tgt,s2t,t2s,done)
+{
+  if (done[o["id"]]) return;
+  var d,other_t;
+  if (o["type"] == "source") {
+    d = s2t;
+    src.push(o["id"]);
+    other_t = "target";
+  } else {
+    d = t2s;
+    tgt.push(o["id"])
+    other_t = "source";
+  }
+
+  if (!d[o["id"]]) return;
+  if (d[o["id"]].length==0) return;
+
+  done[o["id"]] = true;
+
+  for (var i=0; i < d[o["id"]].length; i++) {
+    explore({"id":d[o["id"]][i], "type":other_t}, src, tgt, s2t, t2s, done);
+  }
+
+  return;
+}
+
+var rule_diff = function (prev,now)
+{
+  var diff = {};
+  for (key in now) {
+    if (prev[key] && now[key] != prev[key]) {
+      diff[key] = now[key];
+    }
+    if (!prev[key]) {
+      diff[key] = now[key];
+    }
+  }
+
+  return diff;
+}
+
+var get_simplest_rules = function ()
+{
+  var s2t = [];
+  var t2s = [];
+  for (key in DE_connections) {
+    var a = key.split("-");
+    if (s2t.hasOwnProperty(a[0])) {
+      s2t[parseInt(a[0])].push(parseInt(a[1]));
+    } else {
+      s2t[parseInt(a[0])] = [parseInt(a[1])];
+    }
+    if (t2s.hasOwnProperty(a[1])) {
+      t2s[parseInt(a[1])].push(parseInt(a[0]));
+    } else {
+      t2s[parseInt(a[1])] = [parseInt(a[0])];
+    }
+  }
+
+  var rules = [];
+  var done = {};
+  for (var i=0; i < DE_shapes.length; i++) {
+    if (DE_shapes[i]["type_"] == "source") {
+      var id = parseInt(DE_shapes[i]["id_"]);
+      var src = [];
+      var tgt = [];
+      explore({"id":id,"type":"source"}, src, tgt, s2t, t2s, done);
+      if (src.length >0 && tgt.length>0) {
+        rules.push( {"src":src, "tgt":tgt } );
+      }
+    }
+  }
+
+  rs = {}
+  for (r in rules) {
+    var src = "", tgt = "";
+    var prev=null
+    for (var i=0; i< rules[r]["src"].length; i++) {
+      if (prev!=null && prev < rules[r]["src"][i]-1) {
+        src += "[X] ";
+      }
+      src += DE_shapes_by_id[rules[r]["src"][i]].pair[0].textContent+" ";
+      if (rules[r]["src"][i]!=null)
+        prev = rules[r]["src"][i];
+    }
+    src += "||| ";
+    prev = null;
+    for (var i=0; i< rules[r]["tgt"].length; i++) {
+      if (!DE_shapes_by_id[rules[r]["tgt"][i]]) // unaligned source
+        continue;
+      if (prev && prev < rules[r]["tgt"][i]-1) {
+        tgt += "[X] ";
+      }
+      tgt += DE_shapes_by_id[rules[r]["tgt"][i]].pair[0].textContent+" ";
+      if (rules[r]["tgt"][i])
+        prev = rules[r]["tgt"][i];
+    }
+    if (tgt.replace(/\|\|\|/g, "").trim() != "") {
+      var id = rules[r]["tgt"][0];
+      var b = false;
+      if (DE_target_shapes[0]["id_"] == id) {
+        b = true;
+      }
+      rs[rules[r]["src"]] = b+" ||| "+$.trim(src+tgt);
+    }
+  }
+
+  return rs;
+}
+
+var id2idx = function (id) { // or grid_pos
+  var i = 0;
+  for (k in DE_target_shapes) {
+    if (DE_target_shapes[k]["id_"] == id) {
+      return i;
+    }
+    i++;
+  }
+
+  return -1;
+}
+
+var idx2id = function (idx) {
+  return DE_target_shapes[idx]["id_"];
+}
+
+var amax = function (a) {
+  var max = -9999999999999;
+  for (k in a) {
+    if (a[k] > max)
+      max = a[k];
+  }
+  return max;
+}
+
+var $rules =[];
+var get_simplest_rules1 = function ()
+{
+  var s2t = [];
+  var t2s = [];
+  for (key in DE_connections) {
+    var a = key.split("-");
+    if (s2t.hasOwnProperty(a[0])) {
+      s2t[parseInt(a[0])].push(parseInt(a[1]));
+    } else {
+      s2t[parseInt(a[0])] = [parseInt(a[1])];
+    }
+    if (t2s.hasOwnProperty(a[1])) {
+      t2s[parseInt(a[1])].push(parseInt(a[0]));
+    } else {
+      t2s[parseInt(a[1])] = [parseInt(a[0])];
+    }
+  }
+
+  var rules = [];
+  var done = {};
+  for (var i=0; i < DE_shapes.length; i++) {
+    if (DE_shapes[i]["type_"] == "source") {
+      var id = parseInt(DE_shapes[i]["id_"]);
+      var src = [];
+      var tgt = [];
+      explore({"id":id,"type":"source"}, src, tgt, s2t, t2s, done);
+      if (src.length >0 && tgt.length>0) {
+        tgt.sort(function(a,b) { return id2idx(a) > id2idx(b) });
+        rules.push( {"src":src, "tgt":tgt } );
+      }
+    }
+  }
+
+  for (var z=0; z<rules.length; z++) {
+    var src_gaps = [];
+    var tgt_gaps = [];
+    var r = rules[z];
+    var prev = null;
+
+    for (var j=0; j<r.src.length; j++) {
+      if (prev!=null && prev<(r.src[j]-1)) { // id == index == pos
+        var a = [];
+        for (var k=prev+1; k<r.src[j]; k++) {
+          a.push(k);
+        }
+        src_gaps.push(a);
+      }
+      prev = r.src[j];
+    }
+
+    prev = null;
+    for (var j=0; j<r.tgt.length; j++) {
+      if (prev!=null && prev<((id2idx(r.tgt[j]))-1)) {
+        var a = [];
+        for (var k=prev+1; k<id2idx(r.tgt[j]); k++) {
+          a.push(k);
+        }
+        tgt_gaps.push(a);
+      }
+      prev = id2idx(r.tgt[j]);
+    }
+
+    r["src_gaps"] = src_gaps;
+    r["tgt_gaps"] = tgt_gaps;
+    r["src_gaps_pos"] = []; // 0 before, 1 after
+    src_gaps_covered = [];
+    var tgt_indexes = [];
+    var invalid = false;
+    for (k in r.tgt_gaps) { // for each target gap
+      var g = r.tgt_gaps[k]; // current gap
+      var ga = g.map(function(i) { // these are the aligned sources to this gap
+        try {
+          return t2s[idx2id(i)][0];
+        } catch(e) {
+          return null;
+        }
+      });
+      var index = -1; // behind or before
+      var b = false;
+      for (var l=ga.length-1; l>=0; l--) { // take the last one / or should I?
+        for (m in r.src_gaps) {
+          if (r.src_gaps[m].find(function(i) { return i==ga[l] })) {
+            index = m;
+            src_gaps_covered.push(m);
+            b = true;
+            break;
+          }
+          if (b) break;
+        }
+      }
+
+      if (index == -1) { // not found within
+        // try to find outside
+        var x = null;
+        for (var j=ga.length-1; j>=0; j--) { // first (from the back) aligned
+          if (ga[j]) {
+            x = ga[j];
+            break;
+          }
+        }
+        if (x == null) {
+          if (r.src_gaps.length == 1 && r.tgt_gaps.length == 1) {
+            index = 0;
+            src_gaps_covered.push(0);
+          } else {
+            invalid = true;
+          }
+        } else {
+          if (x < r.src[0]) { // before
+            r.src_gaps.unshift([x]);
+            tgt_indexes = tgt_indexes.map(function(i) { return i+1 });
+            index = 0;
+            r["src_gaps_pos"].push(0);
+            src_gaps_covered.push(-1); // doesn't matter
+          } else if (x > r.src[r.src.length-1]) { // after
+            r.src_gaps.push([x]);
+            index = Math.max(0,amax(tgt_indexes)+1);
+            r["src_gaps_pos"].push(1);
+            src_gaps_covered.push(-1); // doesn't matter
+          } else {
+            invalid = true;
+          }
+        }
+      }
+      tgt_indexes.push(parseInt(index));
+    }
+
+    r["tgt_gaps_pos"] = [];
+    if (r.src_gaps.length > src_gaps_covered.length) {
+      for (k in r.src_gaps) {
+        if (!src_gaps_covered.find(function(i){return i==k;})) { // not covered
+          try {
+            for (var l=r.src_gaps[k].length-1; l>=0; l--) {
+              if (s2t[r.src_gaps[k][l]]!=null) {
+                if (s2t[r.src_gaps[k][l]] > id2idx(r.tgt[0])) { // before
+                  r["tgt_gaps_pos"].push(0);
+                } else if(s2t[r.src_gaps[k][l]] < id2idx(r.tgt[r.tgt.length-1])) { //after
+                  //alert("!!");
+                  r["tgt_gaps_pos"].push(1);
+                } else {
+                }
+                break;
+              }
+            }
+          } catch(e) {
+          }
+        }
+      }
+    }
+    r["tgt_indexes"] = tgt_indexes;
+    r["invalid"] = invalid;
+  }
+
+  for (var z=0; z<rules.length; z++) { // FIXME why here?
+    r = rules[z];
+    if (r.tgt_indexes.length!=r.tgt_gaps.length || r.tgt_indexes.length!=r.src_gaps.length) {
+      r.invalid = true;
+    }
+  }
+
+  rs = {}
+  for (r in rules) {
+    if (r.invalid) {
+      //alert(r);
+      continue;
+    }
+    var src = "", tgt = "";
+    var prev=null
+    var src_idx = 1;
+    var src_gaps_count = 0;
+    for (var i=0; i< rules[r]["src"].length; i++) {
+      if (prev!=null && prev < rules[r]["src"][i]-1) { // work, because id==idx
+        src += "[X,"+src_idx+"] ";
+        src_idx++;
+      }
+      src += DE_shapes_by_id[rules[r]["src"][i]].pair[0].textContent+" ";
+      if (rules[r]["src"][i]!=null)
+        prev = rules[r]["src"][i];
+    }
+    if ((src_idx-1) < rules[r]["src_gaps_pos"].length) {
+      for (q in rules[r]["src_gaps_pos"]) {
+        if (rules[r]["src_gaps_pos"][q] == 0) { // before
+          var re=/\[X,(\d)\]/g;
+          do { m = re.exec(src); if (m) { src[m.index+3] = parseInt(m[1])+1 }; } while (m);
+          src = "[X,1] "+$.trim(src);
+          src_gaps_covered.push(-1);
+        } else { // after
+          var re=/\[X,(\d)\]/g;
+          var last = 0;
+          do { m = re.exec(src); if (m) { last = parseInt(m[1]) }; } while (m);
+          src = $.trim(src);
+          src += " [X,"+(last+1)+"]";
+          src_gaps_covered.push(-1);
+        }
+      }
+    }
+    src += "||| ";
+    prev = null;
+    var tgt_idx_idx = 0;
+    for (var i=0; i< rules[r]["tgt"].length; i++) {
+      if (!DE_shapes_by_id[rules[r]["tgt"][i]]) { // unaligned source
+        continue;
+      }
+      if (prev!=null && prev < id2idx(rules[r]["tgt"][i])-1) {
+        tgt += "[X,"+(rules[r]["tgt_indexes"][tgt_idx_idx]+1)+"] " ;
+        tgt_idx_idx++;
+      }
+      tgt += DE_shapes_by_id[rules[r]["tgt"][i]].pair[0].textContent+" ";
+      if (rules[r]["tgt"][i]) {
+        prev = id2idx(rules[r]["tgt"][i]);
+      }
+    }
+    for (k in rules[r]["tgt_gaps_pos"]) {
+      if (rules[r]["tgt_gaps_pos"][k] == 0) { // before
+        var re=/\[X,(\d)\]/g;
+        do { m = re.exec(tgt); if (m) { tgt[m.index+3] = parseInt(m[1])+1 }; } while (m);
+        tgt = "[X,1] "+$.trim(tgt);
+      } else { // after
+        var re=/\[X,(\d)\]/g;
+        var last = 0;
+        do { m = re.exec(tgt); if (m) { last = parseInt(m[1]) }; } while (m);
+        tgt = $.trim(tgt);
+        tgt += " [X,"+(last+1)+"]";
+      }
+    }
+    if (tgt.replace(/\|\|\|/g, "").trim() != "") {
+      var id = rules[r]["tgt"][0];
+      var b = false;
+      if (DE_target_shapes[0]["id_"] == id) {
+        b = true;
+      }
+      var accept = true;
+      var x = src.match(/\[X,\d\]/g);
+      var y = tgt.match(/\[X,\d\]/g);
+      if (x && y) {
+        accept = x.length==y.length;
+        var srci = src.match(/\[X,(\d)\]/g).map(function(i){return parseInt(i.split(",")[1].replace("]",""))}).sort()
+        var tgti = tgt.match(/\[X,(\d)\]/g).map(function(i){return parseInt(i.split(",")[1].replace("]",""))}).sort()
+        var prev = null;
+        var uniq = true;
+        for (k in srci) {
+          if (prev!=null && prev==srci[k]) {
+            uniq = false;
+            break;
+          }
+          prev = srci[k];
+        }
+        prev = null
+        for (k in tgti) {
+          if (prev!=null && prev==tgti[k]) {
+            uniq = false;
+            break;
+          }
+          prev = tgti[k];
+        }
+        accept = accept && uniq;
+        var same = true;
+        if (srci.length == tgti.length) {
+          for (k in srci) {
+            if (srci[k] != tgti[k]) {
+              same = false;
+              break;
+            }
+          }
+        }
+
+        accept = accept && same;
+
+      } else if (x && !y || !x && y) {
+        accept = false
+      }
+
+      if (accept) {
+        rs[rules[r]["src"]] = b+" ||| "+$.trim(src+tgt);
+      } else {
+        //alert(src+tgt+" "+rules[r]["tgt_gaps"].length+" "+src_gaps_covered.length+" --- "+String(x.length==y.length) + " " + String(uniq) + " " + String(same));
+      }
+    }
+  }
+
+  $rules = rules;
+
+  return rs;
+}
 

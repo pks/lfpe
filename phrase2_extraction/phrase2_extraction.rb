@@ -178,6 +178,16 @@ class Rule
     }
     astr.strip!
 
+    #a = []
+    #source_string.strip.lstrip.split.each_with_index { |s,i|
+    #  target_string.strip.lstrip.split.each_with_index { |t,j|
+    #    if !s.match /\[X,\d+\]/ and !t.match /\[X,\d+\]/
+    #      a << "#{i}-#{j}"
+    #    end
+    #  }
+    #}
+    #astr = a.join ' '
+
     return "[X] ||| #{source_string} ||| #{target_string} ||| NewRule=1 ||| #{astr}"
   end
 

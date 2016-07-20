@@ -148,6 +148,7 @@
     %p <strong>Duration:</strong>                   #{data["durations"][progress]}ms
     %p <strong>Keypresses:</strong>                 #{data["count_kbd"][progress]}
     %p <strong>Clicks:</strong>                     #{data["count_click"][progress]}
+    %p <strong>Pass:</strong>                       #{pass}
 
     %h3 Derivation
     %p
@@ -169,7 +170,7 @@
     /=#########################################################################
     %h2#grammar Grammar
 
-    %p <strong>Notes:</strong> In addition to dynamically adding each source/post-edit instance to the suffix array extractor, the system additionally uses the provided phrase alignments to extract new rules. The extraction follows the original Hiero grammar extraction, but using phrases instead of words and using only a single binary feature: 'NewRule=1'. Extracted rules that already exist in a grammar are annotated with an additional feature: 'KnownRules=1'. OOVs are avoided by asking the user for translations of unknown words prior to translation. These are added to the grammars as new rules ('OOVFix=1').
+    %p <strong>Notes:</strong> <strike>In addition to dynamically adding each source/post-edit instance to the suffix array extractor,</strike> the system additionally uses the provided phrase alignments to extract new rules. The extraction follows the original Hiero grammar extraction, but using phrases instead of words and using only a single binary feature: 'NewRule=1'. Extracted rules that already exist in a grammar are annotated with an additional feature: 'KnownRules=1'. OOVs are avoided by asking the user for translations of unknown words prior to translation. These are added to the grammars as new rules ('OOVFix=1').
 
     %h3
       New Rules
@@ -225,7 +226,7 @@
           %th Rate
       %tbody
         - if pairwise_ranking_data["update_raw"]
-          - raw_update = SparseVector.from_kv(pairwise_ranking_data["update_raw"])
+          - raw_update = SparseVector.new(pairwise_ranking_data["update_raw"])
           - pairwise_ranking_data["weights_before"].default = 0
           - pairwise_ranking_data["weights_after"].keys.each.sort { |a,b| a <=> b }.each do |k|
             - diff = pairwise_ranking_data["weights_after"][k] - pairwise_ranking_data["weights_before"][k]

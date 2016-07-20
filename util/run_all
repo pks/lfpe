@@ -4,6 +4,6 @@
 for i in `cat ../sessions/sessions | cut -f 1`; do
   echo $i
   ./util/run_session $i &
-  sleep 60
+  sleep 10
 done
 
