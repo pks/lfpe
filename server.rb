@@ -303,10 +303,12 @@ def process_next reply
             tmp_rules << [src, tgt]
           }
           tmp_rules_new = tmp_rules.reject { |r|
-              current_grammar_ids.has_key? r
+              current_grammar_ids.has_key? r.join(' ||| ')
           }
           tmp_rules_known = tmp_rules - tmp_rules_new
-          tmp_rules_known.each { |i| no_loo_known_rules << "[X] ||| #{i[0]} ||| #{i[1]} ||| KnownRule=1 ||| 0-0" }
+          tmp_rules_known.each { |i|
+            no_loo_known_rules << "[X] ||| #{i[0]} ||| #{i[1]} ||| KnownRule=1 ||| 0-0"
+          }
           tmp_rules_new.each { |i|
             a = []
             i[0].strip.lstrip.split.each_with_index { |s,ii|
