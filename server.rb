@@ -127,9 +127,11 @@ def init
                                              # setup environment, start daemons
   port = BEGIN_PORT_RANGE
   $daemons.each { |name,cmd|
+    logmsg :server, "starting #{name} daemon"
     sock, pid = start_daemon cmd, name, "tcp://127.0.0.1:#{port}"
     $env[name] = { :socket => sock, :pid => pid }
     port += 1
+    logmsg :server, "starting #{name} daemon done"
   }
 
   if OLM
@@ -372,9 +374,11 @@ def process_next reply
     $db['svg']                << data['svg']
     $db['original_svg']       << data['original_svg']
     $db['durations']          << data['duration'].to_f
+    $db['durations_rating']   << data['duration_rating'].to_f
     $db['count_click']        << data['count_click'].to_i
     $db['count_kbd']          << data['count_kbd'].to_i
     $db['post_edits_display'] << send_recv(:detokenizer, post_edit)
+    $db['ratings']            << data['rating'].to_f
     $last_processed_postedit = $db['post_edits_display'].last
     # 1. tokenize
       $status = "Tokenizing post-edit"                                 # status
@@ -437,6 +441,7 @@ def process_next reply
         `cp #{WORK_DIR}/dtrain.debug.json \
           #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json.pass1`
       else
+        logmsg :server, "no NOLOO"
         send_recv :dtrain, "act:learn ||| #{annotated_source} ||| #{post_edit}"
         `cp #{WORK_DIR}/dtrain.debug.json \
           #{WORK_DIR}/#{$db['progress']}.dtrain.debug.json.pass0`
@@ -658,6 +663,9 @@ get '/debug' do                                                    # debug view
   if data["durations"].size == 0
     data["durations"] << -1
   end
+  if data["durations_rating"].size == 0
+    data["durations_rating"] << -1
+  end
 
   fn = "#{WORK_DIR}/#{$db["progress"]-1}.dtrain.debug.json.pass"
   pass = 0
@@ -807,6 +815,7 @@ get '/reset_progress' do                                # reset current session
   $db['mt_raw'].clear
   $db['updated'].clear
   $db['durations'].clear
+  $db['durations_rating'].clear
   $db['derivations'].clear
   $db['derivations_proc'].clear
   $db['svg'].clear
@@ -815,6 +824,7 @@ get '/reset_progress' do                                # reset current session
   $db['progress'] = -1
   $db['count_kbd'].clear
   $db['count_click'].clear
+  $db['ratings'].clear
   update_database true
   $confirmed = true
   $last_reply = nil
@@ -891,6 +901,7 @@ get '/summary' do
   haml :summary, :locals => { :session_key => SESSION_KEY,
                               :data => data,
                               :ter_scores => ter_scores,
+                              :bleu_scores => bleu_scores,
                               :hter_scores => hter_scores }
 
 end

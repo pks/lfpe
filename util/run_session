@@ -12,6 +12,6 @@ rm $SESSION_DIR/work/lockfile
 rm -r $SESSION_DIR/work/
 mkdir -p $SESSION_DIR/work
 cp $SESSION_DIR/data.json.original $SESSION_DIR/data.json
-cp $SESSION_DIR/g/original/* $SESSION_DIR/g/
-$UTIL/../server.rb $SESSION_DIR/conf.rb &>$SESSION_DIR/work/session.out
+#cp $SESSION_DIR/g/original/* $SESSION_DIR/g/
+$UTIL/../server-neural.rb $SESSION_DIR/conf.rb &>$SESSION_DIR/work/session.out
 

@@ -6,7 +6,7 @@
 
 <p>Please use only a <strong>single browser window</strong> per session at the same time. Going back to earlier examples is not possible, please take great care when interacting with the system.</p>
 
-<p><span style="border-bottom:1px solid #ccc">Instructions for the graphical interface:</span></p>
+<!--<p><span style="border-bottom:1px solid #ccc">Instructions for the graphical interface:</span></p>
 <p>Mark all phrases as finished (phrases are highlighted in dark gray color) and press 'Next' to submit a post-edition in the graphical interface. Keyboard interface:</p>
 <ul>
   <li><strong>Moving around:</strong> Press <strong>Shift+S</strong>, then select phrases using the arrow keys. This is the default mode. Use <strong>Shift+I</strong> to jump to the first phrase, or <strong>Shift+O</strong> (or Shift+F/Shift+G) to the very last phrase.</li>
@@ -18,9 +18,9 @@
   <li><strong>Adding/removing alignments:</strong> Select a source phrase by clicking on it, then click on a target phrase to connect or disconnect it with the selected source phrase. Click the selected source phrase again to cancel.</li>
   <li><strong>Undo:</strong> Press <strong>Shift+U</strong> (or Shift+R) to undo alignments, text edits and deletion of phrases.</li>
   <li><strong>Reset:</strong> Click 'Reset' button to restart editing of the current segment.</li>
-</ul>
+</ul>-->
 
-<p>While editing text, you can press <strong>CTRL+&lt;left/right arrows&gt;</strong> to move the curose word-wise.</p>
+<p>While editing text, you can press <strong>CTRL+&lt;left/right arrows&gt;</strong> to move the cursor word-wise.</p>
 
 <p>The interface was tested with <strong>Firefox</strong> 31, 38, 43 and 45.</p>
 

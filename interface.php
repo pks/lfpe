@@ -3,12 +3,14 @@
   <meta charset="utf-8" />
   <title>Post-Editing Interface (Session: #<?php echo $_GET["key"]; ?>)</title>
   <link rel="stylesheet" type="text/css" href="static/main.css" />
+  <link rel="stylesheet" type="text/css" href="static/nouislider.css" />
   <script src="js/jquery.min.js"                                    type="text/javascript" charset="utf-8"></script>
   <script src="js/interface.js"                                     type="text/javascript" charset="utf-8"></script>
   <script src="js/raphael-min.js"                                   type="text/javascript" charset="utf-8"></script>
   <script src="js/derivation_editor/raphael.inline_text_editing.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/derivation_editor/derivation-editor.js"           type="text/javascript" charset="utf-8"></script>
   <script src="js/jquery.scrollTo.min.js"                           type="text/javascript" charset="utf-8"></script>
+  <script src="js/nouislider.js"                                    type="text/javascript" charset="utf-8"></script>
 </head>
 
 <body>
@@ -52,10 +54,6 @@ Note that the source word may be distorted.
 </div>
 <!-- /Source and target textboxes -->
 
-<!-- Summary -->
-<div id="view_summary" style="display:none;margin:2em"><strong>Session finished, thank you!</strong> View <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/summary" target="_blank">Summary</a>.</div>
-<!-- /Summary -->
-
 <!-- Buttons -->
 <div>
   <button id="help_button" class="button" onclick="$('#help').toggle('blind')">Help</button>
@@ -66,14 +64,31 @@ Note that the source word may be distorted.
 </div>
 <!-- /Buttons -->
 
+<!-- Slider -->
+<div id="slider_wrapper" style="padding:1.5em;display:none">
+<p><em style="font-size:80%">Read the text below and rate it by how much you agree with it:</em></p>
+<p style="text-align:center">The proposed target sentence ("Target:") is an adequate translation of the source sentence ("Source:").</p>
+<p style="display:none"><strong>Proposed translation:</strong> <span id="original_mt_cmp"></span></p>
+<table style="width:100%">
+  <tr>
+    <td style="text-align:right">strongly disagree</td><td style="width:50%" id="slider"></td><td style="text-align:left">strongly agree</td>
+  </tr>
+</table>
+</div>
+<!-- /Slider -->
+
+<!-- Summary -->
+<div id="view_summary" style="display:none;margin:2em"><strong>Session finished, thank you!</strong> View <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/summary" target="_blank">Summary</a>.</div>
+<!-- /Summary -->
+
 <!-- Help -->
 <div id="help">
   <?php include("inc/help.inc.php"); ?>
   <p class="tiny">
     Support: <a href="mailto://simianer@cl.uni-heidelberg.de">Mail</a>
   </p>
-  <p class="tiny">Session: <?php echo $_GET["key"]; ?> |
-    <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a>
+  <p class="tiny">Session: #<?php echo $_GET["key"]; ?> <!--|
+    <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/debug" target="_blank">Debug</a>-->
     <!--| <a href="http://postedit.cl.uni-heidelberg.de:<?php echo $db->port; ?>/summary" target="_blank">Summary</a>-->
   </p>
 </div>
@@ -114,5 +129,6 @@ Note that the source word may be distorted.
 <textarea style="display:none" id="original_svg"      ></textarea>
 <textarea style="display:none" id="original_mt"       ></textarea>
 <textarea style="display:none" id="name"              ><?php echo $_GET["name"]; ?></textarea>
+<textarea style="display:none" id="rating"            >-1</textarea>
 <!-- /Data -->
 

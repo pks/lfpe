@@ -10,6 +10,10 @@ var TEXT_count_click=0,
 
 var rules_orig = {};
 
+var NEXT_MODE = "get"; // or "rate"
+var SLIDER = null;
+var DONE = false;
+
 /*
  * cross-site request
  *
@@ -57,6 +61,40 @@ var Timer = {
   }
 }
 
+var TimerRating = {
+  start_t: 0,
+  pause_start_t: 0,
+  pause_acc_t: 0,
+  paused: false,
+  value: -1,
+
+  start: function () {
+    this.start_t = Date.now();
+    this.pause_start_t = 0;
+    this.pause_acc_t = 0;
+    this.paused = false;
+  },
+  pause: function () {
+    this.paused = true;
+    this.pause_start_t = Date.now();
+  },
+  unpause: function () {
+    this.paused = false;
+    this.pause_acc_t += Date.now()-this.pause_start_t;
+    this.pause_start_t = 0;
+  },
+  stop: function() {
+    this.value = (Date.now()-this.start_t)-this.pause_acc_t;
+  },
+  get: function () {
+    if (this.value < 0) {
+      return (Date.now()-this.start_t)-this.pause_acc_t;
+    } else {
+      return this.value;
+    }
+  }
+}
+
 /*
  * pause/unpause timer
  *
@@ -76,6 +114,7 @@ var pause = function ()
     next_button.setAttribute("disabled", "disabled");
     reset_button.setAttribute("disabled", "disabled");
     Timer.pause();
+    TimerRating.pause();
     if (ui_type=='g') {
       $("#derivation_editor").fadeTo(200,0.1);
       DE_ui_lock=true;
@@ -85,8 +124,10 @@ var pause = function ()
     button.innerHTML = "Pause";
     paused.value = 0;
     next_button.removeAttribute("disabled");
-    reset_button.removeAttribute("disabled", "disabled");
+    if (NEXT_MODE != "rate")
+      reset_button.removeAttribute("disabled", "disabled");
     Timer.unpause();
+    TimerRating.unpause();
     if (ui_type=='g') {
       $("#derivation_editor").fadeTo(200,1);
       DE_ui_lock=false;
@@ -196,17 +237,17 @@ function not_working(fadein=true)
  * polling the server
  *
  */
-var poll = function (url_prefix)
+var poll = function (url_prefix,rate=false,callback=function(){alert("Z");return false})
 {
   setTimeout(function(){
      $.get(url_prefix+"/status").done(function(response){
        $("#status_detail").text(response);
        if (response == "Ready") {
          ready = true;
-         request_and_process_next();
+         request_and_process_next(rate,callback);
          return;
        } else {
-         poll(url_prefix);
+         poll(url_prefix,rate,callback);
        }
      });
   }, 1000);
@@ -236,7 +277,38 @@ var safe_str = function (s)
  * next button
  *
  */
-var next =  function ()
+var next = function()
+{
+  if (NEXT_MODE=="get") {
+    nextX(true,next_callback);
+    NEXT_MODE="rate";
+  } else if (NEXT_MODE=="rate" && !DONE) {
+    TimerRating.stop();
+    Timer.start();
+    $("#slider_wrapper").slideUp();
+    $("#target_textarea").prop("disabled",false);
+    //$("#pause_button").prop("disabled",false);
+    $("#reset_button").prop("disabled",false);
+    $("#next").html("Next");
+    NEXT_MODE="get";
+  }
+
+  return false;
+}
+
+var next_callback = function (done=false)
+{
+  if (done) return false;
+  NEXT_MODE = "rate";
+  $("#slider_wrapper").slideDown();
+  $("#original_mt_cmp").html($("#original_mt").val());
+  SLIDER.set(50);
+  TimerRating.start();
+
+  return false;
+}
+
+var nextX =  function (rate=false,callback=function(){alert("X");return false})
 {
   // elements
   var button              = document.getElementById("next");
@@ -299,11 +371,13 @@ var next =  function ()
 
   send_data["key"] = key;
   send_data["name"] = safe_str($.trim($("#name").val()));
+  send_data["rating"] = $("#rating").val();
 
   // send data
   if (oov_correct.value=="false" && post_edit != "") {
       send_data["EDIT"] = true;
       send_data["duration"] = Timer.get();
+      send_data["duration_rating"] = TimerRating.get();
       send_data["source_value"] = safe_str(source.value);
       // compose request
       // no change?
@@ -332,7 +406,7 @@ var next =  function ()
      for (var i=0; i<l; i++)
        { document.getElementById("oov_fields").children[0].remove(); }
     $("#oov_form").toggle("blind");
-    $("#next").val("Next");
+    $("#next").html("Next");
      send_data["correct"] = src.join("\t") + " ||| " + tgt.join("\t");
   } else {
     if (source.value != "") {
@@ -353,11 +427,11 @@ var next =  function ()
   xhr.onerror = function (e) { alert("XHR ERRROR 1x " + e.target.status); }
   xhr.send(JSON.stringify(send_data)); // send 'next' request
   xhr.onload = function() {
-    poll(base_url+":"+port);
+    poll(base_url+":"+port,rate,callback);
   }
 }
 
-var request_and_process_next = function ()
+var request_and_process_next = function (rate=false,callback=function(){alert("Y");return false})
 {
   // elements
   var button              = document.getElementById("next");
@@ -410,9 +484,10 @@ var request_and_process_next = function ()
     // done, disable interface
     if (data["fin"]) {
       target_textarea.setAttribute("disabled", "disabled");
+      DONE=true;
       status.style.display              = "none";
       //button.innerHTML                  = "-----";
-      $("#view_summary").toggle()
+      $("#view_summary").slideDown()
       $("#raw_source_textarea").html("");
       $("#target_textarea").val("");
       $("#target_textarea").attr("rows", 2);
@@ -421,7 +496,7 @@ var request_and_process_next = function ()
       if (current_seg_id.value)
         $("#seg_"+current_seg_id.value).removeClass("bold");
 
-      return;
+      return callback(true);
 
     // enter OOV correct mode
     } else if (data["oovs"]) {
@@ -461,6 +536,8 @@ var request_and_process_next = function ()
         DE_ui_lock = true;
       }
 
+      return false;
+
     // translation mode
     } else {
       if ($("#ui_type").val() == "t") {
@@ -486,11 +563,17 @@ var request_and_process_next = function ()
       }
       //raw_source_textarea.value = raw_source;
       $("#raw_source_textarea").html(raw_source);
-      button.innerHTML          = "Next";
-               button.removeAttribute("disabled");
-      target_textarea.removeAttribute("disabled", "disabled");
-         pause_button.removeAttribute("disabled", "disabled");
-         document.getElementById("reset_button").removeAttribute("disabled");
+      if (rate) {
+        $("#next").html("Rate");
+      } else {
+        $("#next").html("Next");
+      }
+      button.removeAttribute("disabled");
+      pause_button.removeAttribute("disabled", "disabled");
+      if (!rate) {
+        target_textarea.removeAttribute("disabled", "disabled");
+        document.getElementById("reset_button").removeAttribute("disabled");
+      }
       document.getElementById("seg_"+id).className += " bold";
       if (id > 0) {
         $("#seg_"+(id-1)).removeClass("bold");
@@ -525,11 +608,13 @@ var request_and_process_next = function ()
       }
 
       // start timer
-      Timer.start();
+      //Timer.start();
+
+      return callback(false);
     }
   };
 
-  return;
+  return false;
 }
 
 /*
@@ -540,6 +625,8 @@ var init_text_editor = function ()
 {
   document.getElementById("target_textarea").value     = "";
   document.getElementById("target_textarea").setAttribute("disabled", "disabled");
+  $("#pause_button").prop("disabled", true);
+  $("#reset_button").prop("disabled", true);
 
   TEXT_count_click = 0;
   TEXT_count_kbd = 0;
@@ -599,7 +686,29 @@ $().ready(function()
     document.getElementById("textboxes").style.display = "block";
   }
 
+  initSlider();
 });
+
+var initSlider = function ()
+{
+  var slider = document.getElementById("slider");
+  SLIDER = noUiSlider.create(slider, {
+        start: 50,
+        range: {
+                min: [0,1],
+                max: [100]
+        },
+        pips: {
+                mode: 'values',
+                values: [],
+                density:  25
+        }
+  });
+  SLIDER.on("update", function (values, handle)
+      {
+        $("#rating").val(values[0]);
+      });
+}
 
 var explore = function (o,src,tgt,s2t,t2s,done)
 {

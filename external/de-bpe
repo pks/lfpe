@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+STDOUT.sync = true
+
+while line = STDIN.gets
+  puts line.gsub(/@@ /, "")
+end
+

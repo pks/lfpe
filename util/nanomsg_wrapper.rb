@@ -5,16 +5,14 @@ require 'open3'
 require 'trollop'
 
 conf = Trollop::options do
-  opt :action,         "tokenize,  detokenize, truecase, or lowercase", :short => "-a", :type => :string, :required => true
+  opt :action,         "tokenize,  detokenize, truecase, lowercase, [de-]bpe", :short => "-a", :type => :string, :required => true
   opt :addr,           "socket address",                    :short => "-S", :type => :string, :required => true
   opt :ext,            "path to externals",                 :short => "-e", :type => :string, :required => true
   opt :lang,           "language",                          :short => "-l", :type => :string
   opt :truecase_model, "model file for truecaser",          :short => "-t", :type => :string
+  opt :bpe,            "codes",                             :short => "-b", :type => :string
+  opt :bpe_vocab,      "BPE vocab",                         :short => "-B", :type => :string
 end
-
-sock = NanoMsg::PairSocket.new
-sock.bind conf[:addr]
-sock.send "hello"
 
 if conf[:action] == "detokenize"
   cmd = "#{conf[:ext]}/detokenizer.perl -q -b -u -l #{conf[:lang]}"
@@ -33,10 +31,23 @@ elsif conf[:action] == "truecase"
   end
 elsif conf[:action] == "lowercase"
   cmd = "#{conf[:ext]}/lowercase.perl"
+elsif conf[:action] == "bpe"
+  cmd = "#{conf[:ext]}/apply_bpe.py -c #{conf[:bpe]}" # --vocabulary #{conf[:bpe_vocab]} --vocabulary-threshold 1"
+elsif conf[:action] == "de-bpe"
+  cmd = "#{conf[:ext]}/de-bpe"
 else
   STDERR.write "[wrapper] Unknown action #{conf[:action]}, exiting!\n"; exit
 end
+STDERR.write "[wrapper] will run cmd '#{cmd}'\n"
+
+sock = NanoMsg::PairSocket.new
+STDERR.write "[wrapper] addr: #{conf[:addr]}\n"
+sock.bind conf[:addr]
+sock.send "hello"
+STDERR.write "[wrapper] sent hello\n"
+
 pin, pout, perr = Open3.popen3(cmd)
+
 while true
   inp = sock.recv.strip
   break if !inp||inp=="shutdown"
