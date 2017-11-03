@@ -297,6 +297,7 @@ def process_next reply
     obj["source"]     = source
     obj["progress"]   = $db['progress']
     obj["raw_source"] = raw_source
+    logmsg :server, "#{obj["transl_bpe"]}"
     $db["mt_raw_bpe"]       << obj["transl_bpe"]
     $db["mt_raw"]           << obj["transl"]
     $db["mt"]               << obj["transl_detok"]
