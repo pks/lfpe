@@ -1,0 +1,3 @@
+Die Verbindungen lassen%20sich unter%20anderem zur Markierung von%20Biomolek%C3%BClen in%20bioanalytischen Anwendungen verwenden.
+The compounds can%20be inter%20alia used for marking biomolecules in%20bioanalytical applications .
+0-0 1-1 2-2 3-3 4-5 5-6 6-7 7-8 8-9 9-4 9-10
